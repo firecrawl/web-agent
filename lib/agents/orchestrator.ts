@@ -59,7 +59,10 @@ Guidelines:
 - Use interact for pages that need JavaScript interaction (clicks, forms, pagination)
 - Use bashExec for data processing: jq, awk, sed, grep, sort — great for transforming scraped data
 - When scraping for specific data (pricing, headlines, etc.), use scrape with formats: ["json"] or with a query parameter to get targeted results
-- When done, use formatOutput to present results in the requested format
+- IMPORTANT: When you have gathered all the data, ALWAYS call formatOutput as your final action:
+  - Use format "json" for structured data (pricing, comparisons, lists of items)
+  - Use format "csv" for tabular data (multiple items with consistent fields)
+  - Use format "text" only for narrative summaries
 - Load skills for domain expertise when relevant${skillCatalog}${schemaHint}${urlHint}${csvHint}`;
 
   return new ToolLoopAgent({
@@ -73,5 +76,23 @@ Guidelines:
       bashExec,
     },
     stopWhen: stepCountIs(config.maxSteps ?? 20),
+    experimental_repairToolCall: async ({ toolCall, inputSchema }) => {
+      // When the model sends extra fields that fail schema validation,
+      // get the tool's schema and strip unknown properties from the JSON input
+      try {
+        const schema = await inputSchema({ toolName: toolCall.toolName });
+        const allowedKeys = Object.keys(
+          (schema as { properties?: Record<string, unknown> }).properties ?? {},
+        );
+        const parsed = JSON.parse(toolCall.input);
+        const cleaned: Record<string, unknown> = {};
+        for (const key of allowedKeys) {
+          if (key in parsed) cleaned[key] = parsed[key];
+        }
+        return { ...toolCall, input: JSON.stringify(cleaned) };
+      } catch {
+        return toolCall;
+      }
+    },
   });
 }
