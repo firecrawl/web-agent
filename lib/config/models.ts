@@ -7,7 +7,7 @@ export async function resolveModel(config: ModelConfig) {
       const { createOpenAI } = await import("@ai-sdk/openai");
       return createOpenAI({
         apiKey: config.apiKey || process.env.AI_GATEWAY_API_KEY,
-        baseURL: "https://api.gateway.ai.cloudflare.com/v1",
+        baseURL: "https://gateway.ai.vercel.com/v1",
       })(config.model);
     }
     case "anthropic": {
