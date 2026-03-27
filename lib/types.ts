@@ -2,6 +2,7 @@ export interface AgentConfig {
   prompt: string;
   urls?: string[];
   schema?: Record<string, unknown>;
+  csvContext?: string;
   model: ModelConfig;
   skills: string[];
   subAgents: SubAgentConfig[];

@@ -10,6 +10,7 @@ import AgentInput from "./components/agent-input";
 import PlanVisualization from "./components/plan-visualization";
 import OutputPanel from "./components/output-panel";
 import SettingsPanel from "./components/settings-panel";
+import CsvUpload from "./components/csv-upload";
 import SkillViewer from "./components/skill-viewer";
 import SymbolColored from "@/components/shared/icons/symbol-colored";
 import { cn } from "@/utils/cn";
@@ -227,6 +228,7 @@ function ModelDropdown({
 export default function AgentPage() {
   const [config, setConfig] = useState<AgentConfig>(defaultConfig);
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [followUp, setFollowUp] = useState("");
   const [showSkills, setShowSkills] = useState(false);
   const [showModel, setShowModel] = useState(false);
   const [skills, setSkills] = useState<SkillInfo[]>([]);
@@ -305,6 +307,13 @@ export default function AgentPage() {
           {/* Bottom toolbar */}
           <div className="flex items-center justify-between px-12 pb-10 pt-4">
             <div className="flex items-center gap-4 relative">
+              {/* CSV upload */}
+              <CsvUpload
+                onUpload={(filename, content) =>
+                  setConfig({ ...config, csvContext: content })
+                }
+              />
+
               {/* Skills button */}
               <div className="relative">
                 <button
@@ -443,6 +452,55 @@ export default function AgentPage() {
 
         {/* Skills reference */}
         <SkillViewer />
+
+        {/* Follow-up input */}
+        {!isRunning && messages.length > 0 && (
+          <div className="mt-20 pt-16 border-t border-border-faint">
+            <div
+              className="bg-accent-white rounded-12 overflow-hidden"
+              style={{
+                boxShadow:
+                  "0px 2px 12px -2px rgba(0,0,0,0.04), 0px 0px 0px 1px rgba(0,0,0,0.06)",
+              }}
+            >
+              <div className="flex items-center gap-8 px-16 py-12">
+                <input
+                  className="flex-1 bg-transparent text-body-medium text-accent-black placeholder:text-black-alpha-32 focus:outline-none"
+                  placeholder="Ask a follow-up question..."
+                  value={followUp}
+                  onChange={(e) => setFollowUp(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && followUp.trim()) {
+                      e.preventDefault();
+                      sendMessage({ text: followUp });
+                      setFollowUp("");
+                    }
+                  }}
+                />
+                {followUp.trim() && (
+                  <button
+                    type="button"
+                    className="bg-heat-100 hover:bg-[color:var(--heat-90)] text-accent-white rounded-8 p-6 transition-all active:scale-95"
+                    onClick={() => {
+                      sendMessage({ text: followUp });
+                      setFollowUp("");
+                    }}
+                  >
+                    <svg fill="none" height="16" viewBox="0 0 20 20" width="16">
+                      <path
+                        d="M3.125 10H16.875M11.6667 4.79163L16.875 9.99994L11.6667 15.2083"
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="1.5"
+                      />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

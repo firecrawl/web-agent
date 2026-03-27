@@ -5,7 +5,7 @@ import { resolveModel } from "../config/models";
 import { createSkillTools } from "../skills/tools";
 import { createSubAgentTools } from "./sub-agents";
 import { formatOutput } from "./tools";
-import { bashExec } from "./bash-tool";
+import { bashExec, initBashWithFiles } from "./bash-tool";
 import { discoverSkills } from "../skills/discovery";
 
 export async function createOrchestrator(
@@ -39,6 +39,15 @@ export async function createOrchestrator(
       ? `\n\nStart with these URLs: ${config.urls.join(", ")}`
       : "";
 
+  // Pre-seed bash filesystem with uploaded CSV
+  if (config.csvContext) {
+    await initBashWithFiles({ "/data/input.csv": config.csvContext });
+  }
+
+  const csvHint = config.csvContext
+    ? `\n\nThe user uploaded a CSV file. It's available at /data/input.csv in the bash filesystem. Use bashExec to explore it: 'head -5 /data/input.csv', 'wc -l /data/input.csv', 'awk -F, ...' etc.`
+    : "";
+
   const instructions = `You are a web research agent powered by Firecrawl. Autonomously scrape, search, and interact with the web to fulfill the user's request.
 
 ${fcSystemPrompt ?? ""}
@@ -50,7 +59,7 @@ Guidelines:
 - Use interact for pages that need JavaScript interaction (clicks, forms, pagination)
 - Use bashExec for data processing: jq, awk, sed, grep, sort — great for transforming scraped data
 - When done, use formatOutput to present results in the requested format
-- Load skills for domain expertise when relevant${skillCatalog}${schemaHint}${urlHint}`;
+- Load skills for domain expertise when relevant${skillCatalog}${schemaHint}${urlHint}${csvHint}`;
 
   return new ToolLoopAgent({
     model,
