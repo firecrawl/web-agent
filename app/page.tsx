@@ -9,6 +9,8 @@ import ProviderModelIcon from "./components/provider-icon";
 import AgentInput from "./components/agent-input";
 import PlanVisualization from "./components/plan-visualization";
 import OutputPanel from "./components/output-panel";
+import SettingsPanel from "./components/settings-panel";
+import SkillViewer from "./components/skill-viewer";
 import SymbolColored from "@/components/shared/icons/symbol-colored";
 import { cn } from "@/utils/cn";
 
@@ -401,15 +403,18 @@ export default function AgentPage() {
           <SymbolColored width={22} height={32} />
           <h1 className="text-title-h5 text-accent-black">Firecrawl Agent</h1>
         </button>
-        {isRunning && (
-          <button
-            type="button"
-            className="ml-auto px-12 py-6 rounded-8 text-label-small bg-black-alpha-4 text-accent-black hover:bg-black-alpha-6 transition-all"
-            onClick={stop}
-          >
-            Stop
-          </button>
-        )}
+        <div className="ml-auto flex items-center gap-6">
+          {isRunning && (
+            <button
+              type="button"
+              className="px-12 py-6 rounded-8 text-label-small bg-black-alpha-4 text-accent-black hover:bg-black-alpha-6 transition-all"
+              onClick={stop}
+            >
+              Stop
+            </button>
+          )}
+          <SettingsPanel config={config} onChange={setConfig} />
+        </div>
       </header>
 
       <div className="max-w-700 mx-auto px-20 py-24">
@@ -435,6 +440,9 @@ export default function AgentPage() {
 
         {/* Output */}
         <OutputPanel messages={messages} />
+
+        {/* Skills reference */}
+        <SkillViewer />
       </div>
     </div>
   );

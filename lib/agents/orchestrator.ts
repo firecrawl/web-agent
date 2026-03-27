@@ -5,6 +5,7 @@ import { resolveModel } from "../config/models";
 import { createSkillTools } from "../skills/tools";
 import { createSubAgentTools } from "./sub-agents";
 import { formatOutput } from "./tools";
+import { bashExec } from "./bash-tool";
 import { discoverSkills } from "../skills/discovery";
 
 export async function createOrchestrator(
@@ -47,6 +48,7 @@ Guidelines:
 - Use search to discover relevant pages when you don't have specific URLs
 - Use scrape to extract content from pages
 - Use interact for pages that need JavaScript interaction (clicks, forms, pagination)
+- Use bashExec for data processing: jq, awk, sed, grep, sort — great for transforming scraped data
 - When done, use formatOutput to present results in the requested format
 - Load skills for domain expertise when relevant${skillCatalog}${schemaHint}${urlHint}`;
 
@@ -58,6 +60,7 @@ Guidelines:
       ...skillTools,
       ...subAgentTools,
       formatOutput,
+      bashExec,
     },
     stopWhen: stepCountIs(config.maxSteps ?? 20),
   });

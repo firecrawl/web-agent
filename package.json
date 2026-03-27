@@ -44,6 +44,7 @@
     "framer-motion": "^11.1.7",
     "geist": "^1.4.2",
     "gray-matter": "^4.0.3",
+    "just-bash": "^2.14.0",
     "lucide-react": "^0.539.0",
     "motion": "^12.20.2",
     "next": "^15.2.0",

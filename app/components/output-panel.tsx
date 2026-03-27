@@ -1,54 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import type { UIMessage } from "ai";
 import { cn } from "@/utils/cn";
 
-type OutputFormat = "json" | "csv" | "text";
+type OutputTab = "text" | "json" | "csv";
 
-interface FormattedOutput {
-  format: OutputFormat;
-  content: string;
-}
-
-function isToolPart(
-  part: { type: string },
-): part is { type: string; toolCallId: string; state: string; toolName?: string; output?: unknown } {
+function isToolPart(part: { type: string }): boolean {
   return part.type.startsWith("tool-") || part.type === "dynamic-tool";
 }
 
-function extractOutput(messages: UIMessage[]): FormattedOutput | null {
-  // Walk messages in reverse to find the last formatOutput result
+function extractFormattedOutput(
+  messages: UIMessage[],
+): { format: string; content: string } | null {
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i];
     if (msg.role !== "assistant") continue;
     for (const part of msg.parts) {
       if (isToolPart(part)) {
+        const p = part as Record<string, unknown>;
         const toolName =
-          (part as { toolName?: string }).toolName ??
-          part.type.replace("tool-", "");
-        const state = (part as { state?: string }).state;
-        const output = (part as { output?: unknown }).output;
-
-        if (toolName === "formatOutput" && state === "result" && output) {
-          const result = output as FormattedOutput;
-          if (result.format && result.content) return result;
+          (p.toolName ?? (part.type as string).replace("tool-", "")) as string;
+        if (toolName === "formatOutput" && p.state === "result" && p.output) {
+          const output = p.output as { format: string; content: string };
+          if (output.format && output.content) return output;
         }
       }
     }
   }
-
-  // Fallback: get the last text content from assistant
-  for (let i = messages.length - 1; i >= 0; i--) {
-    const msg = messages[i];
-    if (msg.role !== "assistant") continue;
-    for (const part of msg.parts) {
-      if (part.type === "text" && part.text.trim()) {
-        return { format: "text", content: part.text };
-      }
-    }
-  }
-
   return null;
 }
 
@@ -62,23 +41,218 @@ function download(content: string, filename: string) {
   URL.revokeObjectURL(url);
 }
 
-export default function OutputPanel({
-  messages,
-}: {
-  messages: UIMessage[];
-}) {
-  const [activeTab, setActiveTab] = useState<OutputFormat>("text");
-  const output = extractOutput(messages);
+function JsonViewer({ data }: { data: string }) {
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
-  const tabs: { id: OutputFormat; label: string }[] = [
+  const parsed = useMemo(() => {
+    try {
+      return JSON.parse(data);
+    } catch {
+      return null;
+    }
+  }, [data]);
+
+  if (!parsed) {
+    return (
+      <pre className="text-mono-small text-accent-black whitespace-pre-wrap">
+        {data}
+      </pre>
+    );
+  }
+
+  const toggle = (path: string) => {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(path)) next.delete(path);
+      else next.add(path);
+      return next;
+    });
+  };
+
+  const renderValue = (
+    value: unknown,
+    path: string,
+    depth: number,
+  ): React.ReactNode => {
+    if (value === null) return <span className="text-black-alpha-40">null</span>;
+    if (typeof value === "boolean")
+      return <span className="text-accent-bluetron">{String(value)}</span>;
+    if (typeof value === "number")
+      return <span className="text-accent-amethyst">{value}</span>;
+    if (typeof value === "string")
+      return (
+        <span className="text-accent-forest">
+          &quot;{value.length > 120 ? value.slice(0, 120) + "..." : value}&quot;
+        </span>
+      );
+
+    if (Array.isArray(value)) {
+      if (value.length === 0) return <span>[]</span>;
+      const isCollapsed = collapsed.has(path);
+      return (
+        <span>
+          <button
+            type="button"
+            className="text-black-alpha-40 hover:text-accent-black"
+            onClick={() => toggle(path)}
+          >
+            {isCollapsed ? "▸" : "▾"}
+          </button>
+          {isCollapsed ? (
+            <span className="text-black-alpha-40">
+              {" "}
+              [{value.length} items]
+            </span>
+          ) : (
+            <>
+              {"[\n"}
+              {value.map((item, i) => (
+                <span key={i}>
+                  {"  ".repeat(depth + 1)}
+                  {renderValue(item, `${path}[${i}]`, depth + 1)}
+                  {i < value.length - 1 ? "," : ""}
+                  {"\n"}
+                </span>
+              ))}
+              {"  ".repeat(depth)}]
+            </>
+          )}
+        </span>
+      );
+    }
+
+    if (typeof value === "object") {
+      const entries = Object.entries(value as Record<string, unknown>);
+      if (entries.length === 0) return <span>{"{}"}</span>;
+      const isCollapsed = collapsed.has(path);
+      return (
+        <span>
+          <button
+            type="button"
+            className="text-black-alpha-40 hover:text-accent-black"
+            onClick={() => toggle(path)}
+          >
+            {isCollapsed ? "▸" : "▾"}
+          </button>
+          {isCollapsed ? (
+            <span className="text-black-alpha-40">
+              {" "}
+              {"{"}
+              {entries.length} keys{"}"}
+            </span>
+          ) : (
+            <>
+              {"{\n"}
+              {entries.map(([key, val], i) => (
+                <span key={key}>
+                  {"  ".repeat(depth + 1)}
+                  <span className="text-heat-100">&quot;{key}&quot;</span>
+                  {": "}
+                  {renderValue(val, `${path}.${key}`, depth + 1)}
+                  {i < entries.length - 1 ? "," : ""}
+                  {"\n"}
+                </span>
+              ))}
+              {"  ".repeat(depth)}
+              {"}"}
+            </>
+          )}
+        </span>
+      );
+    }
+
+    return <span>{String(value)}</span>;
+  };
+
+  return (
+    <pre className="text-mono-small text-accent-black whitespace-pre font-mono leading-relaxed">
+      {renderValue(parsed, "$", 0)}
+    </pre>
+  );
+}
+
+function CsvTable({ data }: { data: string }) {
+  const rows = useMemo(() => {
+    const lines = data.split("\n").filter((l) => l.trim());
+    return lines.map((line) => {
+      const cells: string[] = [];
+      let current = "";
+      let inQuote = false;
+      for (const ch of line) {
+        if (ch === '"') {
+          inQuote = !inQuote;
+        } else if (ch === "," && !inQuote) {
+          cells.push(current.trim());
+          current = "";
+        } else {
+          current += ch;
+        }
+      }
+      cells.push(current.trim());
+      return cells;
+    });
+  }, [data]);
+
+  if (rows.length === 0) return <div className="text-body-small text-black-alpha-32">No data</div>;
+
+  const headers = rows[0];
+  const body = rows.slice(1);
+
+  return (
+    <div className="overflow-auto rounded-10 border border-border-faint">
+      <table className="w-full text-body-small">
+        <thead>
+          <tr className="bg-black-alpha-2 border-b border-border-faint">
+            {headers.map((h, i) => (
+              <th
+                key={i}
+                className="text-left text-label-small text-black-alpha-56 px-12 py-8 whitespace-nowrap"
+              >
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {body.map((row, ri) => (
+            <tr
+              key={ri}
+              className={cn(
+                "border-b border-border-faint last:border-0",
+                ri % 2 === 1 && "bg-black-alpha-1",
+              )}
+            >
+              {row.map((cell, ci) => (
+                <td
+                  key={ci}
+                  className="px-12 py-6 text-accent-black whitespace-nowrap"
+                >
+                  {cell}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export default function OutputPanel({ messages }: { messages: UIMessage[] }) {
+  const [activeTab, setActiveTab] = useState<OutputTab>("text");
+  const output = extractFormattedOutput(messages);
+
+  if (!output && messages.length === 0) return null;
+
+  const tabs: { id: OutputTab; label: string }[] = [
     { id: "text", label: "Text" },
     { id: "json", label: "JSON" },
-    { id: "csv", label: "CSV" },
+    { id: "csv", label: "Table" },
   ];
 
   return (
-    <div className="border-t border-border-faint mt-16">
-      <div className="flex items-center justify-between px-16 pt-10">
+    <div className="border-t border-border-faint mt-20 pt-12">
+      <div className="flex items-center justify-between mb-10">
         <div className="flex gap-2 bg-black-alpha-4 rounded-8 p-2">
           {tabs.map((tab) => (
             <button
@@ -100,7 +274,7 @@ export default function OutputPanel({
         {output && (
           <button
             type="button"
-            className="text-label-small text-black-alpha-48 hover:text-accent-black transition-colors"
+            className="flex items-center gap-6 text-label-small text-black-alpha-40 hover:text-accent-black transition-colors"
             onClick={() => {
               const ext =
                 activeTab === "json"
@@ -108,25 +282,38 @@ export default function OutputPanel({
                   : activeTab === "csv"
                     ? "csv"
                     : "md";
-              download(output.content, `agent-output.${ext}`);
+              download(output.content, `firecrawl-output.${ext}`);
             }}
           >
+            <svg fill="none" height="14" viewBox="0 0 24 24" width="14">
+              <path
+                d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+              />
+            </svg>
             Download
           </button>
         )}
       </div>
 
-      <div className="p-16 min-h-120">
-        {!output ? (
-          <div className="text-body-small text-black-alpha-32 text-center py-24">
-            Output will appear here when the agent completes
-          </div>
-        ) : (
-          <pre className="text-mono-medium text-accent-black whitespace-pre-wrap break-words bg-background-lighter rounded-10 p-12 border border-border-faint overflow-auto max-h-400">
-            {output.content}
-          </pre>
-        )}
-      </div>
+      {!output ? (
+        <div className="text-body-small text-black-alpha-24 text-center py-16">
+          Output will appear here when the agent finishes
+        </div>
+      ) : (
+        <div className="bg-background-lighter rounded-12 border border-border-faint p-14 overflow-auto max-h-500">
+          {activeTab === "json" && <JsonViewer data={output.content} />}
+          {activeTab === "csv" && <CsvTable data={output.content} />}
+          {activeTab === "text" && (
+            <pre className="text-body-medium text-accent-black whitespace-pre-wrap leading-relaxed">
+              {output.content}
+            </pre>
+          )}
+        </div>
+      )}
     </div>
   );
 }
