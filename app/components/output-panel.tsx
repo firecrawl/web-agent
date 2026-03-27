@@ -15,7 +15,7 @@ interface OutputData {
 }
 
 function extractOutput(messages: UIMessage[]): OutputData | null {
-  // First: check for explicit formatOutput tool result
+  // 1. Check for explicit formatOutput tool result
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i];
     if (msg.role !== "assistant") continue;
@@ -38,18 +38,39 @@ function extractOutput(messages: UIMessage[]): OutputData | null {
     }
   }
 
-  // Fallback: collect all assistant text parts
-  const texts: string[] = [];
+  // 2. Check for scrape/search tool results with answer fields
+  const toolAnswers: string[] = [];
   for (const msg of messages) {
     if (msg.role !== "assistant") continue;
     for (const part of msg.parts) {
-      if (part.type === "text" && part.text.trim()) {
-        texts.push(part.text);
+      if (isToolPart(part)) {
+        const p = part as Record<string, unknown>;
+        const state = p.state as string;
+        if (state === "result" && p.output) {
+          const out = p.output as Record<string, unknown>;
+          if (out.answer && typeof out.answer === "string") {
+            toolAnswers.push(out.answer);
+          }
+        }
       }
     }
   }
-  if (texts.length > 0) {
-    return { format: "text", content: texts.join("\n\n"), hasExplicitFormat: false };
+  if (toolAnswers.length > 0) {
+    return { format: "text", content: toolAnswers.join("\n\n---\n\n"), hasExplicitFormat: false };
+  }
+
+  // 3. Fallback: only use the LAST assistant text (not narration)
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const msg = messages[i];
+    if (msg.role !== "assistant") continue;
+    const textParts = msg.parts.filter(
+      (p) => p.type === "text" && p.text.trim(),
+    );
+    // Only show if the last text is substantial (not just "I'll do X")
+    const lastText = textParts[textParts.length - 1];
+    if (lastText && lastText.type === "text" && lastText.text.length > 100) {
+      return { format: "text", content: lastText.text, hasExplicitFormat: false };
+    }
   }
 
   return null;
