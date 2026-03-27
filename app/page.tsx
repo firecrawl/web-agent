@@ -11,6 +11,8 @@ import PlanVisualization from "./components/plan-visualization";
 import OutputPanel from "./components/output-panel";
 import SettingsPanel from "./components/settings-panel";
 import CsvUpload from "./components/csv-upload";
+import HistoryPanel from "./components/history-panel";
+import { addToHistory } from "@/lib/history";
 import SkillViewer from "./components/skill-viewer";
 import SymbolColored from "@/components/shared/icons/symbol-colored";
 import { cn } from "@/utils/cn";
@@ -256,6 +258,11 @@ export default function AgentPage() {
   const onRun = () => {
     if (!config.prompt.trim()) return;
     setHasSubmitted(true);
+    addToHistory({
+      prompt: config.prompt,
+      model: currentModelName,
+      skillCount: config.skills.length,
+    });
     sendMessage({ text: config.prompt });
   };
 
@@ -392,6 +399,13 @@ export default function AgentPage() {
               </svg>
             </button>
           </div>
+        </div>
+
+        {/* History */}
+        <div className="w-full max-w-640">
+          <HistoryPanel
+            onSelect={(prompt) => setConfig({ ...config, prompt })}
+          />
         </div>
       </div>
     );
