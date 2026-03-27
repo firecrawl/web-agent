@@ -4,16 +4,61 @@ import { useState } from "react";
 import type { UIMessage } from "ai";
 import { cn } from "@/utils/cn";
 
-function extractDomain(input: unknown): string | null {
-  if (!input || typeof input !== "object") return null;
-  const obj = input as Record<string, unknown>;
-  const url = (obj.url ?? "") as string;
-  try {
-    const parsed = new URL(url.startsWith("http") ? url : `https://${url}`);
-    return parsed.hostname;
-  } catch {
-    return null;
-  }
+// --- Icons ---
+
+function GlobeIcon() {
+  return (
+    <svg fill="none" height="20" viewBox="0 0 24 24" width="20" className="text-black-alpha-32">
+      <path
+        d="M12 19.7C16.26 19.7 19.7 16.26 19.7 12S16.26 4.3 12 4.3 4.3 7.74 4.3 12s3.44 7.7 7.7 7.7zM12 19.7c-1.96 0-3.54-3.44-3.54-7.7S10.04 4.3 12 4.3s3.54 3.44 3.54 7.7-1.58 7.7-3.54 7.7zM19.5 12H4.5"
+        stroke="currentColor"
+        strokeLinecap="square"
+        strokeWidth="1.5"
+      />
+    </svg>
+  );
+}
+
+function SearchQIcon() {
+  return (
+    <svg fill="none" height="20" viewBox="0 0 24 24" width="20" className="text-black-alpha-32">
+      <path
+        d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.5"
+      />
+    </svg>
+  );
+}
+
+function CodeIcon() {
+  return (
+    <svg fill="none" height="20" viewBox="0 0 24 24" width="20" className="text-black-alpha-32">
+      <path
+        d="M16 18l6-6-6-6M8 6l-6 6 6 6"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.5"
+      />
+    </svg>
+  );
+}
+
+function SkillIcon() {
+  return (
+    <svg fill="none" height="20" viewBox="0 0 24 24" width="20" className="text-black-alpha-32">
+      <path
+        d="M12 2a5 5 0 015 5v1a5 5 0 01-10 0V7a5 5 0 015-5zM8 14h8l2 8H6l2-8z"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.5"
+      />
+    </svg>
+  );
 }
 
 function Favicon({ domain }: { domain: string }) {
@@ -23,90 +68,34 @@ function Favicon({ domain }: { domain: string }) {
       width={16}
       height={16}
       alt=""
-      className="rounded-2 flex-shrink-0"
+      className="rounded-2"
     />
   );
 }
 
-function GlobeIcon({ className }: { className?: string }) {
-  return (
-    <svg fill="none" height="20" viewBox="0 0 24 24" width="20" className={className}>
-      <path
-        d="M12 19.7083C16.2572 19.7083 19.7083 16.2572 19.7083 12C19.7083 7.74276 16.2572 4.29163 12 4.29163M12 19.7083C7.74276 19.7083 4.29163 16.2572 4.29163 12C4.29163 7.74276 7.74276 4.29163 12 4.29163M12 19.7083C10.044 19.7083 8.45829 16.2572 8.45829 12C8.45829 7.74276 10.044 4.29163 12 4.29163M12 19.7083C13.956 19.7083 15.5416 16.2572 15.5416 12C15.5416 7.74276 13.956 4.29163 12 4.29163M19.5 12H4.49996"
-        stroke="currentColor"
-        strokeLinecap="square"
-        strokeWidth="1.5"
-      />
-    </svg>
-  );
-}
+function ToolIconPill({ name }: { name: string }) {
+  const isSearch = name === "search";
+  const isScrape = name === "scrape" || name === "interact" || name === "map";
+  const isSubagent = name.startsWith("subagent_");
+  const isSkill = name === "load_skill" || name === "read_skill_resource";
 
-function SearchIcon() {
   return (
-    <svg fill="none" height="16" viewBox="0 0 24 24" width="16" className="text-black-alpha-32">
-      <path
-        d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-      />
-    </svg>
-  );
-}
-
-function SkillIcon() {
-  return (
-    <svg fill="none" height="20" viewBox="0 0 24 24" width="20" className="text-accent-honey">
-      <path
-        d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-      />
-    </svg>
-  );
-}
-
-function ChevronIcon({ open }: { open: boolean }) {
-  return (
-    <svg
-      fill="none"
-      height="20"
-      viewBox="0 0 20 20"
-      width="20"
-      className={cn(
-        "text-black-alpha-32 transition-transform",
-        open ? "rotate-180" : "",
-      )}
-    >
-      <path
-        d="M5 7.5l5 5 5-5"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="1.5"
-      />
-    </svg>
-  );
-}
-
-function ThinkingIndicator() {
-  return (
-    <div className="flex items-center gap-12 py-12">
-      <div className="relative w-20 h-20 flex-shrink-0">
-        <div className="absolute inset-0 rounded-full border-2 border-black-alpha-8 border-t-heat-100 animate-spin" />
-      </div>
+    <div className="w-32 h-32 rounded-8 border border-black-alpha-8 flex-center flex-shrink-0 bg-accent-white">
+      {isSearch && <SearchQIcon />}
+      {isScrape && <GlobeIcon />}
+      {isSubagent && <CodeIcon />}
+      {isSkill && <SkillIcon />}
+      {!isSearch && !isScrape && !isSubagent && !isSkill && <GlobeIcon />}
     </div>
   );
 }
+
+// --- Data extraction ---
 
 interface ToolCallInfo {
   id: string;
   name: string;
   input: unknown;
-  result?: unknown;
   status: "running" | "complete";
 }
 
@@ -114,155 +103,208 @@ function isToolPart(part: { type: string }): boolean {
   return part.type.startsWith("tool-") || part.type === "dynamic-tool";
 }
 
-function extractToolCalls(messages: UIMessage[]): ToolCallInfo[] {
-  const calls: ToolCallInfo[] = [];
+interface TimelineItem {
+  type: "text" | "tool-group" | "skill";
+  text?: string;
+  calls?: ToolCallInfo[];
+  skillName?: string;
+}
+
+function extractTimeline(messages: UIMessage[]): TimelineItem[] {
+  const items: TimelineItem[] = [];
+  let currentGroup: ToolCallInfo[] = [];
+
+  const flushGroup = () => {
+    if (currentGroup.length > 0) {
+      // Pull out skill loads as separate items
+      const skills = currentGroup.filter(
+        (c) => c.name === "load_skill" || c.name === "read_skill_resource",
+      );
+      const rest = currentGroup.filter(
+        (c) => c.name !== "load_skill" && c.name !== "read_skill_resource",
+      );
+      for (const skill of skills) {
+        const obj = (skill.input as Record<string, unknown>) ?? {};
+        items.push({
+          type: "skill",
+          skillName: String(obj.name ?? obj.skill ?? "skill"),
+        });
+      }
+      if (rest.length > 0) {
+        items.push({ type: "tool-group", calls: [...rest] });
+      }
+      currentGroup = [];
+    }
+  };
+
   for (const msg of messages) {
     if (msg.role !== "assistant") continue;
     for (const part of msg.parts) {
-      if (!isToolPart(part)) continue;
-      const p = part as Record<string, unknown>;
-      const toolCallId = (p.toolCallId ?? "") as string;
-      const state = (p.state ?? "") as string;
-      const toolName = (p.toolName ?? (part.type as string).replace("tool-", "")) as string;
-      const input = p.input ?? p.args;
-      const output = p.output;
+      if (part.type === "text" && part.text.trim()) {
+        flushGroup();
+        items.push({ type: "text", text: part.text });
+      } else if (isToolPart(part)) {
+        const p = part as Record<string, unknown>;
+        const toolCallId = (p.toolCallId ?? "") as string;
+        const state = (p.state ?? "") as string;
+        const toolName =
+          (p.toolName ?? (part.type as string).replace("tool-", "")) as string;
+        const input = p.input ?? p.args;
 
-      const existing = calls.find((c) => c.id === toolCallId);
-      if (existing) {
-        if (state === "result") {
-          existing.result = output;
-          existing.status = "complete";
+        const existing = currentGroup.find((c) => c.id === toolCallId);
+        if (existing) {
+          if (state === "result") existing.status = "complete";
+        } else {
+          currentGroup.push({
+            id: toolCallId,
+            name: toolName,
+            input,
+            status: state === "result" ? "complete" : "running",
+          });
         }
-      } else {
-        calls.push({
-          id: toolCallId,
-          name: toolName,
-          input,
-          result: state === "result" ? output : undefined,
-          status: state === "result" ? "complete" : "running",
-        });
       }
     }
   }
-  return calls;
+  flushGroup();
+  return items;
 }
 
-function getStepDescription(call: ToolCallInfo): string {
+function getCallLabel(call: ToolCallInfo): string {
   const obj = (call.input as Record<string, unknown>) ?? {};
   switch (call.name) {
     case "search":
-      return `Searching the web for ${obj.query ?? "information"}`;
+      return `Searched the web for "${obj.query ?? ""}"`;
     case "scrape":
-      return `Reading ${obj.url ?? "page"}`;
+      return `Visited ${obj.url ?? "page"}`;
     case "interact":
-      return `Interacting with ${obj.url ?? "page"}`;
+      return `Interacted with ${obj.url ?? "page"}`;
     case "map":
-      return `Mapping URLs on ${obj.url ?? "site"}`;
-    case "load_skill":
-      return `Loading skill: ${obj.name ?? ""}`;
-    case "read_skill_resource":
-      return `Reading skill resource: ${obj.file ?? ""}`;
+      return `Mapped URLs on ${obj.url ?? "site"}`;
     case "formatOutput":
-      return `Formatting output as ${obj.format ?? "text"}`;
+      return `Formatted output as ${obj.format ?? "text"}`;
     default:
       if (call.name.startsWith("subagent_"))
-        return `Delegating to sub-agent: ${obj.task ? String(obj.task).slice(0, 80) : "task"}`;
+        return String(obj.task ?? "Delegated to sub-agent").slice(0, 100);
       return call.name;
   }
 }
 
-function getSearchQueries(call: ToolCallInfo): string[] {
-  if (call.name !== "search") return [];
+function getDomain(call: ToolCallInfo): string | null {
   const obj = (call.input as Record<string, unknown>) ?? {};
-  return obj.query ? [String(obj.query)] : [];
+  const url = (obj.url ?? "") as string;
+  try {
+    return new URL(url.startsWith("http") ? url : `https://${url}`).hostname;
+  } catch {
+    return null;
+  }
 }
 
-function getScrapeUrls(call: ToolCallInfo): { url: string; domain: string }[] {
-  if (call.name !== "scrape" && call.name !== "interact" && call.name !== "map") return [];
-  const obj = (call.input as Record<string, unknown>) ?? {};
-  if (!obj.url) return [];
-  const domain = extractDomain(call.input);
-  return [{ url: String(obj.url), domain: domain ?? "" }];
+function getCallIcon(call: ToolCallInfo) {
+  const domain = getDomain(call);
+  if (domain) return <Favicon domain={domain} />;
+  if (call.name === "search") return <SearchQIcon />;
+  if (call.name.startsWith("subagent_")) return <CodeIcon />;
+  return <GlobeIcon />;
 }
 
-function StepRow({ call }: { call: ToolCallInfo }) {
-  const [open, setOpen] = useState(false);
-  const desc = getStepDescription(call);
-  const queries = getSearchQueries(call);
-  const urls = getScrapeUrls(call);
-  const hasDetails = queries.length > 0 || urls.length > 0;
-  const isSkill = call.name === "load_skill" || call.name === "read_skill_resource";
-  const isSubagent = call.name.startsWith("subagent_");
+// --- Components ---
+
+function ToolGroup({ calls }: { calls: ToolCallInfo[] }) {
+  const [expanded, setExpanded] = useState(false);
+  const allComplete = calls.every((c) => c.status === "complete");
 
   return (
-    <div>
-      <button
-        type="button"
-        className={cn(
-          "w-full flex items-center gap-12 py-10 text-left transition-colors rounded-8 -mx-4 px-4",
-          hasDetails && "hover:bg-black-alpha-2 cursor-pointer",
-          !hasDetails && "cursor-default",
-        )}
-        onClick={() => hasDetails && setOpen(!open)}
-      >
-        {/* Icon */}
-        {isSkill ? (
-          <SkillIcon />
-        ) : isSubagent ? (
-          <div className="w-20 h-20 rounded-full bg-accent-amethyst/10 flex-center flex-shrink-0">
-            <div className="w-8 h-8 rounded-full bg-accent-amethyst" />
-          </div>
-        ) : call.status === "running" ? (
-          <div className="relative w-20 h-20 flex-shrink-0">
-            <div className="absolute inset-0 rounded-full border-2 border-black-alpha-8 border-t-heat-100 animate-spin" />
-          </div>
-        ) : (
-          <GlobeIcon className="text-black-alpha-40 flex-shrink-0" />
-        )}
-
-        {/* Description */}
-        <span className={cn(
-          "flex-1 text-body-large",
-          call.status === "running" ? "text-accent-black" : "text-black-alpha-64",
-        )}>
-          {desc}
-        </span>
-
-        {/* Chevron */}
-        {hasDetails && <ChevronIcon open={open} />}
-      </button>
-
-      {/* Expanded details */}
-      {open && (
-        <div className="ml-32 pb-6 flex flex-col gap-4">
-          {queries.map((q, i) => (
-            <div key={i} className="flex items-center gap-8 py-4">
-              <SearchIcon />
-              <span className="text-body-medium text-black-alpha-48">{q}</span>
-            </div>
+    <div className="my-8">
+      {/* Collapsed: icon pills row */}
+      {!expanded && (
+        <button
+          type="button"
+          className="flex items-center gap-4 flex-wrap"
+          onClick={() => setExpanded(true)}
+        >
+          {calls.slice(0, 10).map((call) => (
+            <ToolIconPill key={call.id} name={call.name} />
           ))}
-          {urls.map((u, i) => (
-            <div key={i} className="flex items-center gap-8 py-4">
-              {u.domain ? <Favicon domain={u.domain} /> : <GlobeIcon className="text-black-alpha-24 w-16 h-16" />}
-              <span className="text-body-medium text-black-alpha-48 truncate">{u.url}</span>
-            </div>
-          ))}
+          {calls.length > 10 && (
+            <span className="w-32 h-32 rounded-8 border border-black-alpha-8 flex-center text-mono-small text-black-alpha-32 bg-accent-white">
+              ···
+            </span>
+          )}
+          <span className="text-body-medium text-black-alpha-40 ml-4">
+            {calls.length} action{calls.length > 1 ? "s" : ""}
+            {!allComplete && (
+              <span className="ml-4 inline-block w-4 h-4 rounded-full bg-heat-100 animate-pulse" />
+            )}
+          </span>
+        </button>
+      )}
+
+      {/* Expanded: list of actions */}
+      {expanded && (
+        <div>
+          <button
+            type="button"
+            className="flex items-center gap-8 mb-8 text-body-medium text-black-alpha-40 hover:text-black-alpha-64 transition-colors"
+            onClick={() => setExpanded(false)}
+          >
+            <svg
+              fill="none"
+              height="20"
+              viewBox="0 0 20 20"
+              width="20"
+            >
+              <path
+                d="M5 12.5l5-5 5 5"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="1.5"
+              />
+            </svg>
+            Show less
+          </button>
+          <div className="flex flex-col gap-6">
+            {calls.map((call) => (
+              <div key={call.id} className="flex items-center gap-10 py-2">
+                <div className="w-32 h-32 rounded-8 border border-black-alpha-8 flex-center flex-shrink-0 bg-accent-white">
+                  {getCallIcon(call)}
+                </div>
+                <span className="text-body-medium text-black-alpha-48 truncate">
+                  {getCallLabel(call)}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
   );
 }
 
-function extractLastText(messages: UIMessage[]): string | null {
-  for (let i = messages.length - 1; i >= 0; i--) {
-    const msg = messages[i];
-    if (msg.role !== "assistant") continue;
-    for (const part of msg.parts) {
-      if (part.type === "text" && part.text.trim()) return part.text;
-    }
-  }
-  return null;
+function SkillLoad({ name }: { name: string }) {
+  return (
+    <div className="flex items-center gap-10 my-8 py-2">
+      <div className="w-32 h-32 rounded-8 border border-black-alpha-8 flex-center flex-shrink-0 bg-accent-white">
+        <SkillIcon />
+      </div>
+      <span className="text-body-medium text-black-alpha-48">
+        Loaded {name} skill
+      </span>
+    </div>
+  );
 }
+
+function ThinkingIndicator() {
+  return (
+    <div className="flex items-center gap-10 my-12 py-2">
+      <div className="relative w-32 h-32 flex-shrink-0">
+        <div className="absolute inset-4 rounded-full border-2 border-black-alpha-8 border-t-heat-100 animate-spin" />
+      </div>
+    </div>
+  );
+}
+
+// --- Main ---
 
 export default function PlanVisualization({
   messages,
@@ -271,11 +313,9 @@ export default function PlanVisualization({
   messages: UIMessage[];
   isRunning: boolean;
 }) {
-  const toolCalls = extractToolCalls(messages);
-  const lastText = extractLastText(messages);
-  const showText = !isRunning && lastText && toolCalls.length > 0;
+  const timeline = extractTimeline(messages);
 
-  if (toolCalls.length === 0 && !isRunning) {
+  if (timeline.length === 0 && !isRunning) {
     return (
       <div className="flex items-center justify-center py-40">
         <div className="text-body-large text-black-alpha-24">
@@ -287,21 +327,30 @@ export default function PlanVisualization({
 
   return (
     <div>
-      <div className="flex flex-col">
-        {toolCalls.map((call) => (
-          <StepRow key={call.id} call={call} />
-        ))}
-      </div>
+      {timeline.map((item, i) => {
+        switch (item.type) {
+          case "text":
+            return (
+              <div
+                key={i}
+                className={cn(
+                  "text-body-x-large text-accent-black leading-relaxed my-12",
+                  "whitespace-pre-wrap",
+                )}
+              >
+                {item.text}
+              </div>
+            );
+          case "tool-group":
+            return <ToolGroup key={i} calls={item.calls!} />;
+          case "skill":
+            return <SkillLoad key={i} name={item.skillName!} />;
+          default:
+            return null;
+        }
+      })}
 
       {isRunning && <ThinkingIndicator />}
-
-      {showText && (
-        <div className="mt-16 pt-16 border-t border-border-faint">
-          <div className="text-body-large text-accent-black whitespace-pre-wrap leading-relaxed">
-            {lastText}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
