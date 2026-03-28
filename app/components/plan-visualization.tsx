@@ -865,15 +865,19 @@ function extractTimeline(messages: UIMessage[]): TimelineItem[] {
           if (!markdown && outObj?.extract) {
             markdown = "```json\n" + JSON.stringify(outObj.extract, null, 2) + "\n```";
           }
-          // Fallback: if nothing found, dump the raw output (excluding huge fields)
+          // Fallback: if nothing found, dump the raw output (excluding transport/meta fields)
           // Skip for interact -- we extract output + liveViewUrl separately
           if (!markdown && toolName !== "interact" && typeof outObj === "object" && outObj && status === "complete") {
-            const preview = { ...outObj };
-            delete (preview as Record<string, unknown>).rawHtml;
-            delete (preview as Record<string, unknown>).html;
-            delete (preview as Record<string, unknown>).liveViewUrl;
-            delete (preview as Record<string, unknown>).interactiveLiveViewUrl;
-            delete (preview as Record<string, unknown>).scrapeId;
+            const STRIP_KEYS = new Set([
+              "rawHtml", "html", "liveViewUrl", "interactiveLiveViewUrl",
+              "scrapeId", "creditsUsed", "cacheState", "cachedAt",
+              "proxyUsed", "concurrencyLimited", "statusCode", "contentType",
+              "sourceURL", "url", "favicon", "metadata",
+            ]);
+            const preview: Record<string, unknown> = {};
+            for (const [k, v] of Object.entries(outObj)) {
+              if (!STRIP_KEYS.has(k)) preview[k] = v;
+            }
             const str = JSON.stringify(preview, null, 2);
             if (str.length > 10 && str !== "{}") {
               markdown = "```json\n" + str.slice(0, 5000) + "\n```";

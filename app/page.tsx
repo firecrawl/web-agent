@@ -9,7 +9,6 @@ import { useACPChat } from "./hooks/use-acp-chat";
 import ProviderModelIcon from "./components/provider-icon";
 import AgentInput from "./components/agent-input";
 import PlanVisualization from "./components/plan-visualization";
-import OutputPanel from "./components/output-panel";
 import SettingsPanel from "./components/settings-panel";
 import FileUpload from "./components/file-upload";
 import HistoryPanel from "./components/history-panel";
@@ -465,7 +464,13 @@ export default function AgentPage() {
             if (toolName === "search") { searchCredits += credits; searchCount++; }
             else if (toolName === "scrape" || toolName === "map") { scrapeCredits += credits; scrapeCount++; }
             else if (toolName === "interact") { interactCredits += credits; interactCount++; }
-            totalChars += JSON.stringify(output).length;
+            // Count only content-relevant fields for token estimation, not transport metadata
+            const contentKeys = ["markdown", "content", "answer", "text", "json", "extract", "data", "output", "web"];
+            let contentSize = 0;
+            for (const k of contentKeys) {
+              if (output[k] !== undefined) contentSize += JSON.stringify(output[k]).length;
+            }
+            totalChars += contentSize || Math.min(JSON.stringify(output).length, 500);
           }
         }
       }
@@ -499,10 +504,7 @@ export default function AgentPage() {
     }
     prevIsRunning.current = isRunning;
 
-    // Auto-expand export panel when agent finishes
-    if (!isRunning && messages.length > 0) {
-      setStudioCollapsed(false);
-    }
+    // Keep export panel collapsed -- user opens it when ready
 
     // Capture formatOutput results when agent finishes
     if (prevIsRunning.current === false && !isRunning && generatingFormat) {
@@ -976,24 +978,6 @@ export default function AgentPage() {
 
         {/* Activity feed */}
         <PlanVisualization messages={messages} isRunning={isRunning} />
-
-        {/* Output panel (formatted result if available) */}
-        {!isRunning && messages.length > 0 && (
-          <OutputPanel
-            messages={messages}
-            onRequestFormat={(format) => {
-              const prompts: Record<string, string> = {
-                json: "Format all the collected data as JSON using formatOutput.",
-                csv: "Format all the collected data as CSV using formatOutput.",
-                markdown: "Format all the collected data as a markdown report using formatOutput with format \"text\".",
-                html: "Format all the collected data as a clean HTML document using formatOutput with format \"text\". Use proper HTML tags, tables where appropriate, and inline styles for readability.",
-              };
-              setSidebarCollapsed(true);
-              setGeneratingFormat(format);
-              sendMessage({ text: prompts[format] });
-            }}
-          />
-        )}
 
         {/* Bottom section */}
         {!isRunning && messages.length > 0 && (
