@@ -5,6 +5,9 @@ import type { UIMessage } from "ai";
 import { cn } from "@/utils/cn";
 import { Streamdown } from "streamdown";
 import { createCodePlugin } from "@streamdown/code";
+import { JsonView, defaultStyles } from "react-json-view-lite";
+import "react-json-view-lite/dist/index.css";
+import Papa from "papaparse";
 
 const code = createCodePlugin({ themes: ["github-light", "github-light"] });
 
@@ -109,85 +112,120 @@ function extractConversationContext(messages: UIMessage[]): string {
 
 // --- Viewers ---
 
+const jsonStyle: typeof defaultStyles = {
+  ...defaultStyles,
+  container: "json-view-lite font-mono text-[13px] leading-relaxed",
+  basicChildStyle: "pl-16",
+  label: "text-heat-100 font-medium",
+  nullValue: "text-black-alpha-32 italic",
+  undefinedValue: "text-black-alpha-32 italic",
+  stringValue: "text-accent-forest",
+  booleanValue: "text-accent-bluetron font-medium",
+  numberValue: "text-accent-amethyst",
+  otherValue: "text-accent-black",
+  punctuation: "text-black-alpha-32",
+  collapseIcon: "text-black-alpha-24 cursor-pointer select-none hover:text-accent-black",
+  expandIcon: "text-black-alpha-24 cursor-pointer select-none hover:text-accent-black",
+  collapsedContent: "text-black-alpha-24 cursor-pointer hover:text-accent-black",
+  noQuotesForStringValues: false,
+};
+
 function JsonViewer({ data }: { data: string }) {
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const parsed = useMemo(() => { try { return JSON.parse(data); } catch { return null; } }, [data]);
-  if (!parsed) return <pre className="text-mono-small text-accent-black whitespace-pre-wrap break-all">{data}</pre>;
+  if (!parsed) return <pre className="text-mono-small text-accent-black whitespace-pre-wrap break-all p-14">{data}</pre>;
 
-  const toggle = (path: string) => {
-    setCollapsed((prev) => { const next = new Set(prev); if (next.has(path)) next.delete(path); else next.add(path); return next; });
-  };
-
-  const renderValue = (value: unknown, path: string, depth: number): React.ReactNode => {
-    if (value === null) return <span className="text-black-alpha-40">null</span>;
-    if (typeof value === "boolean") return <span className="text-accent-bluetron">{String(value)}</span>;
-    if (typeof value === "number") return <span className="text-accent-amethyst">{value}</span>;
-    if (typeof value === "string") {
-      const display = value.length > 120 ? value.slice(0, 120) + "..." : value;
-      return <span className="text-accent-forest">&quot;{display}&quot;</span>;
-    }
-    if (Array.isArray(value)) {
-      if (value.length === 0) return <span>[]</span>;
-      const isC = collapsed.has(path);
-      return (<span>
-        <button type="button" className="text-black-alpha-40 hover:text-accent-black" onClick={() => toggle(path)}>{isC ? "\u25b8" : "\u25be"}</button>
-        {isC ? <span className="text-black-alpha-40"> [{value.length} items]</span> : (<>{"[\n"}{value.map((item, i) => (<span key={i}>{"  ".repeat(depth + 1)}{renderValue(item, `${path}[${i}]`, depth + 1)}{i < value.length - 1 ? "," : ""}{"\n"}</span>))}{"  ".repeat(depth)}]</>)}
-      </span>);
-    }
-    if (typeof value === "object") {
-      const entries = Object.entries(value as Record<string, unknown>);
-      if (entries.length === 0) return <span>{"{}"}</span>;
-      const isC = collapsed.has(path);
-      return (<span>
-        <button type="button" className="text-black-alpha-40 hover:text-accent-black" onClick={() => toggle(path)}>{isC ? "\u25b8" : "\u25be"}</button>
-        {isC ? <span className="text-black-alpha-40"> {"{"}{entries.length} keys{"}"}</span> : (<>{"{\n"}{entries.map(([key, val], i) => (<span key={key}>{"  ".repeat(depth + 1)}<span className="text-heat-100">&quot;{key}&quot;</span>{": "}{renderValue(val, `${path}.${key}`, depth + 1)}{i < entries.length - 1 ? "," : ""}{"\n"}</span>))}{"  ".repeat(depth)}{"}"}</>)}
-      </span>);
-    }
-    return <span>{String(value)}</span>;
-  };
-
-  return <pre className="text-mono-small text-accent-black whitespace-pre font-mono leading-relaxed">{renderValue(parsed, "$", 0)}</pre>;
+  return (
+    <div className="p-14 overflow-auto">
+      <JsonView data={parsed} style={jsonStyle} shouldExpandNode={(level) => level < 2} />
+    </div>
+  );
 }
 
 function CsvTable({ data }: { data: string }) {
-  const rows = useMemo(() => {
-    const lines = data.split("\n").filter((l) => l.trim());
-    return lines.map((line) => {
-      const cells: string[] = [];
-      let current = "";
-      let inQuote = false;
-      for (const ch of line) {
-        if (ch === '"') inQuote = !inQuote;
-        else if (ch === "," && !inQuote) { cells.push(current.trim()); current = ""; }
-        else current += ch;
-      }
-      cells.push(current.trim());
-      return cells;
-    });
+  const [sortCol, setSortCol] = useState<number | null>(null);
+  const [sortAsc, setSortAsc] = useState(true);
+  const [search, setSearch] = useState("");
+
+  const { headers, rows } = useMemo(() => {
+    const result = Papa.parse<string[]>(data.trim(), { header: false, skipEmptyLines: true });
+    const allRows = result.data;
+    if (allRows.length < 2) return { headers: [] as string[], rows: [] as string[][] };
+    return { headers: allRows[0], rows: allRows.slice(1) };
   }, [data]);
 
-  if (rows.length < 2) return <pre className="text-mono-small text-accent-black whitespace-pre-wrap break-all">{data}</pre>;
+  const filtered = useMemo(() => {
+    if (!search.trim()) return rows;
+    const q = search.toLowerCase();
+    return rows.filter((row) => row.some((cell) => cell.toLowerCase().includes(q)));
+  }, [rows, search]);
+
+  const sorted = useMemo(() => {
+    if (sortCol === null) return filtered;
+    return [...filtered].sort((a, b) => {
+      const va = a[sortCol] ?? "";
+      const vb = b[sortCol] ?? "";
+      const na = parseFloat(va), nb = parseFloat(vb);
+      if (!isNaN(na) && !isNaN(nb)) return sortAsc ? na - nb : nb - na;
+      return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+    });
+  }, [filtered, sortCol, sortAsc]);
+
+  const handleSort = (col: number) => {
+    if (sortCol === col) setSortAsc(!sortAsc);
+    else { setSortCol(col); setSortAsc(true); }
+  };
+
+  if (headers.length === 0) return <pre className="text-mono-small text-accent-black whitespace-pre-wrap break-all p-14">{data}</pre>;
 
   return (
-    <div className="overflow-auto">
-      <table className="w-full text-body-small border-collapse">
-        <thead>
-          <tr className="bg-black-alpha-2 border-b border-border-faint sticky top-0">
-            {rows[0].map((h, i) => (
-              <th key={i} className="text-left text-label-small text-black-alpha-56 px-12 py-8 whitespace-nowrap border-r border-border-faint last:border-r-0">{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.slice(1).map((row, ri) => (
-            <tr key={ri} className={cn("border-b border-border-faint last:border-0", ri % 2 === 1 && "bg-black-alpha-1")}>
-              {row.map((cell, ci) => (
-                <td key={ci} className="px-12 py-6 text-accent-black whitespace-nowrap border-r border-border-faint last:border-r-0">{cell}</td>
+    <div className="flex flex-col">
+      {rows.length > 5 && (
+        <div className="px-12 py-8 border-b border-border-faint flex items-center gap-8">
+          <svg fill="none" height="12" viewBox="0 0 24 24" width="12" className="text-black-alpha-24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+          <input
+            className="flex-1 text-body-small bg-transparent text-accent-black placeholder:text-black-alpha-24 focus:outline-none"
+            placeholder={`Filter ${rows.length} rows...`}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <span className="text-mono-x-small text-black-alpha-24">{sorted.length}/{rows.length}</span>
+        </div>
+      )}
+      <div className="overflow-auto">
+        <table className="w-full text-body-small border-collapse">
+          <thead>
+            <tr className="bg-black-alpha-2 border-b border-border-faint sticky top-0 z-10">
+              <th className="text-left text-mono-x-small text-black-alpha-24 px-8 py-6 w-1 whitespace-nowrap">#</th>
+              {headers.map((h, i) => (
+                <th
+                  key={i}
+                  className="text-left text-label-small text-black-alpha-56 px-12 py-8 whitespace-nowrap border-l border-border-faint cursor-pointer hover:bg-black-alpha-4 select-none transition-colors"
+                  onClick={() => handleSort(i)}
+                >
+                  <span className="flex items-center gap-4">
+                    {h}
+                    {sortCol === i && (
+                      <svg fill="none" height="10" viewBox="0 0 24 24" width="10" className="text-black-alpha-32" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <path d={sortAsc ? "M6 15l6-6 6 6" : "M6 9l6 6 6-6"} />
+                      </svg>
+                    )}
+                  </span>
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {sorted.map((row, ri) => (
+              <tr key={ri} className={cn("border-b border-border-faint last:border-0 hover:bg-black-alpha-2 transition-colors", ri % 2 === 1 && "bg-black-alpha-1")}>
+                <td className="text-mono-x-small text-black-alpha-16 px-8 py-6 w-1 whitespace-nowrap">{ri + 1}</td>
+                {row.map((cell, ci) => (
+                  <td key={ci} className="px-12 py-6 text-accent-black border-l border-border-faint max-w-[300px] truncate" title={cell}>{cell}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -203,23 +241,27 @@ function HtmlViewer({ html, fullHeight }: { html: string; fullHeight?: boolean }
     iframe.src = url;
     const onLoad = () => {
       if (fullHeight) return;
-      try { const doc = iframe.contentDocument; if (doc?.body) setHeight(Math.min(Math.max(doc.body.scrollHeight + 16, 150), 500)); } catch { /* */ }
+      try { const doc = iframe.contentDocument; if (doc?.body) setHeight(Math.min(Math.max(doc.body.scrollHeight + 16, 150), 600)); } catch { /* */ }
     };
     iframe.addEventListener("load", onLoad);
     return () => { iframe.removeEventListener("load", onLoad); URL.revokeObjectURL(url); };
   }, [html, fullHeight]);
-  return <iframe ref={iframeRef} className="w-full border-0" style={{ height: fullHeight ? "100%" : height }} sandbox="allow-same-origin" title="HTML output" />;
+  return (
+    <div className={cn("bg-white", fullHeight ? "h-full" : "")} style={{ height: fullHeight ? "100%" : undefined }}>
+      <iframe ref={iframeRef} className="w-full border-0" style={{ height: fullHeight ? "100%" : height }} sandbox="allow-same-origin allow-scripts" title="HTML output" />
+    </div>
+  );
 }
 
 function OutputContent({ content, formatId, maxH }: { content: string; formatId: string; maxH?: string }) {
   const { isHtml, isCsv, isJson } = getOutputMeta(content, formatId);
   return (
     <div className={cn("overflow-auto", maxH)}>
-      {isJson && <div className="p-14"><JsonViewer data={content} /></div>}
+      {isJson && <JsonViewer data={content} />}
       {isCsv && <CsvTable data={content} />}
       {isHtml && <HtmlViewer html={content} />}
       {!isJson && !isCsv && !isHtml && (
-        <div className="p-14 text-body-medium text-accent-black leading-relaxed prose prose-base max-w-none prose-headings:text-accent-black prose-a:text-heat-100 prose-strong:text-accent-black">
+        <div className="p-14 text-body-medium text-accent-black leading-relaxed prose prose-base max-w-none prose-headings:text-accent-black prose-a:text-heat-100 prose-strong:text-accent-black prose-code:text-heat-100 prose-code:bg-heat-4 prose-code:px-4 prose-code:py-1 prose-code:rounded-4">
           <Streamdown plugins={{ code }}>{content}</Streamdown>
         </div>
       )}

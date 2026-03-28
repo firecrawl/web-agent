@@ -77,3 +77,11 @@
   --sd-muted: hsl(var(--muted));
   --sd-muted-fg: hsl(var(--muted-foreground));
 }
+
+/* JSON viewer overrides */
+.json-view-lite {
+  font-family: var(--font-mono, ui-monospace, monospace) !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+  background: transparent !important;
+}
