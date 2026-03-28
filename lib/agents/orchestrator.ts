@@ -1,6 +1,5 @@
-import { ToolLoopAgent, stepCountIs, tool, type ToolSet } from "ai";
+import { ToolLoopAgent, stepCountIs } from "ai";
 import { FirecrawlTools } from "firecrawl-aisdk";
-import { z } from "zod";
 import type { AgentConfig } from "../types";
 import { resolveModel } from "../config/models";
 import { createSkillTools } from "../skills/tools";
@@ -8,72 +7,6 @@ import { createSubAgentTools } from "./sub-agents";
 import { formatOutput } from "./tools";
 import { bashExec, initBashWithFiles } from "./bash-tool";
 import { discoverSkills } from "../skills/discovery";
-import { parseSkillBody } from "../skills/parser";
-import fs from "fs/promises";
-import path from "path";
-
-const EXPORT_SKILLS: { id: string; name: string; skill: string; description: string }[] = [
-  { id: "export_json", name: "JSON Exporter", skill: "export-json", description: "Format collected data as structured JSON" },
-  { id: "export_csv", name: "CSV Exporter", skill: "export-csv", description: "Format collected data as a CSV table" },
-  { id: "export_report", name: "Report Writer", skill: "export-report", description: "Format collected data as a markdown report" },
-  { id: "export_html", name: "HTML Exporter", skill: "export-html", description: "Format collected data as a styled HTML document" },
-];
-
-async function createExportSubAgents(
-  model: Awaited<ReturnType<typeof resolveModel>>,
-  skills: Awaited<ReturnType<typeof discoverSkills>>,
-): Promise<ToolSet> {
-  const exportTools: ToolSet = {};
-
-  for (const exp of EXPORT_SKILLS) {
-    const skill = skills.find((s) => s.name === exp.skill);
-    let skillInstructions = "";
-    if (skill) {
-      const content = await fs.readFile(path.join(skill.directory, "SKILL.md"), "utf-8");
-      skillInstructions = `\n\n${parseSkillBody(content)}`;
-    }
-
-    const subAgent = new ToolLoopAgent({
-      model,
-      instructions: `You are a formatting sub-agent: "${exp.name}". ${exp.description}.
-
-You will receive the collected data as your task. Format it according to your skill instructions and call formatOutput.${skillInstructions}`,
-      tools: { formatOutput, bashExec },
-      stopWhen: stepCountIs(5),
-    });
-
-    exportTools[`subagent_${exp.id}`] = tool({
-      description: `Delegate formatting to "${exp.name}": ${exp.description}. Pass all collected data as the task.`,
-      inputSchema: z.object({
-        task: z.string().describe("The collected data and context to format"),
-      }),
-      execute: async ({ task }) => {
-        const result = await subAgent.generate({ prompt: task });
-        const stepDetails = result.steps.map((step) => ({
-          text: step.text || "",
-          toolCalls: step.toolCalls.map((tc) => ({
-            toolName: tc.toolName,
-            input: (tc as Record<string, unknown>).input ?? (tc as Record<string, unknown>).args ?? {},
-          })),
-          toolResults: step.toolResults.map((tr) => ({
-            toolName: tr.toolName,
-            output: (tr as Record<string, unknown>).output ?? (tr as Record<string, unknown>).result ?? {},
-          })),
-        }));
-        return {
-          subAgent: exp.name,
-          description: exp.description,
-          task,
-          result: result.text,
-          steps: result.steps.length,
-          stepDetails,
-        };
-      },
-    });
-  }
-
-  return exportTools;
-}
 
 export async function createOrchestrator(
   config: AgentConfig,
@@ -87,12 +20,13 @@ export async function createOrchestrator(
   });
   const skillTools = createSkillTools(skills);
 
-  const subAgentTools =
-    config.subAgents.length > 0
-      ? await createSubAgentTools(config.subAgents, firecrawlApiKey, skills)
-      : {};
-
-  const exportSubAgents = await createExportSubAgents(model, skills);
+  // All sub-agents (user-configured + built-in exports) get the full toolkit
+  const subAgentTools = await createSubAgentTools(
+    config.subAgents,
+    firecrawlApiKey,
+    skills,
+    model,
+  );
 
   // Skill catalog for system prompt (~100 tokens per skill)
   const skillCatalog = skills.length
@@ -145,13 +79,15 @@ You gather context iteratively through conversation. The user will tell you what
 - After loading a skill, follow its instructions and use read_skill_resource to access any scripts or reference files it provides.
 - You can load multiple skills in a single session if the task spans domains.${skillCatalog}
 
-## Output
-- Do NOT call formatOutput on your own. The user will choose their preferred format (JSON, CSV, Markdown, or HTML) after you finish gathering data.
-- When the user asks for a specific export format, delegate to a sub-agent:
-  1. Gather all the data you've collected so far into a concise context summary.
-  2. Use the appropriate subagent tool (subagent_export_json, subagent_export_csv, subagent_export_report, subagent_export_html) and pass the data context as the task.
-  3. The sub-agent will handle formatting and call formatOutput.
-- If no sub-agent is available for the format, call formatOutput directly.${schemaHint}${urlHint}${csvHint}`;
+## Sub-agents
+- You have sub-agents available for delegating tasks. Each sub-agent is a mini version of you with the full toolkit (search, scrape, interact, bash, skills, formatOutput).
+- Use export sub-agents when the user requests a specific output format:
+  - subagent_export_json: Format data as structured JSON
+  - subagent_export_csv: Format data as a CSV table
+  - subagent_export_report: Format data as a markdown report
+  - subagent_export_html: Format data as a styled HTML document
+- When delegating to an export sub-agent, pass ALL collected data as the task. Include raw data, sources, and any analysis.
+- Do NOT call formatOutput yourself -- let the sub-agent handle it.${schemaHint}${urlHint}${csvHint}`;
 
   return new ToolLoopAgent({
     model,
@@ -160,14 +96,11 @@ You gather context iteratively through conversation. The user will tell you what
       ...fcTools,
       ...skillTools,
       ...subAgentTools,
-      ...exportSubAgents,
       formatOutput,
       bashExec,
     },
     stopWhen: stepCountIs(config.maxSteps ?? 20),
     experimental_repairToolCall: async ({ toolCall, inputSchema }) => {
-      // When the model sends extra fields that fail schema validation,
-      // get the tool's schema and strip unknown properties from the JSON input
       try {
         const schema = await inputSchema({ toolName: toolCall.toolName });
         const allowedKeys = Object.keys(

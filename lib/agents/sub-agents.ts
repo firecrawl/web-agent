@@ -5,6 +5,8 @@ import type { SubAgentConfig, SkillMetadata } from "../types";
 import { resolveModel } from "../config/models";
 import { createSkillTools } from "../skills/tools";
 import { parseSkillBody } from "../skills/parser";
+import { formatOutput } from "./tools";
+import { bashExec } from "./bash-tool";
 import fs from "fs/promises";
 import path from "path";
 
@@ -12,36 +14,46 @@ const subagentSchema = z.object({
   task: z.string().describe("The task to delegate"),
 });
 
+interface BuiltInSubAgent {
+  id: string;
+  name: string;
+  description: string;
+  skill: string;
+  maxSteps: number;
+}
+
+const BUILTIN_SUBAGENTS: BuiltInSubAgent[] = [
+  { id: "export_json", name: "JSON Exporter", skill: "export-json", description: "Format collected data as structured JSON", maxSteps: 5 },
+  { id: "export_csv", name: "CSV Exporter", skill: "export-csv", description: "Format collected data as a CSV table", maxSteps: 5 },
+  { id: "export_report", name: "Report Writer", skill: "export-report", description: "Format collected data as a markdown report", maxSteps: 5 },
+  { id: "export_html", name: "HTML Exporter", skill: "export-html", description: "Format collected data as a styled HTML document", maxSteps: 5 },
+];
+
 function makeSubagentTool(
-  config: SubAgentConfig,
+  id: string,
+  name: string,
+  description: string,
   subAgent: ToolLoopAgent<never, ToolSet, never>,
 ) {
   return tool({
-    description: `Delegate a task to sub-agent "${config.name}": ${config.description}`,
+    description: `Delegate a task to sub-agent "${name}": ${description}`,
     inputSchema: subagentSchema,
     execute: async ({ task }) => {
       const result = await subAgent.generate({ prompt: task });
-      // Return full step details so the UI can render nested timeline
       const stepDetails = result.steps.map((step) => ({
         text: step.text || "",
         toolCalls: step.toolCalls.map((tc) => {
           const c = tc as Record<string, unknown>;
-          return {
-            toolName: tc.toolName,
-            input: c.input ?? c.args ?? {},
-          };
+          return { toolName: tc.toolName, input: c.input ?? c.args ?? {} };
         }),
         toolResults: step.toolResults.map((tr) => {
           const r = tr as Record<string, unknown>;
-          return {
-            toolName: tr.toolName,
-            output: r.output ?? r.result ?? {},
-          };
+          return { toolName: tr.toolName, output: r.output ?? r.result ?? {} };
         }),
       }));
       return {
-        subAgent: config.name,
-        description: config.description,
+        subAgent: name,
+        description,
         task,
         result: result.text,
         steps: result.steps.length,
@@ -51,47 +63,92 @@ function makeSubagentTool(
   });
 }
 
+function buildSkillCatalog(skills: SkillMetadata[]): string {
+  if (!skills.length) return "";
+  return `\n\nAvailable skills (use load_skill to activate):\n${skills.map((s) => `- ${s.name}: ${s.description.slice(0, 100)}`).join("\n")}`;
+}
+
+async function loadSkillContent(skillName: string, skills: SkillMetadata[]): Promise<string> {
+  const skill = skills.find((s) => s.name === skillName);
+  if (!skill) return "";
+  const content = await fs.readFile(path.join(skill.directory, "SKILL.md"), "utf-8");
+  return `\n\n## Skill: ${skill.name}\n${parseSkillBody(content)}`;
+}
+
+function buildFullToolset(
+  firecrawlApiKey: string,
+  skills: SkillMetadata[],
+  enabledTools?: ("search" | "scrape" | "interact" | "map")[],
+): ToolSet {
+  const fcToolOptions: Record<string, unknown> = { apiKey: firecrawlApiKey };
+  if (enabledTools) {
+    if (!enabledTools.includes("search")) fcToolOptions.search = false;
+    if (!enabledTools.includes("scrape")) fcToolOptions.scrape = false;
+    if (!enabledTools.includes("interact")) fcToolOptions.interact = false;
+  }
+  const { systemPrompt: _, ...fcTools } = FirecrawlTools(fcToolOptions);
+  const skillTools = createSkillTools(skills);
+  return { ...fcTools, ...skillTools, formatOutput, bashExec };
+}
+
 export async function createSubAgentTools(
   configs: SubAgentConfig[],
   firecrawlApiKey: string,
   skills: SkillMetadata[],
+  parentModel?: Awaited<ReturnType<typeof resolveModel>>,
 ): Promise<ToolSet> {
   const subAgentTools: ToolSet = {};
+  const skillCatalog = buildSkillCatalog(skills);
 
+  // User-configured sub-agents
   for (const config of configs) {
     const model = await resolveModel(config.model);
-
-    const fcToolOptions: Record<string, unknown> = { apiKey: firecrawlApiKey };
-    if (!config.tools.includes("search")) fcToolOptions.search = false;
-    if (!config.tools.includes("scrape")) fcToolOptions.scrape = false;
-    if (!config.tools.includes("interact")) fcToolOptions.interact = false;
-    const { systemPrompt: _, ...fcTools } = FirecrawlTools(fcToolOptions);
-
-    const skillTools = createSkillTools(skills);
+    const tools = buildFullToolset(firecrawlApiKey, skills, config.tools);
 
     let preloadedSkills = "";
     for (const skillName of config.skills) {
-      const skill = skills.find((s) => s.name === skillName);
-      if (skill) {
-        const content = await fs.readFile(
-          path.join(skill.directory, "SKILL.md"),
-          "utf-8",
-        );
-        preloadedSkills += `\n\n## Skill: ${skill.name}\n${parseSkillBody(content)}`;
-      }
+      preloadedSkills += await loadSkillContent(skillName, skills);
     }
 
     const subAgent = new ToolLoopAgent({
       model,
       instructions: `You are a sub-agent named "${config.name}". ${config.description}
 
+You have the full toolkit: search, scrape, interact, bash, formatOutput, and skills.${skillCatalog}
+
 When finished, write a clear summary of what you found.${preloadedSkills}`,
-      tools: { ...fcTools, ...skillTools },
+      tools,
       stopWhen: stepCountIs(10),
     });
 
     subAgentTools[`subagent_${config.id}`] = makeSubagentTool(
-      config,
+      config.id,
+      config.name,
+      config.description,
+      subAgent as unknown as ToolLoopAgent<never, ToolSet, never>,
+    );
+  }
+
+  // Built-in sub-agents (export formatters, etc.)
+  const builtinModel = parentModel ?? await resolveModel({ provider: "anthropic", model: "claude-sonnet-4-5-20250514" });
+  const builtinTools = buildFullToolset(firecrawlApiKey, skills);
+
+  for (const builtin of BUILTIN_SUBAGENTS) {
+    const preloadedSkill = await loadSkillContent(builtin.skill, skills);
+
+    const subAgent = new ToolLoopAgent({
+      model: builtinModel,
+      instructions: `You are a sub-agent: "${builtin.name}". ${builtin.description}.
+
+You have the full toolkit: search, scrape, interact, bash, formatOutput, and skills. Use whatever tools you need to complete the task.${skillCatalog}${preloadedSkill}`,
+      tools: builtinTools,
+      stopWhen: stepCountIs(builtin.maxSteps),
+    });
+
+    subAgentTools[`subagent_${builtin.id}`] = makeSubagentTool(
+      builtin.id,
+      builtin.name,
+      builtin.description,
       subAgent as unknown as ToolLoopAgent<never, ToolSet, never>,
     );
   }
