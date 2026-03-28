@@ -308,7 +308,7 @@ export default function AgentPage() {
   const [savedSkillPath, setSavedSkillPath] = useState<string | null>(null);
   const [generatedSkillContent, setGeneratedSkillContent] = useState<string | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [studioCollapsed, setStudioCollapsed] = useState(false);
+  const [studioCollapsed, setStudioCollapsed] = useState(true);
   const [generatingFormat, setGeneratingFormat] = useState<string | null>(null);
   const [generatedOutputs, setGeneratedOutputs] = useState<Record<string, { format: string; content: string }>>({});
   const [planMode, setPlanMode] = useState(false);
@@ -426,6 +426,11 @@ export default function AgentPage() {
         .catch(() => setSuggestions([]));
     }
     prevIsRunning.current = isRunning;
+
+    // Auto-expand export panel when agent finishes
+    if (!isRunning && messages.length > 0) {
+      setStudioCollapsed(false);
+    }
 
     // Capture formatOutput results when agent finishes
     if (prevIsRunning.current === false && !isRunning && generatingFormat) {
@@ -1060,14 +1065,14 @@ export default function AgentPage() {
       </div>
       </div>
 
-      {/* Studio panel -- right side, NotebookLM style */}
+      {/* Export panel -- right side */}
       {messages.length > 0 && (
         <div className={cn(
           "h-full border-l border-border-faint bg-background-base flex flex-col flex-shrink-0 overflow-hidden transition-all duration-200",
           studioCollapsed ? "w-48" : "w-280",
         )}>
           <div className={cn("px-16 pt-14 pb-6 flex items-center", studioCollapsed ? "justify-center px-8" : "gap-8")}>
-            {!studioCollapsed && <h3 className="text-label-medium text-accent-black flex-1">Studio</h3>}
+            {!studioCollapsed && <h3 className="text-label-medium text-accent-black flex-1">Export</h3>}
             <button
               type="button"
               className="p-6 rounded-6 text-black-alpha-40 hover:bg-black-alpha-4 hover:text-accent-black transition-all flex-shrink-0"
@@ -1079,7 +1084,7 @@ export default function AgentPage() {
             </button>
           </div>
 
-          {!studioCollapsed && <div className="px-12 pb-16 flex flex-col gap-10 overflow-y-auto flex-1">
+          {!studioCollapsed && <div className="px-12 pb-16 flex flex-col gap-10 overflow-y-auto flex-1 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
             {/* 2-column grid of export cards */}
             <div className="grid grid-cols-2 gap-6">
               {([
@@ -1190,6 +1195,40 @@ export default function AgentPage() {
                 </div>
               </div>
             )}
+
+            {/* API snippet */}
+            <div className="mt-2">
+              <div className="flex items-center gap-6 mb-6">
+                <svg fill="none" height="14" viewBox="0 0 24 24" width="14" className="text-black-alpha-32" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M16 18l6-6-6-6M8 6l-6 6 6 6" />
+                </svg>
+                <span className="text-label-small text-black-alpha-40">API</span>
+                <button
+                  type="button"
+                  className="ml-auto p-3 rounded-4 text-black-alpha-24 hover:text-accent-black hover:bg-black-alpha-4 transition-all"
+                  title="Copy to clipboard"
+                  onClick={() => {
+                    const snippet = `curl -X POST ${typeof window !== "undefined" ? window.location.origin : ""}/api/query \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify({ prompt: config.prompt, model: config.model, stream: false }, null, 2).replace(/'/g, "'\\''")}'`;
+                    navigator.clipboard.writeText(snippet);
+                  }}
+                >
+                  <svg fill="none" height="12" viewBox="0 0 24 24" width="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                  </svg>
+                </button>
+              </div>
+              <div className="rounded-8 bg-black-alpha-4 p-10 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+                <pre className="text-mono-x-small text-black-alpha-48 whitespace-pre leading-relaxed">{`curl -X POST /api/query \\
+  -H "Content-Type: application/json" \\
+  -d '{
+  "prompt": ${JSON.stringify(config.prompt.slice(0, 60) + (config.prompt.length > 60 ? "..." : ""))},
+  "stream": false
+}'`}</pre>
+              </div>
+            </div>
           </div>}
         </div>
       )}

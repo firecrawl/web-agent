@@ -64,6 +64,11 @@
   color: hsl(var(--muted-foreground)) !important;
 }
 
+/* Hide scrollbar utility */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* Streamdown container styles */
 [data-streamdown] {
   --sd-bg: hsl(var(--background));
