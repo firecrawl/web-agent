@@ -63,6 +63,57 @@ const defaultConfig: AgentConfig = {
   maxSteps: 20,
 };
 
+const EXAMPLES = [
+  "Search for the top 5 open-source LLM frameworks, scrape each repo, and compare stars, language, and license",
+  "Go to Hacker News, interact with the front page, scrape each of the top 5 links, and summarize the trends",
+  "Find the top AI startups that raised funding this year, scrape their homepages, and interact with their pricing pages",
+  "Scrape Vercel and Netlify pricing pages, interact with the feature toggles, and build a side-by-side comparison",
+  "Search for the best headless CMS platforms, scrape their docs and pricing, and extract key differences",
+  "Find recent YC W25 companies, scrape each company page, and extract founder names, descriptions, and URLs",
+  "Search for React vs Vue vs Svelte performance benchmarks, scrape the top 3 articles, and summarize findings",
+  "Scrape the Stripe and Paddle pricing pages, interact with the calculator widgets, and compare costs at 10k transactions",
+];
+
+function ExampleCarousel({ onSelect }: { onSelect: (text: string) => void }) {
+  const [page, setPage] = useState(0);
+  const pageCount = Math.ceil(EXAMPLES.length / 4);
+  const visible = EXAMPLES.slice(page * 4, page * 4 + 4);
+
+  return (
+    <div className="w-full max-w-640 mt-20">
+      <div className="grid grid-cols-2 gap-8 transition-opacity duration-200">
+        {visible.map((text, i) => (
+          <button
+            key={page * 4 + i}
+            type="button"
+            className="text-left px-14 py-10 rounded-10 border border-border-faint bg-accent-white hover:border-heat-40 hover:bg-heat-4 transition-all group"
+            onClick={() => onSelect(text)}
+          >
+            <span className="text-body-medium text-black-alpha-48 group-hover:text-accent-black transition-colors line-clamp-3">
+              {text}
+            </span>
+          </button>
+        ))}
+      </div>
+      {pageCount > 1 && (
+        <div className="flex items-center justify-center gap-6 mt-12">
+          {Array.from({ length: pageCount }).map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              className={cn(
+                "w-6 h-6 rounded-full transition-all",
+                i === page ? "bg-heat-100 scale-125" : "bg-black-alpha-16 hover:bg-black-alpha-32",
+              )}
+              onClick={() => setPage(i)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface SkillInfo {
   name: string;
   description: string;
@@ -843,34 +894,8 @@ export default function AgentPage() {
           </div>
         )}
 
-        {/* Example prompts */}
-        <div className="w-full max-w-640 mt-20">
-          <div className="grid grid-cols-2 gap-8">
-            {[
-              "Search for the top 5 open-source LLM frameworks, scrape each repo, and compare stars, language, and license",
-              "Go to Hacker News, interact with the front page, scrape each of the top 5 links, and summarize the trends",
-              "Find the top AI startups that raised funding this year, scrape their homepages, and interact with their pricing pages",
-              "Scrape Vercel and Netlify pricing pages, interact with the feature toggles, and build a side-by-side comparison",
-              "Search for the best headless CMS platforms, scrape their docs and pricing, and extract key differences",
-              "Find recent YC W25 companies, scrape each company page, and extract founder names, descriptions, and URLs",
-              "Search for React vs Vue vs Svelte performance benchmarks, scrape the top 3 articles, and summarize findings",
-              "Scrape the Stripe and Paddle pricing pages, interact with the calculator widgets, and compare costs at 10k transactions",
-            ].map((text, i) => (
-              <button
-                key={i}
-                type="button"
-                className="text-left px-14 py-10 rounded-10 border border-border-faint bg-accent-white hover:border-heat-40 hover:bg-heat-4 transition-all group"
-                onClick={() => {
-                  setConfig({ ...config, prompt: text });
-                }}
-              >
-                <span className="text-body-medium text-black-alpha-48 group-hover:text-accent-black transition-colors">
-                  {text}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Example prompts carousel */}
+        <ExampleCarousel onSelect={(text) => setConfig({ ...config, prompt: text })} />
 
         {/* History */}
         <div className="w-full max-w-640">
