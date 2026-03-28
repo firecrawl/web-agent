@@ -43,7 +43,6 @@ export const AVAILABLE_MODELS = {
   ],
   anthropic: [
     { id: "claude-sonnet-4-20250514", name: "Claude Sonnet 4", icon: "claude" },
-    { id: "claude-sonnet-4-20250514", name: "Claude Sonnet 4", icon: "claude" },
     { id: "claude-opus-4-20250514", name: "Claude Opus 4", icon: "claude" },
     { id: "claude-haiku-4-5-20251001", name: "Claude Haiku 4.5", icon: "claude" },
   ],
