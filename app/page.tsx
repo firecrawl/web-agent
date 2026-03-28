@@ -982,35 +982,7 @@ export default function AgentPage() {
                     </div>
                   </button>
 
-                  {/* Generated result below the card */}
-                  {generated && (
-                    <div className="mt-2 rounded-8 border border-border-faint bg-accent-white overflow-hidden">
-                      <div className="flex items-center justify-between px-10 py-6 border-b border-border-faint bg-black-alpha-2">
-                        <span className="text-mono-x-small text-black-alpha-32">
-                          {(generated.content.length / 1000).toFixed(1)}k chars
-                        </span>
-                        <button
-                          type="button"
-                          className="text-mono-x-small text-black-alpha-40 hover:text-accent-black transition-colors"
-                          onClick={() => {
-                            const ext = card.id === "json" ? "json" : card.id === "csv" ? "csv" : card.id === "html" ? "html" : "md";
-                            const blob = new Blob([generated.content], { type: "text/plain" });
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement("a");
-                            a.href = url;
-                            a.download = `output.${ext}`;
-                            a.click();
-                            URL.revokeObjectURL(url);
-                          }}
-                        >
-                          Download
-                        </button>
-                      </div>
-                      <div className="p-10 max-h-200 overflow-auto">
-                        <pre className="text-mono-x-small text-accent-black whitespace-pre-wrap leading-relaxed">{generated.content.slice(0, 500)}{generated.content.length > 500 ? "..." : ""}</pre>
-                      </div>
-                    </div>
-                  )}
+
                 </div>
               );
             })}
