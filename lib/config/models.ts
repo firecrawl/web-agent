@@ -7,6 +7,7 @@ export async function resolveModel(config: ModelConfig) {
       return createOpenAI({
         apiKey: config.apiKey || process.env.AI_GATEWAY_API_KEY,
         baseURL: "https://ai-gateway.vercel.sh/v1",
+        compatibility: "compatible",
       })(config.model);
     }
     case "anthropic": {
