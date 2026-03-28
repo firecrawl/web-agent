@@ -4,11 +4,11 @@ export async function resolveModel(config: ModelConfig) {
   switch (config.provider) {
     case "gateway": {
       const { createOpenAI } = await import("@ai-sdk/openai");
-      return createOpenAI({
+      const provider = createOpenAI({
         apiKey: config.apiKey || process.env.AI_GATEWAY_API_KEY,
         baseURL: "https://ai-gateway.vercel.sh/v1",
-        compatibility: "compatible",
-      })(config.model);
+      });
+      return provider.chat(config.model);
     }
     case "anthropic": {
       const { createAnthropic } = await import("@ai-sdk/anthropic");
