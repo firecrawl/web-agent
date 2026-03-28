@@ -28,6 +28,11 @@
     --input: 240 5.9% 90%;
     --ring: 240 10% 3.9%;
     --radius: 0.5rem;
+    --sidebar: 0 0% 98%;
+    --sidebar-foreground: 240 5.9% 10%;
+    --sidebar-border: 240 5.9% 90%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
   }
 }
 
@@ -44,9 +49,10 @@
 /* Force light theme on all Streamdown code blocks */
 [data-streamdown="code-block"],
 [data-streamdown="code-block"] pre {
-  --sdm-bg: #fafafa !important;
-  background: #fafafa !important;
-  color: #24292e !important;
+  --sdm-bg: hsl(var(--muted)) !important;
+  background: hsl(var(--muted)) !important;
+  color: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--border)) !important;
 }
 
 [data-streamdown="code-block"] pre code span {
@@ -54,6 +60,15 @@
 }
 
 [data-streamdown="code-block-header"] {
-  background: #f0f0f0 !important;
-  color: #6b7280 !important;
+  background: hsl(var(--muted)) !important;
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+/* Streamdown container styles */
+[data-streamdown] {
+  --sd-bg: hsl(var(--background));
+  --sd-fg: hsl(var(--foreground));
+  --sd-border: hsl(var(--border));
+  --sd-muted: hsl(var(--muted));
+  --sd-muted-fg: hsl(var(--muted-foreground));
 }
