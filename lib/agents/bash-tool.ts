@@ -20,7 +20,7 @@ export async function initBashWithFiles(
 
 export const bashExec = tool({
   description:
-    "Execute a bash command in a sandboxed environment with a persistent filesystem. Use for data processing: jq, awk, sed, grep, sort, uniq, wc, head, tail, cut, tr, paste. The filesystem persists between calls — write files in one call, read them in the next. If a CSV was uploaded, it's at /data/input.csv. Great for transforming scraped data, building output files incrementally, or running quick calculations.",
+    "Execute a bash command in a sandboxed environment with a persistent filesystem. Available tools: jq, awk, sed, grep, sort, uniq, wc, head, tail, cut, tr, paste, cat, echo, printf, bc. NOT available: node, python, curl, wget, npm, pip. The filesystem persists between calls — write files in one call, read them in the next. Use jq for JSON processing, awk for CSV/text processing. If a CSV was uploaded, it's at /data/input.csv.",
   inputSchema: z.object({
     command: z
       .string()

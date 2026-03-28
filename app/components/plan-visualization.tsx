@@ -597,21 +597,39 @@ function extractTimeline(messages: UIMessage[]): TimelineItem[] {
 
         if (toolName === "search") {
           // Parse search results from output
+          // Firecrawl returns { success, data: [...] } but the AI SDK may wrap it
           const results: SearchResult[] = [];
           if (output && typeof output === "object") {
-            const data = (output as { data?: SearchResult[] }).data;
+            // Try output.data (standard Firecrawl response)
+            let data = (output as Record<string, unknown>).data;
+            // Try output.results
+            if (!Array.isArray(data)) data = (output as Record<string, unknown>).results;
+            // Try output itself if it's an array
+            if (!Array.isArray(data) && Array.isArray(output)) data = output;
+            // Try output[0].data if wrapped in array
+            if (!Array.isArray(data) && Array.isArray((output as Record<string, unknown>)[0])) {
+              data = (output as Record<string, unknown>)[0];
+            }
             if (Array.isArray(data)) {
-              results.push(...data.map((r: SearchResult) => ({
-                title: r.title,
-                url: r.url,
-                description: r.description,
-                markdown: r.markdown,
-              })));
+              for (const r of data as Record<string, unknown>[]) {
+                if (r && typeof r === "object" && (r.url || r.title)) {
+                  results.push({
+                    title: String(r.title ?? ""),
+                    url: String(r.url ?? ""),
+                    description: String(r.description ?? r.snippet ?? ""),
+                    markdown: typeof r.markdown === "string" ? r.markdown : undefined,
+                  });
+                }
+              }
             }
           }
           const searchCredits = typeof (output as { creditsUsed?: number }).creditsUsed === "number"
             ? (output as { creditsUsed?: number }).creditsUsed
             : undefined;
+          // Debug: log when we have output but no results parsed
+          if (status === "complete" && results.length === 0 && output && Object.keys(output).length > 0) {
+            console.log("[search debug] output keys:", Object.keys(output), "output sample:", JSON.stringify(output).slice(0, 300));
+          }
           items.push({
             type: "search",
             query: String(input.query ?? ""),
