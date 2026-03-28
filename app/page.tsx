@@ -16,8 +16,8 @@ import SymbolColored from "@/components/shared/icons/symbol-colored";
 import { cn } from "@/utils/cn";
 
 const defaultModel: ModelConfig = {
-  provider: "gateway",
-  model: "openai/gpt-5.4",
+  provider: "anthropic",
+  model: "claude-sonnet-4-20250514",
 };
 
 const defaultConfig: AgentConfig = {
