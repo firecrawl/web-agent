@@ -1,8 +1,15 @@
+export interface UploadedFile {
+  name: string;
+  type: string;
+  content: string;
+}
+
 export interface AgentConfig {
   prompt: string;
   urls?: string[];
   schema?: Record<string, unknown>;
   csvContext?: string;
+  uploads?: UploadedFile[];
   model: ModelConfig;
   skills: string[];
   subAgents: SubAgentConfig[];

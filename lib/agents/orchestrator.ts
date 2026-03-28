@@ -42,13 +42,36 @@ export async function createOrchestrator(
       ? `\n\nStart with these URLs: ${config.urls.join(", ")}`
       : "";
 
-  // Pre-seed bash filesystem with uploaded CSV
+  // Pre-seed bash filesystem with uploaded files
+  const uploadedFiles: Record<string, string> = {};
+  const uploadDescriptions: string[] = [];
+
   if (config.csvContext) {
-    await initBashWithFiles({ "/data/input.csv": config.csvContext });
+    uploadedFiles["/data/input.csv"] = config.csvContext;
+    uploadDescriptions.push("/data/input.csv (CSV)");
   }
 
-  const csvHint = config.csvContext
-    ? `\n\nThe user uploaded a CSV file. It's available at /data/input.csv in the bash filesystem. Use bashExec to explore it: 'head -5 /data/input.csv', 'wc -l /data/input.csv', 'awk -F, ...' etc.`
+  if (config.uploads?.length) {
+    for (const upload of config.uploads) {
+      const isText = upload.type.startsWith("text/") || /\.(csv|tsv|json|md|txt|xml|yaml|yml|toml|ini|log|sql|html|css|js|ts|py|rb|sh)$/i.test(upload.name);
+      const safeName = upload.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `/data/${safeName}`;
+      if (isText) {
+        uploadedFiles[path] = upload.content;
+      } else {
+        // Binary files: store base64 content
+        uploadedFiles[path + ".b64"] = upload.content;
+      }
+      uploadDescriptions.push(`${path} (${upload.type || upload.name.split(".").pop()})`);
+    }
+  }
+
+  if (Object.keys(uploadedFiles).length > 0) {
+    await initBashWithFiles(uploadedFiles);
+  }
+
+  const uploadHint = uploadDescriptions.length > 0
+    ? `\n\nThe user uploaded files to the bash filesystem:\n${uploadDescriptions.map((d) => `- ${d}`).join("\n")}\nUse bashExec to explore them: 'head -5 /data/file.csv', 'cat /data/file.json | jq .', 'wc -l /data/file.txt', etc.`
     : "";
 
   const instructions = `You are a web research agent powered by Firecrawl. You help users scrape, search, and extract structured data from the web.
@@ -82,7 +105,7 @@ You gather context iteratively through conversation. The user will tell you what
 ## Sub-agents and export
 - You have export sub-agents available (subagent_export_*). Each is a mini version of you with the full toolkit.
 - When the user asks for a specific format (JSON, CSV, report, slides, etc.), delegate to the matching export sub-agent and pass ALL collected data as the task.
-- If you have no matching sub-agent tool, call formatOutput directly.${schemaHint}${urlHint}${csvHint}`;
+- If you have no matching sub-agent tool, call formatOutput directly.${schemaHint}${urlHint}${uploadHint}`;
 
   return new ToolLoopAgent({
     model,

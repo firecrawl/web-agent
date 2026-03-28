@@ -11,7 +11,7 @@ import AgentInput from "./components/agent-input";
 import PlanVisualization from "./components/plan-visualization";
 import OutputPanel from "./components/output-panel";
 import SettingsPanel from "./components/settings-panel";
-import CsvUpload from "./components/csv-upload";
+import FileUpload from "./components/file-upload";
 import HistoryPanel from "./components/history-panel";
 import { Streamdown } from "streamdown";
 import Sidebar from "./components/sidebar";
@@ -601,7 +601,7 @@ export default function AgentPage() {
           <div className="px-20 pt-16 pb-8">
             <textarea
               className="w-full bg-transparent text-body-large text-accent-black placeholder:text-black-alpha-32 focus:outline-none resize-none"
-              placeholder="Find pricing for the top 5 cloud hosting providers..."
+              placeholder="Describe your idea..."
               rows={2}
               autoFocus
               value={config.prompt}
@@ -620,10 +620,14 @@ export default function AgentPage() {
           {/* Bottom toolbar */}
           <div className="flex items-center justify-between px-12 pb-10 pt-4">
             <div className="flex items-center gap-4 relative">
-              {/* CSV upload */}
-              <CsvUpload
-                onUpload={(filename, content) =>
-                  setConfig({ ...config, csvContext: content })
+              {/* File upload */}
+              <FileUpload
+                uploads={config.uploads ?? []}
+                onUpload={(file) =>
+                  setConfig({ ...config, uploads: [...(config.uploads ?? []), file] })
+                }
+                onRemove={(i) =>
+                  setConfig({ ...config, uploads: (config.uploads ?? []).filter((_, idx) => idx !== i) })
                 }
               />
 
