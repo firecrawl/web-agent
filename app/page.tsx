@@ -353,6 +353,39 @@ export default function AgentPage() {
   }, [isACP, config.model, acpChat, sdkChat]);
 
   const isRunning = status === "streaming" || status === "submitted";
+  // Compute session stats from messages
+  const sessionStats = useMemo(() => {
+    let firecrawlCredits = 0;
+    let toolCalls = 0;
+    let agentTurns = 0;
+    let inputChars = 0;
+    let outputChars = 0;
+
+    for (const msg of messages) {
+      if (msg.role === "assistant") agentTurns++;
+      for (const part of msg.parts) {
+        if (part.type === "text") {
+          if (msg.role === "user") inputChars += part.text.length;
+          else outputChars += part.text.length;
+        }
+        const p = part as Record<string, unknown>;
+        if (part.type.startsWith("tool-") || part.type === "dynamic-tool") {
+          toolCalls++;
+          const output = (p.output ?? p.result) as Record<string, unknown> | undefined;
+          if (output && typeof output === "object") {
+            const credits = typeof output.creditsUsed === "number" ? output.creditsUsed : 0;
+            firecrawlCredits += credits;
+          }
+        }
+      }
+    }
+
+    // Rough token estimate: ~4 chars per token
+    const estimatedTokens = Math.round((inputChars + outputChars) / 4);
+
+    return { firecrawlCredits, toolCalls, agentTurns, estimatedTokens };
+  }, [messages]);
+
   const prevIsRunning = useRef(false);
 
   useEffect(() => {
@@ -777,6 +810,30 @@ export default function AgentPage() {
             </div>
 
 
+          </div>
+        )}
+
+        {/* Session stats scoreboard */}
+        {messages.length > 0 && (
+          <div className="mt-16 mb-8 flex items-center justify-end gap-12">
+            {sessionStats.firecrawlCredits > 0 && (
+              <div className="flex items-center gap-4 text-mono-x-small text-black-alpha-32">
+                <svg fill="none" height="12" viewBox="0 0 24 24" width="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
+                {sessionStats.firecrawlCredits} credit{sessionStats.firecrawlCredits !== 1 ? "s" : ""}
+              </div>
+            )}
+            <div className="flex items-center gap-4 text-mono-x-small text-black-alpha-32">
+              <svg fill="none" height="12" viewBox="0 0 24 24" width="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>
+              {sessionStats.agentTurns} turn{sessionStats.agentTurns !== 1 ? "s" : ""}
+            </div>
+            <div className="flex items-center gap-4 text-mono-x-small text-black-alpha-32">
+              <svg fill="none" height="12" viewBox="0 0 24 24" width="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" /></svg>
+              {sessionStats.toolCalls} tool call{sessionStats.toolCalls !== 1 ? "s" : ""}
+            </div>
+            <div className="flex items-center gap-4 text-mono-x-small text-black-alpha-32">
+              <svg fill="none" height="12" viewBox="0 0 24 24" width="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7V4h16v3M9 20h6M12 4v16" /></svg>
+              ~{sessionStats.estimatedTokens > 1000 ? `${(sessionStats.estimatedTokens / 1000).toFixed(1)}k` : sessionStats.estimatedTokens} tokens
+            </div>
           </div>
         )}
       </div>
