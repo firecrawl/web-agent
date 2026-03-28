@@ -18,47 +18,49 @@ function fileExt(formatId: string) {
   return "md";
 }
 
+const EXPORT_PREAMBLE = "IMPORTANT: Do NOT search, scrape, or use any web tools. Do NOT do any research. ONLY format the data already provided below. Respond with ONLY the formatted output, no narration or explanation.\n\n";
+
 const FORMATS = [
   {
     id: "json",
     label: "JSON",
-    prompt: (path: string) => `Format ALL the collected data from this conversation as clean, structured JSON. Use camelCase keys, keep it flat where practical, include every data point. Write the result to ${path} using bashExec. Return ONLY the JSON, no explanation.`,
+    prompt: () => `${EXPORT_PREAMBLE}Format the data below as clean, structured JSON. Use camelCase keys, keep it flat where practical, include every data point. Return ONLY valid JSON.`,
     icon: <svg fill="none" height="14" viewBox="0 0 24 24" width="14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H7a2 2 0 00-2 2v5a2 2 0 01-2 2 2 2 0 012 2v5a2 2 0 002 2h1M16 3h1a2 2 0 012 2v5a2 2 0 002 2 2 2 0 00-2 2v5a2 2 0 01-2 2h-1" /></svg>,
   },
   {
     id: "csv",
     label: "CSV",
-    prompt: (path: string) => `Format ALL the collected data from this conversation as a CSV table. One row per entity, consistent columns, human-readable headers. Write the result to ${path} using bashExec. Return ONLY the CSV, no explanation.`,
+    prompt: () => `${EXPORT_PREAMBLE}Format the data below as a CSV table. One row per entity, consistent columns, human-readable headers. Return ONLY the CSV.`,
     icon: <svg fill="none" height="14" viewBox="0 0 24 24" width="14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M3 12h18M3 18h18M9 6v12M15 6v12" /></svg>,
   },
   {
     id: "markdown",
     label: "Report",
-    prompt: (path: string) => `Format ALL the collected data from this conversation as a structured markdown report with executive summary, findings organized by topic, tables for comparisons, key takeaways, and sources. Write the result to ${path} using bashExec. Return ONLY the markdown.`,
+    prompt: () => `${EXPORT_PREAMBLE}Format the data below as a structured markdown report with executive summary, findings organized by topic, tables for comparisons, key takeaways, and sources.`,
     icon: <svg fill="none" height="14" viewBox="0 0 24 24" width="14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" /><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" /></svg>,
   },
   {
     id: "html",
     label: "HTML",
-    prompt: (path: string) => `Format ALL the collected data from this conversation as a complete, styled HTML document with inline CSS, clean tables, sans-serif font, responsive layout. Write the result to ${path} using bashExec. Return ONLY the HTML starting with <!DOCTYPE html>.`,
+    prompt: () => `${EXPORT_PREAMBLE}Format the data below as a complete, styled HTML document with inline CSS, clean tables, sans-serif font, responsive layout. Start with <!DOCTYPE html>.`,
     icon: <svg fill="none" height="14" viewBox="0 0 24 24" width="14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg>,
   },
   {
     id: "spreadsheet",
     label: "Spreadsheet",
-    prompt: (path: string) => `Structure ALL the collected data from this conversation as CSV spreadsheet tables with typed columns, summary rows if applicable. Write the result to ${path} using bashExec. Return ONLY the CSV.`,
+    prompt: () => `${EXPORT_PREAMBLE}Format the data below as CSV spreadsheet tables with typed columns, summary rows if applicable. Return ONLY the CSV.`,
     icon: <svg fill="none" height="14" viewBox="0 0 24 24" width="14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M3 15h18M9 3v18" /></svg>,
   },
   {
     id: "document",
     label: "Document",
-    prompt: (path: string) => `Structure ALL the collected data from this conversation as a formal document with title, executive summary, sections, analysis, and sources. Write the result to ${path} using bashExec. Return ONLY the markdown.`,
+    prompt: () => `${EXPORT_PREAMBLE}Format the data below as a formal document with title, executive summary, sections, analysis, and sources.`,
     icon: <svg fill="none" height="14" viewBox="0 0 24 24" width="14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16v16H4zM8 8h8M8 12h8M8 16h5" /></svg>,
   },
   {
     id: "slides",
     label: "Slides",
-    prompt: (path: string) => `Structure ALL the collected data from this conversation as a slide deck outline with 5-12 slides. Each slide: title, 3-5 bullet points, speaker notes. Write the result to ${path} using bashExec. Return ONLY the markdown.`,
+    prompt: () => `${EXPORT_PREAMBLE}Format the data below as a slide deck outline with 5-12 slides. Each slide: title, 3-5 bullet points, speaker notes.`,
     icon: <svg fill="none" height="14" viewBox="0 0 24 24" width="14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" /></svg>,
   },
 ];
@@ -110,20 +112,34 @@ function extractConversationContext(messages: UIMessage[]): string {
   return parts.join("\n\n").slice(0, 30000);
 }
 
+function stripCodeFences(content: string): string {
+  const trimmed = content.trim();
+  const match = trimmed.match(/^```(?:\w+)?\n([\s\S]*?)\n```$/);
+  if (match) return match[1];
+  if (trimmed.startsWith("```")) {
+    const firstNewline = trimmed.indexOf("\n");
+    const lastFence = trimmed.lastIndexOf("```");
+    if (firstNewline > 0 && lastFence > firstNewline) {
+      return trimmed.slice(firstNewline + 1, lastFence).trim();
+    }
+  }
+  return content;
+}
+
 // --- Viewers ---
 
 const jsonStyle: typeof defaultStyles = {
   ...defaultStyles,
   container: "json-view-lite font-mono text-[13px] leading-relaxed",
   basicChildStyle: "pl-16",
-  label: "text-heat-100 font-medium",
-  nullValue: "text-black-alpha-32 italic",
-  undefinedValue: "text-black-alpha-32 italic",
-  stringValue: "text-accent-forest",
-  booleanValue: "text-accent-bluetron font-medium",
-  numberValue: "text-accent-amethyst",
+  label: "text-black-alpha-56 font-medium",
+  nullValue: "text-black-alpha-24 italic",
+  undefinedValue: "text-black-alpha-24 italic",
+  stringValue: "text-accent-black",
+  booleanValue: "text-black-alpha-48 font-medium",
+  numberValue: "text-black-alpha-48",
   otherValue: "text-accent-black",
-  punctuation: "text-black-alpha-32",
+  punctuation: "text-black-alpha-16",
   collapseIcon: "text-black-alpha-24 cursor-pointer select-none hover:text-accent-black",
   expandIcon: "text-black-alpha-24 cursor-pointer select-none hover:text-accent-black",
   collapsedContent: "text-black-alpha-24 cursor-pointer hover:text-accent-black",
@@ -255,11 +271,12 @@ function HtmlViewer({ html, fullHeight }: { html: string; fullHeight?: boolean }
 
 function OutputContent({ content, formatId, maxH }: { content: string; formatId: string; maxH?: string }) {
   const { isHtml, isCsv, isJson } = getOutputMeta(content, formatId);
+  const cleaned = useMemo(() => (isJson || isCsv || isHtml) ? stripCodeFences(content) : content, [content, isJson, isCsv, isHtml]);
   return (
     <div className={cn("overflow-auto", maxH)}>
-      {isJson && <JsonViewer data={content} />}
-      {isCsv && <CsvTable data={content} />}
-      {isHtml && <HtmlViewer html={content} />}
+      {isJson && <JsonViewer data={cleaned} />}
+      {isCsv && <CsvTable data={cleaned} />}
+      {isHtml && <HtmlViewer html={cleaned} />}
       {!isJson && !isCsv && !isHtml && (
         <div className="p-14 text-body-medium text-accent-black leading-relaxed prose prose-base max-w-none prose-headings:text-accent-black prose-a:text-heat-100 prose-strong:text-accent-black prose-code:text-heat-100 prose-code:bg-heat-4 prose-code:px-4 prose-code:py-1 prose-code:rounded-4">
           <Streamdown plugins={{ code }}>{content}</Streamdown>
@@ -288,7 +305,7 @@ function FullscreenViewer({ content, formatId, onClose }: { content: string; for
           <span className="text-body-small text-black-alpha-32">{(content.length / 1000).toFixed(1)}k chars</span>
         </div>
         <div className="flex items-center gap-8">
-          <button type="button" className="flex items-center gap-6 px-12 py-6 rounded-8 text-label-small text-black-alpha-48 hover:bg-black-alpha-4 transition-all" onClick={() => download(content, `export.${ext}`)}>
+          <button type="button" className="flex items-center gap-6 px-12 py-6 rounded-8 text-label-small text-black-alpha-48 hover:bg-black-alpha-4 transition-all" onClick={() => download(stripCodeFences(content), `export.${ext}`)}>
             <svg fill="none" height="14" viewBox="0 0 24 24" width="14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>
             Download .{ext}
           </button>
@@ -322,7 +339,6 @@ interface ExportJob {
   content?: string;
   error?: string;
   steps: AgentStep[];
-  filePath?: string;
 }
 
 function describeToolName(name: string): string {
@@ -333,10 +349,9 @@ function describeToolName(name: string): string {
   return name;
 }
 
-function JobCard({ job, onFullscreen, onRemove }: { job: ExportJob; onFullscreen: () => void; onRemove: () => void }) {
+function JobCard({ job, onView, onRemove }: { job: ExportJob; onView: () => void; onRemove: () => void }) {
   const [mounted, setMounted] = useState(false);
   const [removing, setRemoving] = useState(false);
-  const [expanded, setExpanded] = useState(false);
   const formatDef = FORMATS.find((f) => f.id === job.formatId);
 
   useEffect(() => { requestAnimationFrame(() => setMounted(true)); }, []);
@@ -365,7 +380,7 @@ function JobCard({ job, onFullscreen, onRemove }: { job: ExportJob; onFullscreen
           "w-full flex items-center gap-8 px-10 py-8 text-left transition-colors",
           isDone && "cursor-pointer hover:bg-black-alpha-2",
         )}
-        onClick={() => { if (isDone) setExpanded(!expanded); }}
+        onClick={() => { if (isDone) onView(); }}
         disabled={!isDone}
       >
         {formatDef && <span className="flex-shrink-0 text-black-alpha-40">{formatDef.icon}</span>}
@@ -397,29 +412,16 @@ function JobCard({ job, onFullscreen, onRemove }: { job: ExportJob; onFullscreen
           </>
         )}
         {isDone && (
-          <>
-            <span
-              role="button"
-              tabIndex={0}
-              className="p-4 rounded-4 text-black-alpha-24 hover:text-accent-black hover:bg-black-alpha-4 transition-all"
-              onClick={(e) => { e.stopPropagation(); download(job.content!, `export.${ext}`); }}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); download(job.content!, `export.${ext}`); } }}
-              title="Download"
-            >
-              <svg fill="none" height="12" viewBox="0 0 24 24" width="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>
-            </span>
-            <span
-              role="button"
-              tabIndex={0}
-              className="p-4 rounded-4 text-black-alpha-24 hover:text-accent-black hover:bg-black-alpha-4 transition-all"
-              onClick={(e) => { e.stopPropagation(); onFullscreen(); }}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); onFullscreen(); } }}
-              title="Fullscreen"
-            >
-              <svg fill="none" height="12" viewBox="0 0 24 24" width="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" /></svg>
-            </span>
-            <svg fill="none" height="12" viewBox="0 0 24 24" width="12" className={cn("transition-transform text-black-alpha-24 flex-shrink-0", expanded && "rotate-180")} stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 9l6 6 6-6" /></svg>
-          </>
+          <span
+            role="button"
+            tabIndex={0}
+            className="p-4 rounded-4 text-black-alpha-24 hover:text-accent-black hover:bg-black-alpha-4 transition-all"
+            onClick={(e) => { e.stopPropagation(); download(stripCodeFences(job.content!), `export.${ext}`); }}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); download(stripCodeFences(job.content!), `export.${ext}`); } }}
+            title="Download"
+          >
+            <svg fill="none" height="12" viewBox="0 0 24 24" width="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>
+          </span>
         )}
       </button>
 
@@ -429,26 +431,13 @@ function JobCard({ job, onFullscreen, onRemove }: { job: ExportJob; onFullscreen
           <div className="flex flex-col gap-2">
             {job.steps.filter((s) => s.type === "tool-call").slice(-3).map((s, i) => (
               <div key={i} className="flex items-center gap-6">
-                <div className="w-4 h-4 rounded-full bg-accent-forest animate-pulse flex-shrink-0" />
+                <div className="w-4 h-4 rounded-full bg-black-alpha-24 animate-pulse flex-shrink-0" />
                 <span className="text-mono-x-small text-black-alpha-32 truncate">{describeToolName(s.name ?? "")}</span>
               </div>
             ))}
           </div>
         </div>
       )}
-
-      <div
-        className={cn(
-          "transition-all duration-200 overflow-hidden",
-          expanded ? "max-h-[400px] opacity-100" : "max-h-0 opacity-0",
-        )}
-      >
-        {job.content && (
-          <div className="border-t border-border-faint">
-            <OutputContent content={job.content} formatId={job.formatId} maxH="max-h-[350px]" />
-          </div>
-        )}
-      </div>
     </div>
   );
 }
@@ -465,6 +454,7 @@ async function readSSEStream(
   if (!reader) { onError("No response body"); return; }
   const decoder = new TextDecoder();
   let buffer = "";
+  let formatOutputContent = "";
 
   while (true) {
     const { done, value } = await reader.read();
@@ -482,10 +472,17 @@ async function readSSEStream(
           onStep({ type: "tool-call", name: data.name });
         } else if (data.type === "tool-result") {
           onStep({ type: "tool-result", name: data.name, content: typeof data.output === "string" ? data.output : JSON.stringify(data.output) });
+          if (data.name === "formatOutput" && data.output?.content) {
+            formatOutputContent = data.output.content;
+          }
+          if (data.name === "bashExec" && data.output?.stdout) {
+            formatOutputContent = formatOutputContent || data.output.stdout;
+          }
         } else if (data.type === "text") {
           onStep({ type: "text", content: data.content });
         } else if (data.type === "done") {
-          onDone(data.text ?? "");
+          const text = data.text || formatOutputContent || "";
+          onDone(text);
           return;
         } else if (data.type === "error") {
           onError(data.error ?? "Unknown error");
@@ -516,18 +513,16 @@ export default function ExportSidebar({ collapsed, onToggleCollapse, messages }:
 
     const num = ++jobCounter;
     const jobId = `${formatId}-${num}`;
-    const ext = fileExt(formatId);
-    const filePath = `/data/exports/export_${num}.${ext}`;
-    const newJob: ExportJob = { id: jobId, formatId, label: format.label, status: "running", steps: [], filePath };
+    const newJob: ExportJob = { id: jobId, formatId, label: format.label, status: "running", steps: [] };
     setJobs((prev) => [newJob, ...prev]);
 
     const context = extractConversationContext(messagesRef.current);
-    const fullPrompt = `${format.prompt(filePath)}\n\nAlso return the formatted content as your final text response.\n\nHere is the conversation data to format:\n\n${context}`;
+    const fullPrompt = `${format.prompt()}\n\n---\nDATA:\n${context}`;
 
     fetch("/api/query", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: fullPrompt, maxSteps: 5, stream: true }),
+      body: JSON.stringify({ prompt: fullPrompt, maxSteps: 1, stream: true }),
     })
       .then(async (r) => {
         if (!r.ok) {
@@ -629,7 +624,7 @@ export default function ExportSidebar({ collapsed, onToggleCollapse, messages }:
                   <JobCard
                     key={job.id}
                     job={job}
-                    onFullscreen={() => setFullscreenJob(job)}
+                    onView={() => setFullscreenJob(job)}
                     onRemove={() => removeJob(job.id)}
                   />
                 ))}
