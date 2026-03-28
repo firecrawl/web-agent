@@ -1,6 +1,7 @@
 ---
 name: export-spreadsheet
 description: Structure collected data as a multi-sheet spreadsheet with headers, data types, and formulas.
+category: Export
 ---
 
 # Spreadsheet Export

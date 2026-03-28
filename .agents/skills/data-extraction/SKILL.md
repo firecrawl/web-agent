@@ -1,6 +1,7 @@
 ---
 name: data-extraction
 description: Extract structured data from websites into clean JSON or CSV. Handles pagination, tables, and repeated elements.
+category: Research
 ---
 
 # Data Extraction

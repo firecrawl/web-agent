@@ -66,6 +66,7 @@ const defaultConfig: AgentConfig = {
 interface SkillInfo {
   name: string;
   description: string;
+  category?: string;
 }
 
 function SkillsIcon() {
@@ -94,6 +95,7 @@ function SkillsDropdown({
   onClose: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -103,15 +105,32 @@ function SkillsDropdown({
     return () => document.removeEventListener("mousedown", handler);
   }, [onClose]);
 
+  // Filter out export skills and apply search
+  const visibleSkills = skills
+    .filter((s) => s.category !== "Export")
+    .filter((s) => {
+      if (!search) return true;
+      const q = search.toLowerCase();
+      return s.name.toLowerCase().includes(q) || s.description.toLowerCase().includes(q) || (s.category ?? "").toLowerCase().includes(q);
+    });
+
+  // Group by category
+  const groups = useMemo(() => {
+    const map = new Map<string, SkillInfo[]>();
+    for (const s of visibleSkills) {
+      const cat = s.category ?? "Other";
+      if (!map.has(cat)) map.set(cat, []);
+      map.get(cat)!.push(s);
+    }
+    return Array.from(map.entries());
+  }, [visibleSkills]);
+
   if (skills.length === 0) {
     return (
       <div
         ref={ref}
         className="absolute bottom-full left-0 mb-6 w-320 bg-accent-white rounded-12 border border-border-muted p-12"
-        style={{
-          boxShadow:
-            "0px 16px 32px -8px rgba(0,0,0,0.08), 0px 4px 12px -2px rgba(0,0,0,0.04)",
-        }}
+        style={{ boxShadow: "0px 16px 32px -8px rgba(0,0,0,0.08), 0px 4px 12px -2px rgba(0,0,0,0.04)" }}
       >
         <div className="text-body-small text-black-alpha-48">
           No skills found. Add SKILL.md files to .agents/skills/
@@ -123,71 +142,73 @@ function SkillsDropdown({
   return (
     <div
       ref={ref}
-      className="absolute bottom-full left-0 mb-6 w-360 bg-accent-white rounded-12 border border-border-muted overflow-hidden"
-      style={{
-        boxShadow:
-          "0px 16px 32px -8px rgba(0,0,0,0.08), 0px 4px 12px -2px rgba(0,0,0,0.04)",
-      }}
+      className="absolute bottom-full left-0 mb-6 w-380 bg-accent-white rounded-12 border border-border-muted overflow-hidden"
+      style={{ boxShadow: "0px 16px 32px -8px rgba(0,0,0,0.08), 0px 4px 12px -2px rgba(0,0,0,0.04)" }}
     >
-      <div className="p-8 border-b border-border-faint">
-        <div className="text-label-small text-black-alpha-48 px-8">
-          Select skills
+      {/* Search */}
+      <div className="px-10 pt-10 pb-6">
+        <div className="flex items-center gap-6 px-10 py-6 rounded-8 bg-black-alpha-4">
+          <svg fill="none" height="14" viewBox="0 0 24 24" width="14" className="text-black-alpha-32 flex-shrink-0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+          </svg>
+          <input
+            className="flex-1 bg-transparent text-body-small text-accent-black placeholder:text-black-alpha-32 focus:outline-none"
+            placeholder="Search skills..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            autoFocus
+          />
+          {search && (
+            <button type="button" className="text-black-alpha-24 hover:text-accent-black" onClick={() => setSearch("")}>
+              <svg fill="none" height="10" viewBox="0 0 24 24" width="10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+            </button>
+          )}
         </div>
       </div>
-      <div className="max-h-280 overflow-y-auto p-4">
-        {skills.map((skill) => {
-          const active = selected.includes(skill.name);
-          return (
-            <button
-              key={skill.name}
-              type="button"
-              className={cn(
-                "w-full text-left px-10 py-8 rounded-8 transition-all",
-                active
-                  ? "bg-heat-8"
-                  : "hover:bg-black-alpha-2",
-              )}
-              onClick={() =>
-                onChange(
-                  active
-                    ? selected.filter((s) => s !== skill.name)
-                    : [...selected, skill.name],
-                )
-              }
-            >
-              <div className="flex items-center gap-8">
-                <div
+
+      {/* Grouped skills */}
+      <div className="max-h-320 overflow-y-auto px-6 pb-6" style={{ scrollbarWidth: "none" }}>
+        {groups.length === 0 && (
+          <div className="px-10 py-12 text-body-small text-black-alpha-32 text-center">No skills match &ldquo;{search}&rdquo;</div>
+        )}
+        {groups.map(([category, categorySkills]) => (
+          <div key={category} className="mb-4">
+            <div className="px-10 py-4 text-mono-x-small text-black-alpha-32 uppercase tracking-wider">{category}</div>
+            {categorySkills.map((skill) => {
+              const active = selected.includes(skill.name);
+              return (
+                <button
+                  key={skill.name}
+                  type="button"
                   className={cn(
-                    "w-14 h-14 rounded-4 border-2 flex-shrink-0 flex items-center justify-center transition-all",
-                    active
-                      ? "bg-heat-100 border-heat-100"
-                      : "border-black-alpha-16",
+                    "w-full text-left px-10 py-6 rounded-8 transition-all",
+                    active ? "bg-heat-8" : "hover:bg-black-alpha-2",
                   )}
+                  onClick={() =>
+                    onChange(active ? selected.filter((s) => s !== skill.name) : [...selected, skill.name])
+                  }
                 >
-                  {active && (
-                    <svg
-                      viewBox="0 0 16 16"
-                      className="text-white w-10 h-10"
-                    >
-                      <path
-                        d="M6.5 11.5L3 8l1-1 2.5 2.5L11 5l1 1-5.5 5.5z"
-                        fill="currentColor"
-                      />
-                    </svg>
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <div className="text-label-small text-accent-black">
-                    {skill.name}
+                  <div className="flex items-center gap-8">
+                    <div className={cn(
+                      "w-14 h-14 rounded-4 border-2 flex-shrink-0 flex items-center justify-center transition-all",
+                      active ? "bg-heat-100 border-heat-100" : "border-black-alpha-16",
+                    )}>
+                      {active && (
+                        <svg viewBox="0 0 16 16" className="text-white w-10 h-10">
+                          <path d="M6.5 11.5L3 8l1-1 2.5 2.5L11 5l1 1-5.5 5.5z" fill="currentColor" />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-label-small text-accent-black">{skill.name}</div>
+                      <div className="text-body-small text-black-alpha-48 truncate">{skill.description}</div>
+                    </div>
                   </div>
-                  <div className="text-body-small text-black-alpha-48 truncate">
-                    {skill.description}
-                  </div>
-                </div>
-              </div>
-            </button>
-          );
-        })}
+                </button>
+              );
+            })}
+          </div>
+        ))}
       </div>
     </div>
   );

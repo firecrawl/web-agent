@@ -1,6 +1,7 @@
 ---
 name: export-csv
 description: Format collected data as a clean CSV spreadsheet table.
+category: Export
 ---
 
 # CSV Export

@@ -27,6 +27,7 @@ export async function discoverSkills(): Promise<SkillMetadata[]> {
         skills.push({
           name: meta.name || entry.name,
           description: meta.description || "",
+          category: meta.category,
           directory: skillDir,
           resources,
         });

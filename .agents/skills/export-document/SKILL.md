@@ -1,6 +1,7 @@
 ---
 name: export-document
 description: Structure collected data as a formal document with title page, sections, and professional formatting.
+category: Export
 ---
 
 # Document Export

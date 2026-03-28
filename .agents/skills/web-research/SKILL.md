@@ -1,6 +1,7 @@
 ---
 name: web-research
 description: Systematic web research methodology with source triangulation, query formulation, and synthesis.
+category: Research
 ---
 
 # Web Research

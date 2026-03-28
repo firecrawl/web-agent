@@ -1,6 +1,7 @@
 ---
 name: news-monitoring
 description: Monitor and summarize recent news, trends, and discussions about a topic, company, or industry from multiple sources.
+category: Research
 ---
 
 # News Monitoring

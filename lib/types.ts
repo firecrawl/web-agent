@@ -35,6 +35,7 @@ export interface SubAgentConfig {
 export interface SkillMetadata {
   name: string;
   description: string;
+  category?: string;
   directory: string;
   resources: string[];
 }

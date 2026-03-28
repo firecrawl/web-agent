@@ -1,6 +1,7 @@
 ---
 name: price-tracker
 description: Extract and compare pricing information from product and SaaS websites, including plan tiers, features per plan, and cost calculations.
+category: Product & E-commerce
 ---
 
 # Price Tracker

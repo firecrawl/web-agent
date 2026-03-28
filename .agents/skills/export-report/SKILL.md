@@ -1,6 +1,7 @@
 ---
 name: export-report
 description: Format collected data as a structured markdown report with sections, tables, and analysis.
+category: Export
 ---
 
 # Report Export

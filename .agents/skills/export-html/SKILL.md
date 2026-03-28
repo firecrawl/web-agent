@@ -1,6 +1,7 @@
 ---
 name: export-html
 description: Format collected data as a styled HTML document with tables, headings, and inline CSS.
+category: Export
 ---
 
 # HTML Export

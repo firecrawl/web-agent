@@ -1,6 +1,7 @@
 ---
 name: export-json
 description: Format collected data as clean, structured JSON output.
+category: Export
 ---
 
 # JSON Export

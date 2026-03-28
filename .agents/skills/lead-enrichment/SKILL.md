@@ -1,6 +1,7 @@
 ---
 name: lead-enrichment
 description: Enrich a list of companies or people by finding their websites, social profiles, descriptions, funding info, and key details from the web.
+category: Lead Enrichment
 ---
 
 # Lead Enrichment

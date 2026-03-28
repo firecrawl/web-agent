@@ -1,6 +1,7 @@
 ---
 name: knowledge-base
 description: Build a local knowledge base by systematically scraping, organizing, and indexing content from documentation sites, wikis, or any collection of web pages.
+category: Research
 ---
 
 # Knowledge Base Builder

@@ -1,6 +1,7 @@
 ---
 name: competitive-analysis
 description: Analyze competitors by extracting pricing, features, and positioning from their websites.
+category: Competitive Intelligence
 ---
 
 # Competitive Analysis

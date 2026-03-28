@@ -6,6 +6,7 @@ export async function GET() {
     skills.map((s) => ({
       name: s.name,
       description: s.description,
+      category: s.category ?? "Other",
       resources: s.resources,
     })),
   );

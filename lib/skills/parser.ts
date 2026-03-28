@@ -3,6 +3,7 @@ import matter from "gray-matter";
 export interface SkillFrontmatter {
   name: string;
   description: string;
+  category?: string;
 }
 
 export function parseSkillFrontmatter(content: string): SkillFrontmatter {
@@ -10,6 +11,7 @@ export function parseSkillFrontmatter(content: string): SkillFrontmatter {
   return {
     name: typeof data.name === "string" ? data.name : "",
     description: typeof data.description === "string" ? data.description : "",
+    category: typeof data.category === "string" ? data.category : undefined,
   };
 }
 

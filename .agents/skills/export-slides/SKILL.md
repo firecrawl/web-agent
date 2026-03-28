@@ -1,6 +1,7 @@
 ---
 name: export-slides
 description: Structure collected data as a slide deck outline with title slides, content slides, and speaker notes.
+category: Export
 ---
 
 # Slide Deck Export

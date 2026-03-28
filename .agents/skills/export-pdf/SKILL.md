@@ -1,6 +1,7 @@
 ---
 name: export-pdf
 description: Structure collected data as a print-ready document with sections, tables, headers, and footers.
+category: Export
 ---
 
 # PDF Document Export
