@@ -37,33 +37,15 @@ const FORMATS = [
   },
   {
     id: "markdown",
-    label: "Report",
-    prompt: () => `${EXPORT_PREAMBLE}Format the data below as a structured markdown report with executive summary, findings organized by topic, tables for comparisons, key takeaways, and sources.`,
+    label: "Markdown",
+    prompt: () => `${EXPORT_PREAMBLE}Format the data below as clean, structured markdown with headings, tables, and bullet points. Include all data points.`,
     icon: <svg fill="none" height="14" viewBox="0 0 24 24" width="14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" /><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" /></svg>,
   },
   {
     id: "html",
-    label: "HTML",
-    prompt: () => `${EXPORT_PREAMBLE}Format the data below as a complete, styled HTML document with inline CSS, clean tables, sans-serif font, responsive layout. Start with <!DOCTYPE html>.`,
+    label: "HTML App",
+    prompt: () => `${EXPORT_PREAMBLE}Build a single-file HTML application that visualizes and presents the data below. Use inline CSS and vanilla JavaScript. Make it interactive — sortable tables, filters, charts where appropriate, responsive layout, modern design with a clean sans-serif font. Start with <!DOCTYPE html>. The entire app must be self-contained in one HTML file with no external dependencies.`,
     icon: <svg fill="none" height="14" viewBox="0 0 24 24" width="14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6" /></svg>,
-  },
-  {
-    id: "spreadsheet",
-    label: "Spreadsheet",
-    prompt: () => `${EXPORT_PREAMBLE}Format the data below as CSV spreadsheet tables with typed columns, summary rows if applicable. Return ONLY the CSV.`,
-    icon: <svg fill="none" height="14" viewBox="0 0 24 24" width="14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18M3 15h18M9 3v18" /></svg>,
-  },
-  {
-    id: "document",
-    label: "Document",
-    prompt: () => `${EXPORT_PREAMBLE}Format the data below as a formal document with title, executive summary, sections, analysis, and sources.`,
-    icon: <svg fill="none" height="14" viewBox="0 0 24 24" width="14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16v16H4zM8 8h8M8 12h8M8 16h5" /></svg>,
-  },
-  {
-    id: "slides",
-    label: "Slides",
-    prompt: () => `${EXPORT_PREAMBLE}Format the data below as a slide deck outline with 5-12 slides. Each slide: title, 3-5 bullet points, speaker notes.`,
-    icon: <svg fill="none" height="14" viewBox="0 0 24 24" width="14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" /></svg>,
   },
 ];
 
@@ -515,7 +497,6 @@ export default function ExportSidebar({ collapsed, onToggleCollapse, messages }:
   const [fullscreenJob, setFullscreenJob] = useState<ExportJob | null>(null);
   const [bashFiles, setBashFiles] = useState<BashFile[]>([]);
   const [viewingFile, setViewingFile] = useState<{ path: string; content: string; formatId: string } | null>(null);
-  const [tab, setTab] = useState<"files" | "export">("files");
   const messagesRef = useRef(messages);
   messagesRef.current = messages;
 
@@ -634,121 +615,87 @@ export default function ExportSidebar({ collapsed, onToggleCollapse, messages }:
         </div>
 
         {!collapsed && (
-          <div className="flex-1 flex flex-col overflow-hidden">
-            {/* Tab switcher */}
-            <div className="flex-shrink-0 px-8 pb-6">
-              <div className="flex gap-2 bg-black-alpha-4 rounded-8 p-2">
-                <button
-                  type="button"
-                  className={cn(
-                    "flex-1 text-label-small py-4 rounded-6 transition-all text-center",
-                    tab === "files" ? "bg-accent-white text-accent-black shadow-sm" : "text-black-alpha-48 hover:text-accent-black",
-                  )}
-                  onClick={() => setTab("files")}
-                >
-                  Files{bashFiles.length > 0 ? ` (${bashFiles.length})` : ""}
-                </button>
-                <button
-                  type="button"
-                  className={cn(
-                    "flex-1 text-label-small py-4 rounded-6 transition-all text-center",
-                    tab === "export" ? "bg-accent-white text-accent-black shadow-sm" : "text-black-alpha-48 hover:text-accent-black",
-                  )}
-                  onClick={() => setTab("export")}
-                >
-                  Generate
-                </button>
+          <div className="flex-1 overflow-y-auto px-8 pb-12">
+            {/* Files from bash scratchpad */}
+            {bashFiles.length > 0 && (
+              <div className="mb-10">
+                <div className="text-mono-x-small text-black-alpha-32 uppercase tracking-wider px-4 pb-6">Files</div>
+                <div className="flex flex-col gap-3">
+                  {bashFiles.map((f) => {
+                    const name = f.path.split("/").pop() ?? f.path;
+                    const ext = name.split(".").pop()?.toLowerCase() ?? "";
+                    const sizeStr = f.size > 1024 ? `${(f.size / 1024).toFixed(1)}KB` : `${f.size}B`;
+                    return (
+                      <div
+                        key={f.path}
+                        className="flex items-center gap-6 px-10 py-8 rounded-8 border border-border-faint bg-accent-white hover:border-heat-40 transition-all group"
+                      >
+                        <span className="text-black-alpha-32 flex-shrink-0 text-mono-x-small">
+                          {ext === "json" ? "{}" : ext === "csv" ? "⊞" : ext === "html" ? "◇" : "◻"}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-label-small text-accent-black truncate">{name}</div>
+                          <div className="text-mono-x-small text-black-alpha-32">{sizeStr}</div>
+                        </div>
+                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            type="button"
+                            className="p-4 rounded-4 text-black-alpha-32 hover:text-accent-black hover:bg-black-alpha-4 transition-all"
+                            onClick={() => viewFile(f.path)}
+                            title="View"
+                          >
+                            <svg fill="none" height="12" viewBox="0 0 24 24" width="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            className="p-4 rounded-4 text-black-alpha-32 hover:text-accent-black hover:bg-black-alpha-4 transition-all"
+                            onClick={() => downloadFile(f.path)}
+                            title="Download"
+                          >
+                            <svg fill="none" height="12" viewBox="0 0 24 24" width="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Generate section */}
+            <div className="mb-10">
+              <div className="text-mono-x-small text-black-alpha-32 uppercase tracking-wider px-4 pb-6">Generate</div>
+              <div className="grid grid-cols-2 gap-4">
+                {FORMATS.map((f) => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    className="flex items-center gap-6 px-10 py-6 rounded-8 text-body-small text-black-alpha-56 bg-black-alpha-2 hover:bg-black-alpha-4 hover:text-accent-black transition-all whitespace-nowrap"
+                    onClick={() => runExport(f.id)}
+                  >
+                    <span className="flex-shrink-0">{f.icon}</span>
+                    {f.label}
+                  </button>
+                ))}
               </div>
             </div>
 
-            {tab === "files" ? (
-              <div className="flex-1 overflow-y-auto px-8 pb-12">
-                {bashFiles.length === 0 ? (
-                  <div className="text-body-small text-black-alpha-24 text-center py-20">
-                    Files will appear here as the agent creates them
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-3">
-                    {bashFiles.map((f) => {
-                      const name = f.path.split("/").pop() ?? f.path;
-                      const ext = name.split(".").pop()?.toLowerCase() ?? "";
-                      const sizeStr = f.size > 1024 ? `${(f.size / 1024).toFixed(1)}KB` : `${f.size}B`;
-                      return (
-                        <div
-                          key={f.path}
-                          className="flex items-center gap-6 px-10 py-8 rounded-8 border border-border-faint bg-accent-white hover:border-heat-40 transition-all group"
-                        >
-                          <span className="text-black-alpha-32 flex-shrink-0">
-                            {ext === "json" ? "{}" : ext === "csv" ? "⊞" : ext === "html" ? "◇" : "◻"}
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <div className="text-label-small text-accent-black truncate">{name}</div>
-                            <div className="text-mono-x-small text-black-alpha-32">{sizeStr}</div>
-                          </div>
-                          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                              type="button"
-                              className="p-4 rounded-4 text-black-alpha-32 hover:text-accent-black hover:bg-black-alpha-4 transition-all"
-                              onClick={() => viewFile(f.path)}
-                              title="View"
-                            >
-                              <svg fill="none" height="12" viewBox="0 0 24 24" width="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
-                              </svg>
-                            </button>
-                            <button
-                              type="button"
-                              className="p-4 rounded-4 text-black-alpha-32 hover:text-accent-black hover:bg-black-alpha-4 transition-all"
-                              onClick={() => downloadFile(f.path)}
-                              title="Download"
-                            >
-                              <svg fill="none" height="12" viewBox="0 0 24 24" width="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Format grid */}
-                <div className="flex-shrink-0 px-0 pb-10">
-                  <div className="grid grid-cols-2 gap-4">
-                    {FORMATS.map((f) => (
-                      <button
-                        key={f.id}
-                        type="button"
-                        className="flex items-center gap-6 px-10 py-6 rounded-8 text-body-small text-black-alpha-56 bg-black-alpha-2 hover:bg-black-alpha-4 hover:text-accent-black transition-all whitespace-nowrap"
-                        onClick={() => runExport(f.id)}
-                      >
-                        <span className="flex-shrink-0">{f.icon}</span>
-                        {f.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Job list */}
-                <div className="flex-1 overflow-y-auto pb-12">
-                  {jobs.length === 0 && (
-                    <div className="text-body-small text-black-alpha-24 text-center py-20">
-                      Choose a format above to generate
-                    </div>
-                  )}
-                  <div className="flex flex-col gap-4">
-                    {jobs.map((job) => (
-                      <JobCard
-                        key={job.id}
-                        job={job}
-                        onView={() => setFullscreenJob(job)}
-                        onRemove={() => removeJob(job.id)}
-                      />
-                    ))}
-                  </div>
+            {/* Job list */}
+            {jobs.length > 0 && (
+              <div>
+                <div className="flex flex-col gap-4">
+                  {jobs.map((job) => (
+                    <JobCard
+                      key={job.id}
+                      job={job}
+                      onView={() => setFullscreenJob(job)}
+                      onRemove={() => removeJob(job.id)}
+                    />
+                  ))}
                 </div>
               </div>
             )}
