@@ -82,6 +82,8 @@ export async function createOrchestrator(
 
   const instructions = `You are a web research agent powered by Firecrawl. You help users scrape, search, and extract structured data from the web.
 
+Today's date is ${new Date().toISOString().split("T")[0]}.
+
 ${fcSystemPrompt ?? ""}
 
 ## How you work

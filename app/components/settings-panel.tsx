@@ -251,11 +251,20 @@ function SkillView({
 function GeneralView({
   config,
   onChange,
+  keyStatuses,
 }: {
   config: AgentConfig;
   onChange: (c: AgentConfig) => void;
+  keyStatuses: Record<string, { configured: boolean }>;
 }) {
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  const availableProviders = (Object.keys(PROVIDER_META).filter(k => k !== "acp") as Provider[]).filter(
+    (p) => {
+      const hasAny = Object.values(keyStatuses).some(s => s.configured);
+      return !hasAny || keyStatuses[p]?.configured;
+    }
+  );
 
   return (
     <div className="flex flex-col gap-28">
@@ -276,7 +285,7 @@ function GeneralView({
               onChange({ ...config, model: { ...config.model, provider, model: models[0]?.id ?? "" } });
             }}
           >
-            {(Object.keys(PROVIDER_META).filter(k => k !== "acp") as Provider[]).map((p) => (
+            {availableProviders.map((p) => (
               <option key={p} value={p}>{PROVIDER_META[p].name}</option>
             ))}
           </select>
@@ -309,7 +318,7 @@ function GeneralView({
             }}
           >
             <option value="">Same as orchestrator</option>
-            {(Object.keys(PROVIDER_META).filter(k => k !== "acp") as Provider[]).map((p) => (
+            {availableProviders.map((p) => (
               <option key={p} value={p}>{PROVIDER_META[p].name}</option>
             ))}
           </select>
@@ -378,7 +387,7 @@ function GeneralView({
                       }}
                     >
                       <option value="">Default</option>
-                      {(Object.keys(PROVIDER_META).filter(k => k !== "acp") as Provider[]).map((p) => (
+                      {availableProviders.map((p) => (
                         <option key={p} value={p}>{PROVIDER_META[p].name}</option>
                       ))}
                     </select>
@@ -579,7 +588,7 @@ export default function SettingsPanel({ config, onChange }: { config: AgentConfi
                   />
                 )}
 
-                {activeSection === "general" && <GeneralView config={config} onChange={onChange} />}
+                {activeSection === "general" && <GeneralView config={config} onChange={onChange} keyStatuses={keyStatuses} />}
               </div>
 
               <div className="px-32 py-14 border-t border-border-faint bg-background-base flex items-center gap-10">

@@ -358,7 +358,7 @@ function FormattedResult({
           <HtmlViewer html={formatted.content} />
         )}
         {formatted.format === "text" && !isHtml && (
-          <div className="p-14 overflow-auto max-h-500 text-body-medium text-accent-black leading-relaxed prose prose-sm max-w-none prose-headings:text-accent-black prose-a:text-heat-100 prose-strong:text-accent-black">
+          <div className="p-14 overflow-auto max-h-500 text-body-medium text-accent-black leading-relaxed prose prose-sm max-w-none prose-headings:text-accent-black prose-a:text-heat-100 prose-strong:text-accent-black prose-code:text-heat-100 prose-code:bg-heat-4 prose-code:px-4 prose-code:py-1 prose-code:rounded-4">
             <Streamdown plugins={{ code }}>{formatted.content}</Streamdown>
           </div>
         )}

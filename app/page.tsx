@@ -10,7 +10,7 @@ import ProviderModelIcon from "./components/provider-icon";
 import AgentInput from "./components/agent-input";
 import PlanVisualization from "./components/plan-visualization";
 import SettingsPanel from "./components/settings-panel";
-import FileUpload from "./components/file-upload";
+import type { UploadedFile } from "@/lib/types";
 import HistoryPanel from "./components/history-panel";
 import { Streamdown } from "streamdown";
 import Sidebar from "./components/sidebar";
@@ -113,57 +113,6 @@ function useTypewriter(phrases: string[], typingSpeed = 50, pauseMs = 2000, dele
   return display;
 }
 
-const EXAMPLES = [
-  "Search for the top 5 open-source LLM frameworks, scrape each repo, and compare stars, language, and license",
-  "Go to Hacker News, interact with the front page, scrape each of the top 5 links, and summarize the trends",
-  "Find the top AI startups that raised funding this year, scrape their homepages, and interact with their pricing pages",
-  "Scrape Vercel and Netlify pricing pages, interact with the feature toggles, and build a side-by-side comparison",
-  "Search for the best headless CMS platforms, scrape their docs and pricing, and extract key differences",
-  "Find recent YC W25 companies, scrape each company page, and extract founder names, descriptions, and URLs",
-  "Search for React vs Vue vs Svelte performance benchmarks, scrape the top 3 articles, and summarize findings",
-  "Scrape the Stripe and Paddle pricing pages, interact with the calculator widgets, and compare costs at 10k transactions",
-];
-
-function ExampleCarousel({ onSelect }: { onSelect: (text: string) => void }) {
-  const [page, setPage] = useState(0);
-  const pageCount = Math.ceil(EXAMPLES.length / 4);
-  const visible = EXAMPLES.slice(page * 4, page * 4 + 4);
-
-  return (
-    <div className="w-full max-w-640 mt-20">
-      <div className="grid grid-cols-2 gap-8 transition-opacity duration-200">
-        {visible.map((text, i) => (
-          <button
-            key={page * 4 + i}
-            type="button"
-            className="text-left px-14 py-10 rounded-10 border border-border-faint bg-accent-white hover:border-heat-40 hover:bg-heat-4 transition-all group"
-            onClick={() => onSelect(text)}
-          >
-            <span className="text-body-medium text-black-alpha-48 group-hover:text-accent-black transition-colors line-clamp-3">
-              {text}
-            </span>
-          </button>
-        ))}
-      </div>
-      {pageCount > 1 && (
-        <div className="flex items-center justify-center gap-6 mt-12">
-          {Array.from({ length: pageCount }).map((_, i) => (
-            <button
-              key={i}
-              type="button"
-              className={cn(
-                "w-6 h-6 rounded-full transition-all",
-                i === page ? "bg-heat-100 scale-125" : "bg-black-alpha-16 hover:bg-black-alpha-32",
-              )}
-              onClick={() => setPage(i)}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 interface SkillInfo {
   name: string;
   description: string;
@@ -184,15 +133,21 @@ function SkillsIcon() {
   );
 }
 
-function SkillsDropdown({
+function PlusMenu({
   skills,
-  selected,
-  onChange,
+  selectedSkills,
+  onSkillsChange,
+  onUploadClick,
+  uploads,
+  onRemoveUpload,
   onClose,
 }: {
   skills: SkillInfo[] | null;
-  selected: string[];
-  onChange: (skills: string[]) => void;
+  selectedSkills: string[];
+  onSkillsChange: (skills: string[]) => void;
+  onUploadClick: () => void;
+  uploads: UploadedFile[];
+  onRemoveUpload: (i: number) => void;
   onClose: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -206,16 +161,14 @@ function SkillsDropdown({
     return () => document.removeEventListener("mousedown", handler);
   }, [onClose]);
 
-  // Filter out export skills and apply search
   const visibleSkills = (skills ?? [])
     .filter((s) => s.category !== "Export")
     .filter((s) => {
       if (!search) return true;
       const q = search.toLowerCase();
-      return s.name.toLowerCase().includes(q) || s.description.toLowerCase().includes(q) || (s.category ?? "").toLowerCase().includes(q);
+      return s.name.toLowerCase().includes(q) || s.description.toLowerCase().includes(q);
     });
 
-  // Group by category
   const groups = useMemo(() => {
     const map = new Map<string, SkillInfo[]>();
     for (const s of visibleSkills) {
@@ -226,90 +179,108 @@ function SkillsDropdown({
     return Array.from(map.entries());
   }, [visibleSkills]);
 
-  if (!skills || skills.length === 0) {
-    return (
-      <div
-        ref={ref}
-        className="absolute bottom-full left-0 mb-6 w-320 bg-accent-white rounded-12 border border-border-muted p-12"
-        style={{ boxShadow: "0px 16px 32px -8px rgba(0,0,0,0.08), 0px 4px 12px -2px rgba(0,0,0,0.04)" }}
-      >
-        <div className="text-body-small text-black-alpha-48">
-          {skills === null ? "Loading skills..." : "No skills found. Add SKILL.md files to .agents/skills/"}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div
       ref={ref}
-      className="absolute bottom-full left-0 mb-6 w-380 bg-accent-white rounded-12 border border-border-muted overflow-hidden"
-      style={{ boxShadow: "0px 16px 32px -8px rgba(0,0,0,0.08), 0px 4px 12px -2px rgba(0,0,0,0.04)" }}
+      className="absolute bottom-full left-0 mb-6 w-320 bg-accent-white rounded-12 border border-border-muted overflow-hidden flex flex-col"
+      style={{ boxShadow: "0px 16px 32px -8px rgba(0,0,0,0.08), 0px 4px 12px -2px rgba(0,0,0,0.04)", maxHeight: "min(420px, 60vh)" }}
     >
-      {/* Search */}
-      <div className="px-10 pt-10 pb-6">
-        <div className="flex items-center gap-6 px-10 py-6 rounded-8 bg-black-alpha-4">
-          <svg fill="none" height="14" viewBox="0 0 24 24" width="14" className="text-black-alpha-32 flex-shrink-0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
-          </svg>
-          <input
-            className="flex-1 bg-transparent text-body-small text-accent-black placeholder:text-black-alpha-32 focus:outline-none"
-            placeholder="Search skills..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            autoFocus
-          />
-          {search && (
-            <button type="button" className="text-black-alpha-24 hover:text-accent-black" onClick={() => setSearch("")}>
-              <svg fill="none" height="10" viewBox="0 0 24 24" width="10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
-            </button>
+      {/* Skills section (scrollable) */}
+      <div className="flex-1 min-h-0 flex flex-col">
+        <div className="px-10 pt-8 pb-4">
+          <div className="flex items-center gap-6 px-10 py-5 rounded-8 bg-black-alpha-4">
+            <svg fill="none" height="12" viewBox="0 0 24 24" width="12" className="text-black-alpha-32 flex-shrink-0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+            </svg>
+            <input
+              className="flex-1 bg-transparent text-body-small text-accent-black placeholder:text-black-alpha-32 focus:outline-none"
+              placeholder="Search skills..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="max-h-[280px] overflow-y-auto px-6 pb-6" style={{ scrollbarWidth: "thin" }}>
+          {!skills && (
+            <div className="px-10 py-8 text-body-small text-black-alpha-32">Loading skills...</div>
           )}
+          {skills && groups.length === 0 && (
+            <div className="px-10 py-8 text-body-small text-black-alpha-32 text-center">
+              {search ? `No skills match "${search}"` : "No skills found"}
+            </div>
+          )}
+          {groups.map(([category, categorySkills]) => (
+            <div key={category} className="mb-2">
+              <div className="px-10 py-3 text-mono-x-small text-black-alpha-32 uppercase tracking-wider">{category}</div>
+              {categorySkills.map((skill) => {
+                const active = selectedSkills.includes(skill.name);
+                return (
+                  <button
+                    key={skill.name}
+                    type="button"
+                    className={cn(
+                      "w-full text-left px-10 py-5 rounded-8 transition-all",
+                      active ? "bg-heat-8" : "hover:bg-black-alpha-2",
+                    )}
+                    onClick={() =>
+                      onSkillsChange(active ? selectedSkills.filter((s) => s !== skill.name) : [...selectedSkills, skill.name])
+                    }
+                  >
+                    <div className="flex items-center gap-8">
+                      <div className={cn(
+                        "w-14 h-14 rounded-4 border-2 flex-shrink-0 flex items-center justify-center transition-all",
+                        active ? "bg-heat-100 border-heat-100" : "border-black-alpha-16",
+                      )}>
+                        {active && (
+                          <svg viewBox="0 0 16 16" className="text-white w-10 h-10">
+                            <path d="M6.5 11.5L3 8l1-1 2.5 2.5L11 5l1 1-5.5 5.5z" fill="currentColor" />
+                          </svg>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-label-small text-accent-black">{skill.name}</div>
+                        <div className="text-body-small text-black-alpha-48 truncate">{skill.description}</div>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Grouped skills */}
-      <div className="max-h-320 overflow-y-auto px-6 pb-6" style={{ scrollbarWidth: "none" }}>
-        {groups.length === 0 && (
-          <div className="px-10 py-12 text-body-small text-black-alpha-32 text-center">No skills match &ldquo;{search}&rdquo;</div>
-        )}
-        {groups.map(([category, categorySkills]) => (
-          <div key={category} className="mb-4">
-            <div className="px-10 py-4 text-mono-x-small text-black-alpha-32 uppercase tracking-wider">{category}</div>
-            {categorySkills.map((skill) => {
-              const active = selected.includes(skill.name);
-              return (
-                <button
-                  key={skill.name}
-                  type="button"
-                  className={cn(
-                    "w-full text-left px-10 py-6 rounded-8 transition-all",
-                    active ? "bg-heat-8" : "hover:bg-black-alpha-2",
-                  )}
-                  onClick={() =>
-                    onChange(active ? selected.filter((s) => s !== skill.name) : [...selected, skill.name])
-                  }
-                >
-                  <div className="flex items-center gap-8">
-                    <div className={cn(
-                      "w-14 h-14 rounded-4 border-2 flex-shrink-0 flex items-center justify-center transition-all",
-                      active ? "bg-heat-100 border-heat-100" : "border-black-alpha-16",
-                    )}>
-                      {active && (
-                        <svg viewBox="0 0 16 16" className="text-white w-10 h-10">
-                          <path d="M6.5 11.5L3 8l1-1 2.5 2.5L11 5l1 1-5.5 5.5z" fill="currentColor" />
-                        </svg>
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="text-label-small text-accent-black">{skill.name}</div>
-                      <div className="text-body-small text-black-alpha-48 truncate">{skill.description}</div>
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        ))}
+      {/* Upload option (pinned at bottom, closest to + button) */}
+      <div className="border-t border-border-faint flex-shrink-0">
+        <div className="px-6 py-6">
+          <button
+            type="button"
+            className="w-full flex items-center gap-8 px-10 py-8 rounded-8 text-left hover:bg-black-alpha-2 transition-all"
+            onClick={() => { onUploadClick(); onClose(); }}
+          >
+            <svg fill="none" height="16" viewBox="0 0 24 24" width="16" className="text-black-alpha-40 flex-shrink-0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
+            </svg>
+            <span className="text-label-small text-accent-black">Upload file</span>
+          </button>
+          {uploads.length > 0 && (
+            <div className="px-10 pt-2 flex flex-wrap gap-4">
+              {uploads.map((f, i) => (
+                <span key={i} className="flex items-center gap-2 px-6 py-2 rounded-6 bg-black-alpha-4 text-mono-x-small text-black-alpha-48 max-w-[140px]">
+                  <span className="truncate">{f.name}</span>
+                  <button
+                    type="button"
+                    className="flex-shrink-0 text-black-alpha-24 hover:text-accent-crimson transition-colors"
+                    onClick={() => onRemoveUpload(i)}
+                  >
+                    <svg fill="none" height="8" viewBox="0 0 24 24" width="8" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -320,11 +291,13 @@ function ModelDropdown({
   onChange,
   onClose,
   acpAgents,
+  configuredProviders,
 }: {
   value: ModelConfig;
   onChange: (config: ModelConfig) => void;
   onClose: () => void;
   acpAgents?: { name: string; bin: string; displayName: string }[];
+  configuredProviders?: Set<string>;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -336,25 +309,29 @@ function ModelDropdown({
     return () => document.removeEventListener("mousedown", handler);
   }, [onClose]);
 
-  const providerKeys = Object.keys(AVAILABLE_MODELS) as string[];
+  const providerKeys = (Object.keys(AVAILABLE_MODELS) as string[]).filter(
+    (p) => p !== "acp" && (!configuredProviders || configuredProviders.size === 0 || configuredProviders.has(p))
+  );
 
   return (
     <div
       ref={ref}
-      className="absolute bottom-full right-0 mb-6 w-280 bg-accent-white rounded-12 border border-border-muted overflow-hidden"
+      className="absolute bottom-full right-0 mb-6 w-220 bg-accent-white rounded-12 border border-border-muted overflow-hidden"
       style={{
         boxShadow:
           "0px 16px 32px -8px rgba(0,0,0,0.08), 0px 4px 12px -2px rgba(0,0,0,0.04)",
+        maxHeight: "min(360px, 50vh)",
       }}
     >
-      {providerKeys.filter((p) => p !== "acp").map((providerId) => {
+      <div className="overflow-y-auto" style={{ maxHeight: "min(360px, 50vh)", scrollbarWidth: "thin" }}>
+      {providerKeys.map((providerId) => {
         const meta = PROVIDER_META[providerId];
         const models = AVAILABLE_MODELS[providerId];
         if (!models) return null;
         return (
           <div key={providerId}>
-            <div className="flex items-center gap-6 text-label-x-small text-black-alpha-40 px-12 pt-8 pb-2">
-              <ProviderModelIcon icon={meta.icon} size={14} />
+            <div className="flex items-center gap-6 text-label-x-small text-black-alpha-40 px-10 pt-6 pb-1">
+              <ProviderModelIcon icon={meta.icon} size={12} />
               {meta.name}
             </div>
             {models.map((m) => (
@@ -362,7 +339,7 @@ function ModelDropdown({
                 key={m.id}
                 type="button"
                 className={cn(
-                  "w-full text-left px-12 py-6 text-body-medium transition-all flex items-center gap-8",
+                  "w-full text-left px-10 py-4 text-body-small transition-all flex items-center gap-6",
                   value.provider === providerId && value.model === m.id
                     ? "bg-heat-8 text-heat-100"
                     : "hover:bg-black-alpha-2 text-accent-black",
@@ -372,7 +349,7 @@ function ModelDropdown({
                   onClose();
                 }}
               >
-                <ProviderModelIcon icon={m.icon} size={16} />
+                <ProviderModelIcon icon={m.icon} size={14} />
                 {m.name}
               </button>
             ))}
@@ -381,8 +358,8 @@ function ModelDropdown({
       })}
       {acpAgents && acpAgents.length > 0 && (
         <div>
-          <div className="flex items-center gap-6 text-label-x-small text-black-alpha-40 px-12 pt-8 pb-2">
-            <svg fill="none" height="14" viewBox="0 0 24 24" width="14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <div className="flex items-center gap-6 text-label-x-small text-black-alpha-40 px-10 pt-6 pb-1">
+            <svg fill="none" height="12" viewBox="0 0 24 24" width="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M16 18l6-6-6-6M8 6l-6 6 6 6" />
             </svg>
             Local Agent (ACP)
@@ -392,7 +369,7 @@ function ModelDropdown({
               key={a.bin}
               type="button"
               className={cn(
-                "w-full text-left px-12 py-6 text-body-medium transition-all flex items-center gap-8",
+                "w-full text-left px-10 py-4 text-body-small transition-all flex items-center gap-6",
                 value.provider === "acp" && value.model === a.bin
                   ? "bg-heat-8 text-heat-100"
                   : "hover:bg-black-alpha-2 text-accent-black",
@@ -402,7 +379,7 @@ function ModelDropdown({
                 onClose();
               }}
             >
-              <svg fill="none" height="16" viewBox="0 0 24 24" width="16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg fill="none" height="14" viewBox="0 0 24 24" width="14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M16 18l6-6-6-6M8 6l-6 6 6 6" />
               </svg>
               {a.displayName}
@@ -410,6 +387,7 @@ function ModelDropdown({
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }
@@ -420,10 +398,15 @@ export default function AgentPage() {
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [followUp, setFollowUp] = useState("");
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const [showSkills, setShowSkills] = useState(false);
+  const [showPlus, setShowPlus] = useState(false);
   const [showModel, setShowModel] = useState(false);
   const [skills, setSkills] = useState<SkillInfo[] | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [mentionStart, setMentionStart] = useState(0);
 
   const [showSaveSkill, setShowSaveSkill] = useState(false);
   const [skillName, setSkillName] = useState("");
@@ -440,6 +423,7 @@ export default function AgentPage() {
 
 
   const [acpAgents, setAcpAgents] = useState<{ name: string; bin: string; displayName: string; available: boolean }[]>([]);
+  const [configuredProviders, setConfiguredProviders] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetch("/api/skills")
@@ -450,7 +434,34 @@ export default function AgentPage() {
       .then((r) => r.json())
       .then((agents) => setAcpAgents(agents.filter((a: { available: boolean }) => a.available)))
       .catch(() => setAcpAgents([]));
+    fetch("/api/config")
+      .then((r) => r.json())
+      .then((data: { keys: Record<string, { configured: boolean }> }) => {
+        const configured = new Set<string>();
+        for (const [id, status] of Object.entries(data.keys)) {
+          if (status.configured && id !== "firecrawl") configured.add(id);
+        }
+        setConfiguredProviders(configured);
+      })
+      .catch(() => {});
   }, []);
+
+  const handleFileUpload = (file: File) => {
+    const reader = new FileReader();
+    const isText = file.type.startsWith("text/") ||
+      /\.(csv|tsv|json|md|txt|xml|yaml|yml|toml|ini|log|sql|html|css|js|ts|py|rb|sh)$/i.test(file.name);
+    const onLoad = (content: string) => {
+      const uploaded: UploadedFile = { name: file.name, type: file.type || "text/plain", content };
+      setConfig((prev) => ({ ...prev, uploads: [...(prev.uploads ?? []), uploaded] }));
+    };
+    if (isText) {
+      reader.onload = () => onLoad(reader.result as string);
+      reader.readAsText(file);
+    } else {
+      reader.onload = () => onLoad((reader.result as string).split(",")[1]);
+      reader.readAsDataURL(file);
+    }
+  };
 
   const isACP = config.model.provider === "acp";
 
@@ -494,10 +505,16 @@ export default function AgentPage() {
     let interactCount = 0;
     let toolCalls = 0;
     let agentTurns = 0;
+    let llmCalls = 0;
     let totalChars = 0;
 
     for (const msg of messages) {
-      if (msg.role === "assistant") agentTurns++;
+      if (msg.role === "assistant") {
+        agentTurns++;
+        // Each assistant message = one LLM inference. Additional LLM calls happen
+        // after tool results return (counted by tool calls that produce a follow-up).
+        llmCalls++;
+      }
       for (const part of msg.parts) {
         if (part.type === "text") {
           totalChars += part.text.length;
@@ -529,7 +546,10 @@ export default function AgentPage() {
 
     const estimatedTokens = Math.round(totalChars / 4);
 
-    return { firecrawlCredits, searchCredits, scrapeCredits, interactCredits, searchCount, scrapeCount, interactCount, toolCalls, agentTurns, estimatedTokens };
+    // Each tool call triggers an additional LLM call (tool result → model)
+    llmCalls += toolCalls;
+
+    return { firecrawlCredits, searchCredits, scrapeCredits, interactCredits, searchCount, scrapeCount, interactCount, toolCalls, agentTurns, llmCalls, estimatedTokens };
   }, [messages]);
 
   const prevIsRunning = useRef(false);
@@ -652,6 +672,26 @@ export default function AgentPage() {
     sendMessage({ text: promptWithPlan });
   };
 
+  const categories = useMemo(() => {
+    if (!skills) return [];
+    const catMap = new Map<string, SkillInfo[]>();
+    for (const s of skills.filter((s) => s.category !== "Export")) {
+      const cat = s.category ?? "Other";
+      if (!catMap.has(cat)) catMap.set(cat, []);
+      catMap.get(cat)!.push(s);
+    }
+    return Array.from(catMap.entries());
+  }, [skills]);
+
+  const mentionSkills = useMemo(() => {
+    if (mentionQuery === null || !skills) return [];
+    const q = mentionQuery.toLowerCase();
+    return skills
+      .filter((s) => s.category !== "Export")
+      .filter((s) => s.name.toLowerCase().includes(q) || s.description.toLowerCase().includes(q))
+      .slice(0, 6);
+  }, [mentionQuery, skills]);
+
   const currentModel = AVAILABLE_MODELS[config.model.provider]?.find(
     (m) => m.id === config.model.model,
   );
@@ -678,82 +718,162 @@ export default function AgentPage() {
           }}
         >
           {/* Text area */}
-          <div className="px-20 pt-16 pb-8">
+          <div className="px-20 pt-16 pb-8 relative">
             <textarea
+              ref={textareaRef}
               className="w-full bg-transparent text-body-large text-accent-black placeholder:text-black-alpha-32 focus:outline-none resize-none"
               placeholder={typingPlaceholder || "What data do you want to extract?"}
               rows={2}
               autoFocus
               value={config.prompt}
-              onChange={(e) =>
-                setConfig({ ...config, prompt: e.target.value })
-              }
+              onChange={(e) => {
+                const val = e.target.value;
+                setConfig({ ...config, prompt: val });
+                // @ mention detection
+                const pos = e.target.selectionStart ?? val.length;
+                const before = val.slice(0, pos);
+                const atMatch = before.match(/@([\w-]*)$/);
+                if (atMatch) {
+                  setMentionQuery(atMatch[1]);
+                  setMentionStart(pos - atMatch[0].length);
+                } else {
+                  setMentionQuery(null);
+                }
+              }}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey && config.prompt.trim()) {
+                if (mentionQuery !== null && mentionSkills.length > 0) {
+                  if (e.key === "Escape") { e.preventDefault(); setMentionQuery(null); return; }
+                  if (e.key === "Enter" || e.key === "Tab") {
+                    e.preventDefault();
+                    const skill = mentionSkills[0];
+                    const before = config.prompt.slice(0, mentionStart);
+                    const after = config.prompt.slice((textareaRef.current?.selectionStart ?? config.prompt.length));
+                    setConfig({ ...config, prompt: before + after, skills: config.skills.includes(skill.name) ? config.skills : [...config.skills, skill.name] });
+                    setMentionQuery(null);
+                    return;
+                  }
+                }
+                if (e.key === "Enter" && !e.shiftKey && config.prompt.trim() && mentionQuery === null) {
                   e.preventDefault();
                   onRun();
                 }
               }}
             />
+            {/* @ mention dropdown */}
+            {mentionQuery !== null && mentionSkills.length > 0 && (
+              <div
+                className="absolute left-20 right-20 top-full mt-2 bg-accent-white rounded-10 border border-border-muted overflow-hidden z-10"
+                style={{ boxShadow: "0px 8px 24px -4px rgba(0,0,0,0.08), 0px 2px 8px -2px rgba(0,0,0,0.04)" }}
+              >
+                {mentionSkills.map((skill) => (
+                  <button
+                    key={skill.name}
+                    type="button"
+                    className="w-full text-left px-12 py-8 hover:bg-black-alpha-2 transition-all flex items-center gap-8"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      const before = config.prompt.slice(0, mentionStart);
+                      const after = config.prompt.slice((textareaRef.current?.selectionStart ?? config.prompt.length));
+                      setConfig({ ...config, prompt: before + after, skills: config.skills.includes(skill.name) ? config.skills : [...config.skills, skill.name] });
+                      setMentionQuery(null);
+                    }}
+                  >
+                    <SkillsIcon />
+                    <div className="min-w-0">
+                      <div className="text-label-small text-accent-black">{skill.name}</div>
+                      <div className="text-body-small text-black-alpha-40 truncate">{skill.description}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
+
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,.tsv,.txt,.json,.md,.xml,.yaml,.yml,.pdf,.png,.jpg,.jpeg,.xlsx,.xls,.docx,.pptx,.html"
+            className="hidden"
+            multiple
+            onChange={(e) => {
+              const files = e.target.files;
+              if (files) {
+                for (let i = 0; i < files.length; i++) handleFileUpload(files[i]);
+              }
+              e.target.value = "";
+            }}
+          />
 
           {/* Bottom toolbar */}
           <div className="flex items-center justify-between px-12 pb-10 pt-4">
             <div className="flex items-center gap-4 relative">
-              {/* File upload */}
-              <FileUpload
-                uploads={config.uploads ?? []}
-                onUpload={(file) =>
-                  setConfig({ ...config, uploads: [...(config.uploads ?? []), file] })
-                }
-                onRemove={(i) =>
-                  setConfig({ ...config, uploads: (config.uploads ?? []).filter((_, idx) => idx !== i) })
-                }
-              />
-
-              {/* Skills button */}
+              {/* + button */}
               <div className="relative">
                 <button
                   type="button"
                   className={cn(
-                    "flex items-center gap-6 px-10 py-6 rounded-8 text-label-small transition-all",
-                    config.skills.length > 0
-                      ? "bg-heat-8 text-heat-100"
-                      : "text-black-alpha-48 hover:bg-black-alpha-4",
+                    "flex items-center justify-center w-28 h-28 rounded-8 transition-all",
+                    (config.skills.length > 0 || (config.uploads ?? []).length > 0)
+                      ? "text-heat-100 hover:bg-heat-8"
+                      : "text-black-alpha-32 hover:bg-black-alpha-4 hover:text-black-alpha-48",
                   )}
-                  onClick={() => {
-                    setShowSkills(!showSkills);
-                    setShowModel(false);
-                  }}
+                  onClick={() => { setShowPlus(!showPlus); setShowModel(false); }}
                 >
-                  <SkillsIcon />
-                  <span>
-                    {config.skills.length > 0
-                      ? `${config.skills.length} skill${config.skills.length > 1 ? "s" : ""}`
-                      : "Skills"}
-                  </span>
+                  <svg fill="none" height="18" viewBox="0 0 24 24" width="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
                 </button>
-                {showSkills && (
-                  <SkillsDropdown
+                {showPlus && (
+                  <PlusMenu
                     skills={skills}
-                    selected={config.skills}
-                    onChange={(s) => setConfig({ ...config, skills: s })}
-                    onClose={() => setShowSkills(false)}
+                    selectedSkills={config.skills}
+                    onSkillsChange={(s) => setConfig({ ...config, skills: s })}
+                    onUploadClick={() => fileInputRef.current?.click()}
+                    uploads={config.uploads ?? []}
+                    onRemoveUpload={(i) =>
+                      setConfig({ ...config, uploads: (config.uploads ?? []).filter((_, idx) => idx !== i) })
+                    }
+                    onClose={() => setShowPlus(false)}
                   />
                 )}
               </div>
 
+              {/* Inline indicators for selected items */}
+              {((config.uploads ?? []).length > 0 || config.skills.length > 0) && (
+                <div className="flex items-center gap-4">
+                  {(config.uploads ?? []).map((f, i) => (
+                    <span key={`f-${i}`} className="flex items-center gap-2 px-6 py-2 rounded-6 bg-black-alpha-4 text-mono-x-small text-black-alpha-48 max-w-[100px]">
+                      <span className="truncate">{f.name}</span>
+                      <button
+                        type="button"
+                        className="flex-shrink-0 text-black-alpha-24 hover:text-accent-crimson transition-colors"
+                        onClick={() => setConfig({ ...config, uploads: (config.uploads ?? []).filter((_, idx) => idx !== i) })}
+                      >
+                        <svg fill="none" height="8" viewBox="0 0 24 24" width="8" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                      </button>
+                    </span>
+                  ))}
+                  {config.skills.length > 0 && (
+                    <span className="flex items-center gap-4 px-6 py-2 rounded-6 bg-heat-8 text-mono-x-small text-heat-100">
+                      <SkillsIcon />
+                      {config.skills.length} skill{config.skills.length > 1 ? "s" : ""}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Model + Plan + Submit */}
+            <div className="flex items-center gap-4">
               {/* Model button */}
               <div className="relative">
                 <button
                   type="button"
-                  className="flex items-center gap-6 px-10 py-6 rounded-8 text-label-small text-black-alpha-48 hover:bg-black-alpha-4 transition-all"
-                  onClick={() => {
-                    setShowModel(!showModel);
-                    setShowSkills(false);
-                  }}
+                  className="flex items-center gap-6 px-8 py-5 rounded-8 text-label-small text-black-alpha-40 hover:bg-black-alpha-4 transition-all"
+                  onClick={() => { setShowModel(!showModel); setShowPlus(false); }}
                 >
-                  <ProviderModelIcon icon={currentModelIcon} size={16} />
+                  <ProviderModelIcon icon={currentModelIcon} size={14} />
                   <span>{currentModelName}</span>
                 </button>
                 {showModel && (
@@ -762,13 +882,11 @@ export default function AgentPage() {
                     onChange={(model) => setConfig({ ...config, model })}
                     onClose={() => setShowModel(false)}
                     acpAgents={acpAgents}
+                    configuredProviders={configuredProviders}
                   />
                 )}
               </div>
-            </div>
 
-            {/* Plan mode toggle + Submit */}
-            <div className="flex items-center gap-6">
               <button
                 type="button"
                 className={cn(
@@ -803,7 +921,7 @@ export default function AgentPage() {
                 ) : (
                   <svg fill="none" height="18" viewBox="0 0 20 20" width="18">
                     <path
-                      d="M3.125 10H16.875M11.6667 4.79163L16.875 9.99994L11.6667 15.2083"
+                      d="M10 16.875V3.125M4.79163 8.33333L9.99994 3.125L15.2083 8.33333"
                       stroke="currentColor"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -852,7 +970,7 @@ export default function AgentPage() {
                   rows={Math.max(6, planEditText.split("\n").length)}
                 />
               ) : (
-                <div className="text-body-small text-accent-black leading-relaxed prose prose-sm max-w-none">
+                <div className="text-body-medium text-accent-black leading-relaxed prose prose-sm max-w-none prose-headings:text-accent-black prose-a:text-heat-100 prose-strong:text-accent-black prose-code:text-heat-100 prose-code:bg-heat-4 prose-code:px-4 prose-code:py-1 prose-code:rounded-4">
                   <Streamdown>{planEditText || planText}</Streamdown>
                 </div>
               )}
@@ -905,8 +1023,60 @@ export default function AgentPage() {
           </div>
         )}
 
-        {/* Example prompts carousel */}
-        <ExampleCarousel onSelect={(text) => setConfig({ ...config, prompt: text })} />
+        {/* Category pills / expanded skill list */}
+        {activeCategory ? (
+          <div
+            className="w-full max-w-640 mt-16 bg-accent-white rounded-12 overflow-hidden"
+            style={{ boxShadow: "0px 2px 12px -2px rgba(0,0,0,0.04), 0px 0px 0px 1px rgba(0,0,0,0.06)" }}
+          >
+            <div className="flex items-center justify-between px-16 py-12 border-b border-border-faint">
+              <div className="flex items-center gap-8">
+                <SkillsIcon />
+                <span className="text-label-medium text-accent-black">{activeCategory}</span>
+              </div>
+              <button
+                type="button"
+                className="text-black-alpha-32 hover:text-accent-black transition-colors p-4"
+                onClick={() => setActiveCategory(null)}
+              >
+                <svg fill="none" height="14" viewBox="0 0 24 24" width="14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="max-h-[280px] overflow-y-auto" style={{ scrollbarWidth: "thin" }}>
+              {(categories.find(([cat]) => cat === activeCategory)?.[1] ?? []).map((skill) => (
+                <button
+                  key={skill.name}
+                  type="button"
+                  className="w-full text-left px-16 py-12 border-b border-border-faint last:border-0 hover:bg-black-alpha-2 transition-all"
+                  onClick={() => {
+                    setConfig({
+                      ...config,
+                      prompt: skill.description,
+                      skills: config.skills.includes(skill.name) ? config.skills : [...config.skills, skill.name],
+                    });
+                    setActiveCategory(null);
+                  }}
+                >
+                  <span className="text-body-medium text-accent-black">{skill.name.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : categories.length > 0 ? (
+          <div className="flex flex-wrap items-center justify-center gap-8 mt-20 max-w-640">
+            {categories.map(([cat]) => (
+              <button
+                key={cat}
+                type="button"
+                className="flex items-center gap-6 px-14 py-8 rounded-full border border-border-faint bg-accent-white text-body-medium text-black-alpha-56 hover:border-heat-40 hover:text-accent-black hover:bg-heat-4 transition-all"
+                onClick={() => setActiveCategory(cat)}
+              >
+                <SkillsIcon />
+                {cat}
+              </button>
+            ))}
+          </div>
+        ) : null}
 
         {/* History */}
         <div className="w-full max-w-640">
@@ -966,7 +1136,7 @@ export default function AgentPage() {
           }}
         />
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto no-scrollbar">
       <div className={cn("mx-auto px-20 py-24 transition-all duration-200", sidebarCollapsed ? "max-w-900" : "max-w-700")}>
         {/* Query display */}
         <div className="mb-20">
@@ -1062,6 +1232,10 @@ export default function AgentPage() {
               <div className="flex items-center gap-4 text-mono-x-small text-black-alpha-32">
                 <svg fill="none" height="12" viewBox="0 0 24 24" width="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>
                 {sessionStats.agentTurns} turn{sessionStats.agentTurns !== 1 ? "s" : ""}
+              </div>
+              <div className="flex items-center gap-4 text-mono-x-small text-black-alpha-32">
+                <svg fill="none" height="12" viewBox="0 0 24 24" width="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a4 4 0 014 4c0 1.95-2 4-4 6-2-2-4-4.05-4-6a4 4 0 014-4zM8 14v.5A3.5 3.5 0 004.5 18v0a1.5 1.5 0 001.5 1.5h12a1.5 1.5 0 001.5-1.5v0A3.5 3.5 0 0016 14.5V14" /></svg>
+                {sessionStats.llmCalls} LLM call{sessionStats.llmCalls !== 1 ? "s" : ""}
               </div>
               <div className="flex items-center gap-4 text-mono-x-small text-black-alpha-32">
                 <svg fill="none" height="12" viewBox="0 0 24 24" width="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7V4h16v3M9 20h6M12 4v16" /></svg>

@@ -273,12 +273,12 @@ function OutputContent({ content, formatId, maxH }: { content: string; formatId:
   const { isHtml, isCsv, isJson } = getOutputMeta(content, formatId);
   const cleaned = useMemo(() => (isJson || isCsv || isHtml) ? stripCodeFences(content) : content, [content, isJson, isCsv, isHtml]);
   return (
-    <div className={cn("overflow-auto", maxH)}>
+    <div className={cn("overflow-auto no-scrollbar", maxH)}>
       {isJson && <JsonViewer data={cleaned} />}
       {isCsv && <CsvTable data={cleaned} />}
       {isHtml && <HtmlViewer html={cleaned} />}
       {!isJson && !isCsv && !isHtml && (
-        <div className="p-14 text-body-medium text-accent-black leading-relaxed prose prose-base max-w-none prose-headings:text-accent-black prose-a:text-heat-100 prose-strong:text-accent-black prose-code:text-heat-100 prose-code:bg-heat-4 prose-code:px-4 prose-code:py-1 prose-code:rounded-4">
+        <div className="p-14 text-body-medium text-accent-black leading-relaxed prose prose-sm max-w-none prose-headings:text-accent-black prose-a:text-heat-100 prose-strong:text-accent-black prose-code:text-heat-100 prose-code:bg-heat-4 prose-code:px-4 prose-code:py-1 prose-code:rounded-4">
           <Streamdown plugins={{ code }}>{content}</Streamdown>
         </div>
       )}
@@ -289,7 +289,7 @@ function OutputContent({ content, formatId, maxH }: { content: string; formatId:
 // --- Fullscreen Viewer ---
 
 function FullscreenViewer({ content, formatId, onClose }: { content: string; formatId: string; onClose: () => void }) {
-  const { ext, label, isHtml } = getOutputMeta(content, formatId);
+  const { ext, label, isHtml, isCsv } = getOutputMeta(content, formatId);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -315,7 +315,9 @@ function FullscreenViewer({ content, formatId, onClose }: { content: string; for
         </div>
       </div>
       <div className="flex-1 overflow-auto">
-        {isHtml ? <HtmlViewer html={content} fullHeight /> : (
+        {isHtml ? <HtmlViewer html={content} fullHeight /> : isCsv ? (
+          <OutputContent content={content} formatId={formatId} />
+        ) : (
           <div className="max-w-[900px] mx-auto"><OutputContent content={content} formatId={formatId} /></div>
         )}
       </div>

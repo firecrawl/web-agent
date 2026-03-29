@@ -8,6 +8,10 @@ import { createCodePlugin } from "@streamdown/code";
 const code = createCodePlugin({ themes: ["github-light", "github-light"] });
 import { cn } from "@/utils/cn";
 
+// --- Shared prose classes for Streamdown rendering ---
+const PROSE_CLASSES = "text-body-medium text-accent-black leading-relaxed prose prose-sm max-w-none prose-headings:text-accent-black prose-a:text-heat-100 prose-strong:text-accent-black prose-code:text-heat-100 prose-code:bg-heat-4 prose-code:px-4 prose-code:py-1 prose-code:rounded-4";
+const PROSE_CLASSES_LARGE = "text-body-large text-accent-black leading-relaxed prose prose-sm max-w-none prose-headings:text-accent-black prose-a:text-heat-100 prose-strong:text-accent-black prose-code:text-heat-100 prose-code:bg-heat-4 prose-code:px-4 prose-code:py-1 prose-code:rounded-4";
+
 // --- Icons ---
 
 function SearchIcon() {
@@ -142,8 +146,8 @@ function SearchResultItem({ result }: { result: SearchResult }) {
       </button>
 
       {expanded && hasMarkdown && (
-        <div className="border-t border-border-faint bg-background-lighter p-12 max-h-400 overflow-auto">
-          <div className="text-body-small text-black-alpha-56 leading-relaxed prose prose-sm max-w-none prose-headings:text-black-alpha-56 prose-a:text-heat-100">
+        <div className="border-t border-border-faint bg-background-lighter p-12 max-h-400 overflow-auto no-scrollbar">
+          <div className={PROSE_CLASSES}>
             <Streamdown plugins={{ code }}>{result.markdown!}</Streamdown>
           </div>
         </div>
@@ -312,7 +316,7 @@ function ScrapeResult({
       )}>
         {interactOutput && (
           <div className="mx-14 mb-10 bg-accent-bluetron/[0.04] rounded-8 border border-accent-bluetron/15 p-12">
-            <div className="text-body-medium text-accent-black leading-relaxed prose prose-sm max-w-none">
+            <div className={PROSE_CLASSES}>
               <Streamdown plugins={{ code }}>{interactOutput}</Streamdown>
             </div>
           </div>
@@ -320,7 +324,7 @@ function ScrapeResult({
 
         {answer && (
           <div className="mx-14 mb-10 bg-black-alpha-2 rounded-8 border border-border-faint p-12">
-            <div className="text-body-medium text-accent-black leading-relaxed prose prose-sm max-w-none">
+            <div className={PROSE_CLASSES}>
               <Streamdown plugins={{ code }}>{answer}</Streamdown>
             </div>
           </div>
@@ -348,11 +352,11 @@ function ScrapeResult({
         )}
 
         {content && !answer && (
-          <div className="border-t border-border-faint bg-background-lighter p-14 max-h-500 overflow-auto">
+          <div className="border-t border-border-faint bg-background-lighter p-14 max-h-500 overflow-auto no-scrollbar">
             {isJsonContent(content) ? (
               <pre className="text-mono-small text-accent-black whitespace-pre-wrap">{extractJsonContent(content)}</pre>
             ) : (
-              <div className="text-body-small text-black-alpha-56 leading-relaxed prose prose-sm max-w-none prose-headings:text-black-alpha-56 prose-a:text-heat-100">
+              <div className={PROSE_CLASSES}>
                 <Streamdown plugins={{ code }}>{content}</Streamdown>
               </div>
             )}
@@ -526,20 +530,20 @@ function InteractCard({ item }: { item: TimelineItem }) {
             <div className={cn("mx-14 mb-10", expanded ? "flex flex-col gap-8" : "flex flex-col gap-8")}>
               {item.interactOutput && (
                 <div className="bg-black-alpha-2 rounded-8 border border-border-faint p-12">
-                  <div className="text-body-small text-accent-black leading-relaxed prose prose-sm max-w-none prose-headings:text-accent-black prose-a:text-heat-100 prose-strong:text-accent-black">
+                  <div className={PROSE_CLASSES}>
                     <Streamdown plugins={{ code }}>{item.interactOutput}</Streamdown>
                   </div>
                 </div>
               )}
               {item.content && (
                 <div className={cn(
-                  "rounded-8 border border-border-faint bg-background-lighter p-14 overflow-auto",
+                  "rounded-8 border border-border-faint bg-background-lighter p-14 overflow-auto no-scrollbar",
                   expanded ? "max-h-[600px]" : "max-h-300",
                 )}>
                   {isJsonContent(item.content) ? (
                     <pre className="text-mono-small text-accent-black whitespace-pre-wrap">{extractJsonContent(item.content)}</pre>
                   ) : (
-                    <div className="text-body-small text-accent-black leading-relaxed prose prose-sm max-w-none prose-headings:text-accent-black prose-a:text-heat-100 prose-strong:text-accent-black">
+                    <div className={PROSE_CLASSES}>
                       <Streamdown plugins={{ code }}>{item.content}</Streamdown>
                     </div>
                   )}
@@ -591,13 +595,13 @@ function SubAgentCard({ item }: { item: TimelineItem }) {
 
   return (
     <div className={cn(
-      "my-12 rounded-12 border overflow-hidden transition-all",
+      "my-12 rounded-10 border overflow-hidden transition-all",
       isRunning ? "border-accent-amethyst/30 shadow-sm" : "border-accent-amethyst/15",
     )}>
       {/* Header - clickable to expand */}
       <button
         type="button"
-        className="w-full flex items-center gap-10 px-14 py-12 hover:bg-accent-amethyst/[0.02] transition-colors text-left cursor-pointer"
+        className="w-full flex items-center gap-8 px-14 py-10 hover:bg-accent-amethyst/[0.02] transition-colors text-left cursor-pointer"
         onClick={() => setExpanded(!expanded)}
       >
         <div className="w-28 h-28 rounded-8 bg-accent-amethyst/10 flex-center flex-shrink-0">
@@ -657,7 +661,7 @@ function SubAgentCard({ item }: { item: TimelineItem }) {
                     {si.type === "text" ? si.label : (
                       <>
                         <span className={cn(
-                          "text-mono-x-small px-4 py-0.5 rounded-3 mr-4",
+                          "text-mono-x-small px-6 py-1 rounded-4 mr-4",
                           si.type === "search" ? "text-heat-100 bg-heat-4" :
                           si.type === "scrape" ? "text-accent-forest bg-accent-forest/8" :
                           si.type === "interact" ? "text-accent-amethyst bg-accent-amethyst/8" :
@@ -704,7 +708,7 @@ function SubAgentCard({ item }: { item: TimelineItem }) {
       {expanded && item.status === "complete" && item.text && (
         <div className="border-t border-accent-amethyst/10 px-14 py-10">
           <div className="text-label-x-small text-black-alpha-24 mb-4">Result</div>
-          <div className="text-body-small text-accent-black leading-relaxed prose prose-sm max-w-none">
+          <div className={PROSE_CLASSES}>
             <Streamdown plugins={{ code }}>{item.text}</Streamdown>
           </div>
         </div>
@@ -749,10 +753,10 @@ function BashResult({ command, stdout, stderr, exitCode }: { command: string; st
   const { label, detail } = describeBashAction(command);
 
   return (
-    <div className={cn("my-8 rounded-10 border overflow-hidden transition-all", expanded ? "border-black-alpha-16 shadow-sm" : "border-border-faint hover:border-black-alpha-16")}>
+    <div className={cn("my-12 rounded-10 border overflow-hidden transition-all", expanded ? "border-black-alpha-16 shadow-sm" : "border-border-faint hover:border-black-alpha-16")}>
       <button
         type="button"
-        className="w-full flex items-center gap-8 px-14 py-8 hover:bg-black-alpha-2 transition-colors text-left cursor-pointer"
+        className="w-full flex items-center gap-8 px-14 py-10 hover:bg-black-alpha-2 transition-colors text-left cursor-pointer"
         onClick={() => setExpanded(!expanded)}
       >
         <div className="w-24 h-24 rounded-6 bg-black-alpha-4 flex-center flex-shrink-0">
@@ -783,7 +787,7 @@ function BashResult({ command, stdout, stderr, exitCode }: { command: string; st
 
       {/* Expanded: show command + output */}
       {expanded && (
-        <div className="border-t border-border-faint bg-black-alpha-2 px-14 py-10 max-h-300 overflow-auto">
+        <div className="border-t border-border-faint bg-black-alpha-2 px-14 py-10 max-h-300 overflow-auto no-scrollbar">
           <code className="text-mono-x-small text-black-alpha-40 block mb-6">{command}</code>
           {stdout && <pre className="text-mono-small text-accent-black whitespace-pre-wrap">{stdout}</pre>}
           {stderr && <pre className="text-mono-small text-accent-crimson whitespace-pre-wrap mt-6">{stderr}</pre>}
@@ -808,7 +812,7 @@ function TextBlock({ text, isLatest }: { text: string; isLatest: boolean }) {
 
   if (isShort) {
     return (
-      <div className="text-body-large text-accent-black leading-relaxed my-12 prose prose-sm max-w-none prose-headings:text-accent-black prose-a:text-heat-100 prose-strong:text-accent-black prose-code:text-heat-100 prose-code:bg-heat-4 prose-code:px-4 prose-code:py-1 prose-code:rounded-4">
+      <div className={cn(PROSE_CLASSES_LARGE, "my-12")}>
         <Streamdown plugins={{ code }}>{text}</Streamdown>
       </div>
     );
@@ -818,7 +822,7 @@ function TextBlock({ text, isLatest }: { text: string; isLatest: boolean }) {
     <div className="my-12 rounded-10 border border-border-faint overflow-hidden">
       <button
         type="button"
-        className="w-full flex items-center gap-10 px-14 py-10 hover:bg-black-alpha-2 transition-colors text-left cursor-pointer"
+        className="w-full flex items-center gap-8 px-14 py-10 hover:bg-black-alpha-2 transition-colors text-left cursor-pointer"
         onClick={() => setCollapsed(!collapsed)}
       >
         <svg fill="none" height="16" viewBox="0 0 24 24" width="16" className="flex-shrink-0 text-black-alpha-32">
@@ -839,7 +843,7 @@ function TextBlock({ text, isLatest }: { text: string; isLatest: boolean }) {
         "transition-all duration-300 overflow-hidden",
         collapsed ? "max-h-0 opacity-0" : "max-h-[4000px] opacity-100",
       )}>
-        <div className="border-t border-border-faint p-14 max-h-[600px] overflow-auto text-body-large text-accent-black leading-relaxed prose prose-sm max-w-none prose-headings:text-accent-black prose-a:text-heat-100 prose-strong:text-accent-black prose-code:text-heat-100 prose-code:bg-heat-4 prose-code:px-4 prose-code:py-1 prose-code:rounded-4">
+        <div className={cn("border-t border-border-faint p-14 max-h-[600px] overflow-auto no-scrollbar", PROSE_CLASSES_LARGE)}>
           <Streamdown plugins={{ code }}>{text}</Streamdown>
         </div>
       </div>
@@ -850,7 +854,7 @@ function TextBlock({ text, isLatest }: { text: string; isLatest: boolean }) {
 function SkillLoad({ name, description, status }: { name: string; description?: string; status: "running" | "complete" }) {
   return (
     <div className="my-12 rounded-10 border border-border-faint overflow-hidden">
-      <div className="flex items-center gap-10 px-14 py-10">
+      <div className="flex items-center gap-8 px-14 py-10">
         <EndpointBadge type="skill" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-6">
@@ -1201,7 +1205,7 @@ export default function PlanVisualization({
               (() => {
                 const domain = item.url ? getDomain(item.url) : null;
                 return (
-                  <div key={i} className="my-8 rounded-10 border border-border-faint px-14 py-10 flex items-center gap-8 text-black-alpha-40 animate-pulse">
+                  <div key={i} className="my-12 rounded-10 border border-border-faint px-14 py-10 flex items-center gap-8 text-black-alpha-40 animate-pulse">
                     {domain ? <Favicon domain={domain} /> : <GlobeIcon />}
                     <span className="text-label-medium flex-1">Scraping {item.url}</span>
                     <div className="w-5 h-5 rounded-full bg-heat-100 animate-pulse flex-shrink-0" />
@@ -1215,7 +1219,7 @@ export default function PlanVisualization({
             return item.status === "complete" ? (
               <BashResult key={i} command={item.command!} stdout={item.stdout!} stderr={item.stderr!} exitCode={item.exitCode!} />
             ) : (
-              <div key={i} className="my-8 rounded-10 border border-border-faint overflow-hidden">
+              <div key={i} className="my-12 rounded-10 border border-border-faint overflow-hidden">
                 <div className="flex items-center gap-8 px-14 py-8">
                   <div className="w-24 h-24 rounded-6 bg-black-alpha-4 flex-center flex-shrink-0">
                     <svg fill="none" height="12" viewBox="0 0 24 24" width="12" className="text-black-alpha-40" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1246,7 +1250,7 @@ export default function PlanVisualization({
 
       {/* Running indicator */}
       {isRunning && (
-        <div className="flex items-center gap-6 my-8 px-4">
+        <div className="flex items-center gap-6 my-12 px-4">
           <div className="w-12 h-12 rounded-full border-2 border-black-alpha-8 border-t-heat-100 animate-spin flex-shrink-0" />
           <span className="text-body-small text-black-alpha-24">Working...</span>
         </div>
