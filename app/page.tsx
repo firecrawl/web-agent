@@ -133,6 +133,32 @@ function SkillsIcon() {
   );
 }
 
+function CategoryIcon({ category }: { category: string }) {
+  const iconProps = { fill: "none", height: "16", width: "16", viewBox: "0 0 24 24", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  switch (category) {
+    case "Research":
+      return <svg {...iconProps}><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></svg>;
+    case "Competitive Intelligence":
+      return <svg {...iconProps}><path d="M18 20V10M12 20V4M6 20v-6" /></svg>;
+    case "Investment & Finance":
+      return <svg {...iconProps}><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" /></svg>;
+    case "Content":
+      return <svg {...iconProps}><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>;
+    case "SEO":
+      return <svg {...iconProps}><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" /></svg>;
+    case "Lead Enrichment":
+      return <svg {...iconProps}><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" /></svg>;
+    case "Data Migration":
+      return <svg {...iconProps}><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" /></svg>;
+    case "Product & E-commerce":
+      return <svg {...iconProps}><circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" /><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" /></svg>;
+    case "Observability":
+      return <svg {...iconProps}><path d="M22 12h-4l-3 9L9 3l-3 9H2" /></svg>;
+    default:
+      return <SkillsIcon />;
+  }
+}
+
 function PlusMenu({
   skills,
   selectedSkills,
@@ -701,11 +727,11 @@ export default function AgentPage() {
   // First screen: clean input bar like Google/Lovable
   if (!hasSubmitted) {
     return (
-      <div className="min-h-screen bg-background-base flex flex-col items-center justify-center px-16 relative">
+      <div className="min-h-screen bg-background-base flex flex-col items-center px-16 relative">
         <div className="absolute top-12 right-20">
           <HeaderLinks />
         </div>
-        <div className="flex flex-col items-center gap-12 mb-32 -mt-60">
+        <div className="flex flex-col items-center gap-12 mb-32 mt-[min(18vh,160px)]">
           <SymbolColored width={56} height={80} />
         </div>
 
@@ -1023,15 +1049,15 @@ export default function AgentPage() {
           </div>
         )}
 
-        {/* Category pills / expanded skill list */}
+        {/* Skills tile grid / expanded skill list */}
         {activeCategory ? (
           <div
-            className="w-full max-w-640 mt-16 bg-accent-white rounded-12 overflow-hidden"
+            className="w-full max-w-640 mt-24 bg-accent-white rounded-12 overflow-hidden"
             style={{ boxShadow: "0px 2px 12px -2px rgba(0,0,0,0.04), 0px 0px 0px 1px rgba(0,0,0,0.06)" }}
           >
             <div className="flex items-center justify-between px-16 py-12 border-b border-border-faint">
               <div className="flex items-center gap-8">
-                <SkillsIcon />
+                <CategoryIcon category={activeCategory} />
                 <span className="text-label-medium text-accent-black">{activeCategory}</span>
               </div>
               <button
@@ -1063,23 +1089,34 @@ export default function AgentPage() {
             </div>
           </div>
         ) : categories.length > 0 ? (
-          <div className="flex flex-wrap items-center justify-center gap-8 mt-20 max-w-640">
-            {categories.map(([cat]) => (
-              <button
-                key={cat}
-                type="button"
-                className="flex items-center gap-6 px-14 py-8 rounded-full border border-border-faint bg-accent-white text-body-medium text-black-alpha-56 hover:border-heat-40 hover:text-accent-black hover:bg-heat-4 transition-all"
-                onClick={() => setActiveCategory(cat)}
-              >
-                <SkillsIcon />
-                {cat}
-              </button>
-            ))}
+          <div className="w-full max-w-780 mt-32">
+            <div className="flex items-center justify-between mb-16">
+              <h2 className="text-label-medium text-accent-black">Explore What&apos;s Possible</h2>
+              <span className="text-body-small text-black-alpha-32">{categories.reduce((n, [, s]) => n + s.length, 0)} skills</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-8">
+              {categories.map(([cat, catSkills]) => (
+                <button
+                  key={cat}
+                  type="button"
+                  className="flex items-center gap-12 px-16 py-14 rounded-12 border border-border-faint bg-accent-white hover:border-heat-40 hover:bg-heat-4 transition-all text-left group"
+                  onClick={() => setActiveCategory(cat)}
+                >
+                  <div className="flex items-center justify-center w-36 h-36 rounded-10 bg-black-alpha-4 group-hover:bg-heat-8 transition-all flex-shrink-0">
+                    <CategoryIcon category={cat} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-label-small text-accent-black">{cat}</div>
+                    <div className="text-body-small text-black-alpha-32">{catSkills.length} skill{catSkills.length !== 1 ? "s" : ""}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
         ) : null}
 
-        {/* History */}
-        <div className="w-full max-w-640">
+        {/* Recent conversations */}
+        <div className="w-full max-w-780 pb-60">
           <HistoryPanel
             onSelect={(id, title) => setConfig({ ...config, prompt: title })}
             currentId={conversationId ?? undefined}

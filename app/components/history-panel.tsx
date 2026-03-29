@@ -45,40 +45,45 @@ export default function HistoryPanel({
 
   if (conversations.length === 0) return null;
 
-  return (
-    <div className="mt-16">
-      <button
-        type="button"
-        className="text-body-small text-black-alpha-32 hover:text-black-alpha-48 transition-colors"
-        onClick={() => setShow(!show)}
-      >
-        {show ? "Hide history" : "Recent"} ({conversations.length})
-      </button>
+  const visible = show ? conversations : conversations.slice(0, 3);
 
-      {show && (
-        <div className="mt-8 flex flex-col gap-2 max-h-300 overflow-y-auto">
-          {conversations.map((conv) => (
-            <button
-              key={conv.id}
-              type="button"
-              className={cn(
-                "w-full text-left px-12 py-8 rounded-8 transition-all group",
-                currentId === conv.id
-                  ? "bg-heat-4 border border-heat-20"
-                  : "hover:bg-black-alpha-2 border border-transparent",
-              )}
-              onClick={() => onSelect(conv.id, conv.title)}
-            >
-              <div className="text-body-medium text-accent-black truncate group-hover:text-heat-100 transition-colors">
-                {conv.title}
-              </div>
-              <div className="text-body-small text-black-alpha-32">
-                {formatRelativeTime(conv.updated_at)}
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
+  return (
+    <div className="mt-32">
+      <div className="flex items-center justify-between mb-16">
+        <h2 className="text-label-medium text-accent-black">Recent</h2>
+        {conversations.length > 3 && (
+          <button
+            type="button"
+            className="text-body-small text-black-alpha-32 hover:text-heat-100 transition-colors"
+            onClick={() => setShow(!show)}
+          >
+            {show ? "Show less" : `See all (${conversations.length})`}
+          </button>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+        {visible.map((conv) => (
+          <button
+            key={conv.id}
+            type="button"
+            className={cn(
+              "w-full text-left px-16 py-14 rounded-12 border transition-all group",
+              currentId === conv.id
+                ? "bg-heat-4 border-heat-20"
+                : "border-border-faint bg-accent-white hover:border-heat-40 hover:bg-heat-4",
+            )}
+            onClick={() => onSelect(conv.id, conv.title)}
+          >
+            <div className="text-label-small text-accent-black truncate group-hover:text-heat-100 transition-colors">
+              {conv.title}
+            </div>
+            <div className="text-body-small text-black-alpha-32 mt-4">
+              {formatRelativeTime(conv.updated_at)}
+            </div>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
