@@ -503,11 +503,47 @@ interface ExportSidebarProps {
   messages: UIMessage[];
 }
 
+interface BashFile {
+  path: string;
+  size: number;
+}
+
 export default function ExportSidebar({ collapsed, onToggleCollapse, messages }: ExportSidebarProps) {
   const [jobs, setJobs] = useState<ExportJob[]>([]);
   const [fullscreenJob, setFullscreenJob] = useState<ExportJob | null>(null);
+  const [bashFiles, setBashFiles] = useState<BashFile[]>([]);
+  const [viewingFile, setViewingFile] = useState<{ path: string; content: string; formatId: string } | null>(null);
+  const [tab, setTab] = useState<"files" | "export">("files");
   const messagesRef = useRef(messages);
   messagesRef.current = messages;
+
+  // Poll for bash files
+  useEffect(() => {
+    const poll = () => {
+      fetch("/api/files")
+        .then((r) => r.json())
+        .then((data) => { if (data.files) setBashFiles(data.files); })
+        .catch(() => {});
+    };
+    poll();
+    const interval = setInterval(poll, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const viewFile = useCallback(async (path: string) => {
+    const r = await fetch(`/api/files?path=${encodeURIComponent(path)}`);
+    const data = await r.json();
+    const ext = path.split(".").pop()?.toLowerCase() ?? "";
+    const formatId = ext === "json" ? "json" : ext === "csv" ? "csv" : ext === "html" ? "html" : "report";
+    setViewingFile({ path, content: data.content, formatId });
+  }, []);
+
+  const downloadFile = useCallback(async (path: string) => {
+    const r = await fetch(`/api/files?path=${encodeURIComponent(path)}`);
+    const data = await r.json();
+    const filename = path.split("/").pop() ?? "download";
+    download(data.content, filename);
+  }, []);
 
   const runExport = useCallback((formatId: string) => {
     const format = FORMATS.find((f) => f.id === formatId);
@@ -583,7 +619,7 @@ export default function ExportSidebar({ collapsed, onToggleCollapse, messages }:
             </svg>
           </button>
           {!collapsed && (
-            <span className="text-label-small text-black-alpha-48 flex-1">Export</span>
+            <span className="text-label-small text-black-alpha-48 flex-1">Assets</span>
           )}
           {!collapsed && runningCount > 0 && (
             <div className="w-10 h-10 rounded-full border-2 border-heat-100 border-t-transparent animate-spin flex-shrink-0" />
@@ -597,47 +633,132 @@ export default function ExportSidebar({ collapsed, onToggleCollapse, messages }:
 
         {!collapsed && (
           <div className="flex-1 flex flex-col overflow-hidden">
-            {/* Format grid */}
-            <div className="flex-shrink-0 px-8 pb-10">
-              <div className="grid grid-cols-2 gap-4">
-                {FORMATS.map((f) => (
-                  <button
-                    key={f.id}
-                    type="button"
-                    className="flex items-center gap-6 px-10 py-6 rounded-8 text-body-small text-black-alpha-56 bg-black-alpha-2 hover:bg-black-alpha-4 hover:text-accent-black transition-all whitespace-nowrap"
-                    onClick={() => runExport(f.id)}
-                  >
-                    <span className="flex-shrink-0">{f.icon}</span>
-                    {f.label}
-                  </button>
-                ))}
+            {/* Tab switcher */}
+            <div className="flex-shrink-0 px-8 pb-6">
+              <div className="flex gap-2 bg-black-alpha-4 rounded-8 p-2">
+                <button
+                  type="button"
+                  className={cn(
+                    "flex-1 text-label-small py-4 rounded-6 transition-all text-center",
+                    tab === "files" ? "bg-accent-white text-accent-black shadow-sm" : "text-black-alpha-48 hover:text-accent-black",
+                  )}
+                  onClick={() => setTab("files")}
+                >
+                  Files{bashFiles.length > 0 ? ` (${bashFiles.length})` : ""}
+                </button>
+                <button
+                  type="button"
+                  className={cn(
+                    "flex-1 text-label-small py-4 rounded-6 transition-all text-center",
+                    tab === "export" ? "bg-accent-white text-accent-black shadow-sm" : "text-black-alpha-48 hover:text-accent-black",
+                  )}
+                  onClick={() => setTab("export")}
+                >
+                  Generate
+                </button>
               </div>
             </div>
 
-            {/* Job list */}
-            <div className="flex-1 overflow-y-auto px-8 pb-12">
-              {jobs.length === 0 && (
-                <div className="text-body-small text-black-alpha-24 text-center py-20">
-                  Choose a format above to export
-                </div>
-              )}
-              <div className="flex flex-col gap-4">
-                {jobs.map((job) => (
-                  <JobCard
-                    key={job.id}
-                    job={job}
-                    onView={() => setFullscreenJob(job)}
-                    onRemove={() => removeJob(job.id)}
-                  />
-                ))}
+            {tab === "files" ? (
+              <div className="flex-1 overflow-y-auto px-8 pb-12">
+                {bashFiles.length === 0 ? (
+                  <div className="text-body-small text-black-alpha-24 text-center py-20">
+                    Files will appear here as the agent creates them
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    {bashFiles.map((f) => {
+                      const name = f.path.split("/").pop() ?? f.path;
+                      const ext = name.split(".").pop()?.toLowerCase() ?? "";
+                      const sizeStr = f.size > 1024 ? `${(f.size / 1024).toFixed(1)}KB` : `${f.size}B`;
+                      return (
+                        <div
+                          key={f.path}
+                          className="flex items-center gap-6 px-10 py-8 rounded-8 border border-border-faint bg-accent-white hover:border-heat-40 transition-all group"
+                        >
+                          <span className="text-black-alpha-32 flex-shrink-0">
+                            {ext === "json" ? "{}" : ext === "csv" ? "⊞" : ext === "html" ? "◇" : "◻"}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-label-small text-accent-black truncate">{name}</div>
+                            <div className="text-mono-x-small text-black-alpha-32">{sizeStr}</div>
+                          </div>
+                          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              type="button"
+                              className="p-4 rounded-4 text-black-alpha-32 hover:text-accent-black hover:bg-black-alpha-4 transition-all"
+                              onClick={() => viewFile(f.path)}
+                              title="View"
+                            >
+                              <svg fill="none" height="12" viewBox="0 0 24 24" width="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
+                              </svg>
+                            </button>
+                            <button
+                              type="button"
+                              className="p-4 rounded-4 text-black-alpha-32 hover:text-accent-black hover:bg-black-alpha-4 transition-all"
+                              onClick={() => downloadFile(f.path)}
+                              title="Download"
+                            >
+                              <svg fill="none" height="12" viewBox="0 0 24 24" width="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            </div>
+            ) : (
+              <div className="flex-1 flex flex-col overflow-hidden">
+                {/* Format grid */}
+                <div className="flex-shrink-0 px-0 pb-10">
+                  <div className="grid grid-cols-2 gap-4">
+                    {FORMATS.map((f) => (
+                      <button
+                        key={f.id}
+                        type="button"
+                        className="flex items-center gap-6 px-10 py-6 rounded-8 text-body-small text-black-alpha-56 bg-black-alpha-2 hover:bg-black-alpha-4 hover:text-accent-black transition-all whitespace-nowrap"
+                        onClick={() => runExport(f.id)}
+                      >
+                        <span className="flex-shrink-0">{f.icon}</span>
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Job list */}
+                <div className="flex-1 overflow-y-auto pb-12">
+                  {jobs.length === 0 && (
+                    <div className="text-body-small text-black-alpha-24 text-center py-20">
+                      Choose a format above to generate
+                    </div>
+                  )}
+                  <div className="flex flex-col gap-4">
+                    {jobs.map((job) => (
+                      <JobCard
+                        key={job.id}
+                        job={job}
+                        onView={() => setFullscreenJob(job)}
+                        onRemove={() => removeJob(job.id)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
 
       {fullscreenJob?.content && (
         <FullscreenViewer content={fullscreenJob.content} formatId={fullscreenJob.formatId} onClose={() => setFullscreenJob(null)} />
+      )}
+      {viewingFile && (
+        <FullscreenViewer content={viewingFile.content} formatId={viewingFile.formatId} onClose={() => setViewingFile(null)} />
       )}
     </>
   );

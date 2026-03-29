@@ -18,6 +18,22 @@ export async function initBashWithFiles(
   }
 }
 
+export async function listBashFiles(): Promise<{ path: string; size: number }[]> {
+  if (!sharedBash) return [];
+  const result = await sharedBash.exec("find /data -type f 2>/dev/null | while read f; do s=$(wc -c < \"$f\" 2>/dev/null); echo \"$s $f\"; done");
+  if (!result.stdout.trim()) return [];
+  return result.stdout.trim().split("\n").filter(Boolean).map((line) => {
+    const spaceIdx = line.indexOf(" ");
+    return { path: line.slice(spaceIdx + 1), size: parseInt(line.slice(0, spaceIdx)) || 0 };
+  });
+}
+
+export async function readBashFile(path: string): Promise<string> {
+  if (!sharedBash) return "";
+  const result = await sharedBash.exec(`cat "${path}"`);
+  return result.stdout;
+}
+
 export const bashExec = tool({
   description:
     "Execute a bash command in a sandboxed environment with a persistent filesystem. Available tools: jq, awk, sed, grep, sort, uniq, wc, head, tail, cut, tr, paste, cat, echo, printf, expr, ls, mkdir, rm, cp, mv, tee, xargs. NOT available: node, python, curl, wget, npm, pip, bc. For math use awk (e.g. awk 'BEGIN{print 10*1.5}') or expr. The filesystem persists between calls — write files in one call, read them in the next. Use jq for JSON processing, awk for CSV/text processing. If a CSV was uploaded, it's at /data/input.csv.",
