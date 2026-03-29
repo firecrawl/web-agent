@@ -3,17 +3,33 @@
 import { useState, useMemo, useRef } from "react";
 import type { UIMessage } from "ai";
 import { Streamdown } from "streamdown";
-import { createCodePlugin } from "@streamdown/code";
-import { createMermaidPlugin } from "@streamdown/mermaid";
-
-const code = createCodePlugin({ themes: ["github-light", "github-light"] });
-const mermaid = createMermaidPlugin();
+import { code } from "@streamdown/code";
+import { mermaid } from "@streamdown/mermaid";
 import { cn } from "@/utils/cn";
 
-// --- Shared prose classes for Streamdown rendering ---
-// Streamdown renders its own styled HTML with Tailwind classes — no prose needed
-const PROSE_CLASSES = "text-body-medium text-accent-black leading-relaxed max-w-none";
-const PROSE_CLASSES_LARGE = "text-body-large text-accent-black leading-relaxed max-w-none";
+// --- Shared Streamdown wrapper with full plugin + controls support ---
+const SD_CLASSES = "text-body-medium text-accent-black leading-relaxed max-w-none";
+const SD_CLASSES_LARGE = "text-body-large text-accent-black leading-relaxed max-w-none";
+
+function StreamdownBlock({ children, isStreaming, className }: { children: string; isStreaming?: boolean; className?: string }) {
+  return (
+    <div className={className}>
+      <Streamdown
+        plugins={{ code, mermaid }}
+        controls={{
+          table: true,
+          code: true,
+          mermaid: { download: true, copy: true, fullscreen: true },
+        }}
+        animated
+        caret="block"
+        isAnimating={isStreaming}
+      >
+        {children}
+      </Streamdown>
+    </div>
+  );
+}
 
 // --- Icons ---
 
@@ -150,8 +166,8 @@ function SearchResultItem({ result }: { result: SearchResult }) {
 
       {expanded && hasMarkdown && (
         <div className="border-t border-border-faint bg-background-lighter p-12 max-h-400 overflow-auto no-scrollbar">
-          <div className={PROSE_CLASSES}>
-            <Streamdown plugins={{ code, mermaid }}>{result.markdown!}</Streamdown>
+          <div className={SD_CLASSES}>
+            <StreamdownBlock>{result.markdown!}</StreamdownBlock>
           </div>
         </div>
       )}
@@ -319,16 +335,16 @@ function ScrapeResult({
       )}>
         {interactOutput && (
           <div className="mx-14 mb-10 bg-accent-bluetron/[0.04] rounded-8 border border-accent-bluetron/15 p-12">
-            <div className={PROSE_CLASSES}>
-              <Streamdown plugins={{ code, mermaid }}>{interactOutput}</Streamdown>
+            <div className={SD_CLASSES}>
+              <StreamdownBlock>{interactOutput}</StreamdownBlock>
             </div>
           </div>
         )}
 
         {answer && (
           <div className="mx-14 mb-10 bg-black-alpha-2 rounded-8 border border-border-faint p-12">
-            <div className={PROSE_CLASSES}>
-              <Streamdown plugins={{ code, mermaid }}>{answer}</Streamdown>
+            <div className={SD_CLASSES}>
+              <StreamdownBlock>{answer}</StreamdownBlock>
             </div>
           </div>
         )}
@@ -359,8 +375,8 @@ function ScrapeResult({
             {isJsonContent(content) ? (
               <pre className="text-mono-small text-accent-black whitespace-pre-wrap">{extractJsonContent(content)}</pre>
             ) : (
-              <div className={PROSE_CLASSES}>
-                <Streamdown plugins={{ code, mermaid }}>{content}</Streamdown>
+              <div className={SD_CLASSES}>
+                <StreamdownBlock>{content}</StreamdownBlock>
               </div>
             )}
           </div>
@@ -533,8 +549,8 @@ function InteractCard({ item }: { item: TimelineItem }) {
             <div className={cn("mx-14 mb-10", expanded ? "flex flex-col gap-8" : "flex flex-col gap-8")}>
               {item.interactOutput && (
                 <div className="bg-black-alpha-2 rounded-8 border border-border-faint p-12">
-                  <div className={PROSE_CLASSES}>
-                    <Streamdown plugins={{ code, mermaid }}>{item.interactOutput}</Streamdown>
+                  <div className={SD_CLASSES}>
+                    <StreamdownBlock>{item.interactOutput}</StreamdownBlock>
                   </div>
                 </div>
               )}
@@ -546,8 +562,8 @@ function InteractCard({ item }: { item: TimelineItem }) {
                   {isJsonContent(item.content) ? (
                     <pre className="text-mono-small text-accent-black whitespace-pre-wrap">{extractJsonContent(item.content)}</pre>
                   ) : (
-                    <div className={PROSE_CLASSES}>
-                      <Streamdown plugins={{ code, mermaid }}>{item.content}</Streamdown>
+                    <div className={SD_CLASSES}>
+                      <StreamdownBlock>{item.content}</StreamdownBlock>
                     </div>
                   )}
                 </div>
@@ -711,8 +727,8 @@ function SubAgentCard({ item }: { item: TimelineItem }) {
       {expanded && item.status === "complete" && item.text && (
         <div className="border-t border-accent-amethyst/10 px-14 py-10">
           <div className="text-label-x-small text-black-alpha-24 mb-4">Result</div>
-          <div className={PROSE_CLASSES}>
-            <Streamdown plugins={{ code, mermaid }}>{item.text}</Streamdown>
+          <div className={SD_CLASSES}>
+            <StreamdownBlock>{item.text}</StreamdownBlock>
           </div>
         </div>
       )}
@@ -789,16 +805,17 @@ function BashResult({ command, stdout, stderr, exitCode }: { command: string; st
         </div>
       </button>
 
-      {/* Expanded: terminal output */}
+      {/* Expanded: terminal output via Streamdown */}
       {expanded && (
-        <div className="px-14 py-10 max-h-300 overflow-auto no-scrollbar" style={{ borderTop: "1px solid #333" }}>
-          <div className="flex items-start gap-6 mb-6">
-            <span className="text-mono-x-small flex-shrink-0 select-none" style={{ color: "#28c840" }}>$</span>
-            <code className="text-mono-x-small break-all" style={{ color: "#a0a0a0" }}>{command}</code>
-          </div>
-          {stdout && <pre className="text-mono-small whitespace-pre-wrap" style={{ color: "#d4d4d4" }}>{stdout}</pre>}
-          {stderr && <pre className="text-mono-small whitespace-pre-wrap mt-6" style={{ color: "#ff5f57" }}>{stderr}</pre>}
-          {!hasOutput && <span className="text-mono-x-small" style={{ color: "#555" }}>No output</span>}
+        <div className="px-10 py-8 max-h-300 overflow-auto no-scrollbar" style={{ borderTop: "1px solid #333" }}>
+          <StreamdownBlock>{[
+            "```bash",
+            command,
+            "```",
+            stdout ? ["```", stdout, "```"].join("\n") : "",
+            stderr ? ["```", "# stderr", stderr, "```"].join("\n") : "",
+            !hasOutput ? "*No output*" : "",
+          ].filter(Boolean).join("\n\n")}</StreamdownBlock>
         </div>
       )}
     </div>
@@ -819,8 +836,8 @@ function TextBlock({ text, isLatest }: { text: string; isLatest: boolean }) {
 
   if (isShort) {
     return (
-      <div className={cn(PROSE_CLASSES_LARGE, "my-12")}>
-        <Streamdown plugins={{ code, mermaid }}>{text}</Streamdown>
+      <div className={cn(SD_CLASSES_LARGE, "my-12")}>
+        <StreamdownBlock>{text}</StreamdownBlock>
       </div>
     );
   }
@@ -850,8 +867,8 @@ function TextBlock({ text, isLatest }: { text: string; isLatest: boolean }) {
         "transition-all duration-300 overflow-hidden",
         collapsed ? "max-h-0 opacity-0" : "max-h-[4000px] opacity-100",
       )}>
-        <div className={cn("border-t border-border-faint p-14 max-h-[600px] overflow-auto no-scrollbar", PROSE_CLASSES_LARGE)}>
-          <Streamdown plugins={{ code, mermaid }}>{text}</Streamdown>
+        <div className={cn("border-t border-border-faint p-14 max-h-[600px] overflow-auto no-scrollbar", SD_CLASSES_LARGE)}>
+          <StreamdownBlock>{text}</StreamdownBlock>
         </div>
       </div>
     </div>

@@ -78,6 +78,31 @@
   --sd-muted-fg: hsl(var(--muted-foreground));
 }
 
+/* Scale headings down slightly for activity feed context */
+[data-streamdown="heading-1"] {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+[data-streamdown="heading-2"] {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+[data-streamdown="heading-3"] {
+  font-size: 1.125rem;
+  line-height: 1.5rem;
+}
+
+/* Code block styling */
+[data-streamdown="code-block"] {
+  border-radius: 0.5rem;
+  border: 1px solid hsl(var(--border));
+}
+
+/* Table styling */
+[data-streamdown="table"] {
+  font-size: 0.875rem;
+}
+
 /* JSON viewer overrides */
 .json-view-lite {
   font-family: var(--font-mono, ui-monospace, monospace) !important;
