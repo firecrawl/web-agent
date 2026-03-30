@@ -1068,6 +1068,9 @@ export default function AgentPage() {
           className="flex items-center gap-10 hover:opacity-80 transition-opacity"
           onClick={() => {
             setHasSubmitted(false);
+            setConfig(defaultConfig);
+            setConversationId(null);
+            setSuggestions([]);
             stop();
           }}
         >
