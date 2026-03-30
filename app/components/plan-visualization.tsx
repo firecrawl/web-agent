@@ -1287,19 +1287,25 @@ export default function PlanVisualization({
         // Workers panel handles its own running state — skip here
         if (lastRunning?.type === "workers") return null;
 
-        // Regular tool running — describe it
-        let description = "Thinking...";
-        if (lastRunning?.type === "search") description = `Searching: "${lastRunning.text?.slice(0, 60)}"`;
-        else if (lastRunning?.type === "scrape") description = `Scraping ${lastRunning.url ? new URL(lastRunning.url).hostname : "page"}`;
-        else if (lastRunning?.type === "interact") description = `Interacting with ${lastRunning.url ? new URL(lastRunning.url).hostname : "page"}`;
-        else if (lastRunning?.type === "bash") description = describeBashAction(lastRunning.command ?? "").label;
-        else if (lastRunning?.type === "skill") description = `Loading skill: ${lastRunning.skillName}`;
-        else if (lastRunning?.type === "subagent") description = `Running sub-agent: ${lastRunning.skillName}`;
+        // Regular tool running — show as a card tile
+        let title = "Generating response";
+        let subtitle = "";
+        if (lastRunning?.type === "search") { title = "Searching"; subtitle = lastRunning.text?.slice(0, 80) ?? ""; }
+        else if (lastRunning?.type === "scrape") { title = "Scraping"; subtitle = lastRunning.url ? new URL(lastRunning.url).hostname : ""; }
+        else if (lastRunning?.type === "interact") { title = "Interacting"; subtitle = lastRunning.url ? new URL(lastRunning.url).hostname : ""; }
+        else if (lastRunning?.type === "bash") { const b = describeBashAction(lastRunning.command ?? ""); title = b.label; subtitle = b.detail ?? ""; }
+        else if (lastRunning?.type === "skill") { title = "Loading skill"; subtitle = lastRunning.skillName ?? ""; }
+        else if (lastRunning?.type === "subagent") { title = "Running sub-agent"; subtitle = lastRunning.skillName ?? ""; }
 
         return (
-          <div className="flex items-center gap-6 my-12 px-4">
-            <div className="w-12 h-12 rounded-full border-2 border-black-alpha-8 border-t-heat-100 animate-spin flex-shrink-0" />
-            <span className="text-body-small text-black-alpha-40">{description}</span>
+          <div className="my-12 rounded-10 border border-border-faint overflow-hidden animate-pulse">
+            <div className="flex items-center gap-8 px-14 py-10">
+              <div className="flex-1 min-w-0">
+                <div className="text-label-medium text-accent-black">{title}</div>
+                {subtitle && <div className="text-body-small text-black-alpha-40 truncate">{subtitle}</div>}
+              </div>
+              <div className="w-5 h-5 rounded-full bg-heat-100 flex-shrink-0" />
+            </div>
           </div>
         );
       })()}
