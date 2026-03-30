@@ -114,7 +114,7 @@ Rules:
 - Always use \`graph TD\` (top-down) layout
 - 4-12 nodes — show the key steps
 - Label nodes with the action (Search, Scrape, Compare, Output, etc.)
-- Show parallel branches where applicable — especially when using spawnWorkers
+- Show parallel branches where applicable — especially when using spawnAgents
 - After the diagram, immediately start executing
 
 Updating the plan:
@@ -133,32 +133,32 @@ graph TD
     style F fill:#efe,stroke:#6b6
 \`\`\`
 
-- Update the plan whenever: a worker fails, a new source is found, the approach pivots, or you're about to start a new phase.
+- Update the plan whenever: a agent fails, a new source is found, the approach pivots, or you're about to start a new phase.
 
-## Parallel workers — use spawnWorkers for independent tasks
-When you have 2+ independent data collection tasks (researching multiple companies, scraping multiple sites, analyzing multiple stocks), use the \`spawnWorkers\` tool to run them in parallel:
+## Parallel agents — use spawnAgents for independent tasks
+When you have 2+ independent data collection tasks (researching multiple companies, scraping multiple sites, analyzing multiple stocks), use the \`spawnAgents\` tool to run them in parallel:
 
-spawnWorkers({ tasks: [
+spawnAgents({ tasks: [
   { id: "vercel", prompt: "Search for and scrape Vercel's pricing page. Extract all plan tiers with prices and features." },
   { id: "netlify", prompt: "Search for and scrape Netlify's pricing page. Extract all plan tiers with prices and features." },
   { id: "cloudflare", prompt: "Search for and scrape Cloudflare Pages pricing. Extract all plan tiers with prices and features." },
 ]})
 
-Each worker gets its own isolated context and full toolkit. Workers return only a concise result — your context stays clean. Always show the parallel branches in your mermaid plan:
+Each agent gets its own isolated context and full toolkit. Agents return only a concise result — your context stays clean. Always show the parallel branches in your mermaid plan:
 
 \`\`\`mermaid
 graph TD
-    A[Plan] --> W{spawnWorkers}
-    W --> B[Worker: Vercel]
-    W --> C[Worker: Netlify]
-    W --> D[Worker: Cloudflare]
+    A[Plan] --> W{spawnAgents}
+    W --> B[Agent: Vercel]
+    W --> C[Agent: Netlify]
+    W --> D[Agent: Cloudflare]
     B --> E[Compile results]
     C --> E
     D --> E
     E --> F[Output comparison table]
 \`\`\`
 
-Use spawnWorkers when:
+Use spawnAgents when:
 - Comparing 2+ companies, products, or services
 - Researching multiple stocks or financial instruments
 - Scraping multiple sites for the same type of data
@@ -212,7 +212,7 @@ Use spawnWorkers when:
 - Only use bashExec to SAVE data to /data/ when: (a) the dataset is very large (100+ rows), (b) you need to process it further, or (c) you want to persist intermediate results between steps.
 - Keep narration minimal — a one-line summary before the data block is fine. No paragraphs explaining what you're about to show.${schemaHint}${urlHint}${uploadHint}`;
 
-  const spawnWorkers = createWorkerTool(model, firecrawlApiKey, skills);
+  const spawnAgents = createWorkerTool(model, firecrawlApiKey, skills);
 
   return new ToolLoopAgent({
     model,
@@ -221,7 +221,7 @@ Use spawnWorkers when:
       ...fcTools,
       ...skillTools,
       ...subAgentTools,
-      spawnWorkers,
+      spawnAgents,
       formatOutput,
       bashExec,
     },

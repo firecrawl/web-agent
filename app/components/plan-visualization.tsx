@@ -806,8 +806,8 @@ function WorkersPanel({ item }: { item: TimelineItem }) {
         <div className="flex-1 min-w-0">
           <div className="text-label-medium text-accent-black">
             {isRunning
-              ? `${tasks.length} workers running`
-              : `${results.filter((r) => r.status === "done").length} workers completed`}
+              ? `${tasks.length} agents running`
+              : `${results.filter((r) => r.status === "done").length} agents completed`}
           </div>
           <div className="text-body-small text-black-alpha-40 truncate">
             {isRunning
@@ -1076,7 +1076,7 @@ function extractTimeline(messages: UIMessage[]): TimelineItem[] {
             text: desc,
             status,
           });
-        } else if (toolName === "spawnWorkers") {
+        } else if (toolName === "spawnAgents" || toolName === "spawnWorkers") {
           const outObj = output as { results?: WorkerResultData[]; total?: number; completed?: number; failed?: number } | undefined;
           const taskList = Array.isArray((input as Record<string, unknown>).tasks)
             ? (input as Record<string, unknown>).tasks as { id: string; prompt: string }[]

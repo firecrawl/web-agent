@@ -1155,6 +1155,17 @@ export default function AgentPage() {
               ))}
             </div>
 
+            {/* Get code example button */}
+            <button
+              type="button"
+              className="w-full mb-10 px-14 py-10 rounded-10 bg-heat-100 text-accent-white text-label-medium hover:bg-[color:var(--heat-90)] transition-all active:scale-[0.99] text-center"
+              onClick={() => {
+                sendMessage({ text: `Show me the code to reproduce this query using the Firecrawl API. Show tabs for: Python, TypeScript/Node.js, and cURL. Include the prompt, any schemas, and the expected response format.` });
+              }}
+            >
+              Get code example
+            </button>
+
             {/* Follow-up suggestions — stacked block level */}
             <div className="flex flex-col gap-4 mb-10">
               {suggestions.map((s, i) => (
