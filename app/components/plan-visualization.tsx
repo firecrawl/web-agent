@@ -831,6 +831,15 @@ function TextBlock({ text, isLatest }: { text: string; isLatest: boolean }) {
   const isShort = text.length < SHORT_TEXT_THRESHOLD;
   const [collapsed, setCollapsed] = useState(!isLatest && !isShort);
   const preview = useMemo(() => {
+    // Clean labels for code-fenced content
+    const trimmed = text.trim();
+    if (trimmed.startsWith("```json")) return "JSON";
+    if (trimmed.startsWith("```csv")) return "CSV";
+    if (trimmed.startsWith("```markdown") || trimmed.startsWith("```md")) return "Markdown";
+    if (trimmed.startsWith("```")) {
+      const lang = trimmed.slice(3).split("\n")[0].trim();
+      return lang ? lang.charAt(0).toUpperCase() + lang.slice(1) : "Response";
+    }
     const firstLine = text.split("\n").find((l) => l.trim() && !l.startsWith("#"))?.trim() ?? text.slice(0, 100);
     return firstLine.length > 120 ? firstLine.slice(0, 120) + "..." : firstLine;
   }, [text]);

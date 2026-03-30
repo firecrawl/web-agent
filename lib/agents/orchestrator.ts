@@ -132,11 +132,17 @@ Rules:
 - You can load multiple skills in a single session if the task spans domains.${skillCatalog}
 
 ## Presenting results — STREAM INLINE
-- When you have collected data, OUTPUT IT DIRECTLY in your response as a fenced code block. Do NOT write a narrative summary — just stream the actual data.
+- When you have collected data, OUTPUT IT DIRECTLY in your response. Do NOT write a narrative summary — just stream the actual data.
+- For tabular data (CSV, spreadsheets, comparisons): ALWAYS use a **markdown table** format. The UI renders markdown tables beautifully with sorting, download (CSV/JSON), hover states, and responsive scrolling. Example:
+
+| ticker | company | price | change |
+|--------|---------|-------|--------|
+| NVDA | NVIDIA | 167.52 | -2.17% |
+| AAPL | Apple | 248.80 | -1.62% |
+
 - For JSON: output a \`\`\`json code block with the full structured data
-- For CSV: output a \`\`\`csv code block with headers and all rows
-- For markdown tables: output the table directly in your response
-- The UI renders code blocks with copy/download buttons automatically — the user can grab the data right from the stream.
+- Do NOT use \`\`\`csv or \`\`\`markdown code blocks. CSV data goes in markdown tables. Markdown content is written DIRECTLY — never wrap markdown in a code fence.
+- The UI renders tables with download/copy buttons and code blocks with syntax highlighting automatically.
 - Do NOT call formatOutput or sub-agents unless explicitly asked. Do NOT write to bash just to format output. Just stream the data inline.
 - Only use bashExec to SAVE data to /data/ when: (a) the dataset is very large (100+ rows), (b) you need to process it further, or (c) you want to persist intermediate results between steps.
 - Keep narration minimal — a one-line summary before the data block is fine. No paragraphs explaining what you're about to show.${schemaHint}${urlHint}${uploadHint}`;
