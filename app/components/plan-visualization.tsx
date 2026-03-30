@@ -773,42 +773,42 @@ function BashResult({ command, stdout, stderr, exitCode }: { command: string; st
     );
   }
 
-  // Data processing commands — terminal style
+  // Data processing commands — same light card style
   return (
-    <div className={cn("my-12 rounded-10 overflow-hidden transition-all", expanded ? "shadow-sm" : "")} style={{ background: "#1e1e1e" }}>
+    <div className={cn("my-12 rounded-10 border overflow-hidden transition-all", expanded ? "border-black-alpha-16 shadow-sm" : "border-border-faint hover:border-black-alpha-16")}>
       <button
         type="button"
-        className="w-full flex items-center gap-8 px-14 py-10 hover:brightness-110 transition-all text-left cursor-pointer"
+        className="w-full flex items-center gap-8 px-14 py-10 hover:bg-black-alpha-2 transition-colors text-left cursor-pointer"
         onClick={() => setExpanded(!expanded)}
       >
-        <div className="flex items-center gap-4 flex-shrink-0">
-          <div className="w-8 h-8 rounded-full" style={{ background: "#ff5f57" }} />
-          <div className="w-8 h-8 rounded-full" style={{ background: "#febc2e" }} />
-          <div className="w-8 h-8 rounded-full" style={{ background: "#28c840" }} />
+        <div className="w-24 h-24 rounded-6 bg-black-alpha-4 flex-center flex-shrink-0">
+          <svg fill="none" height="12" viewBox="0 0 24 24" width="12" className="text-black-alpha-40" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" />
+          </svg>
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-label-small" style={{ color: "#e0e0e0" }}>{label}</div>
-          {detail && <div className="text-mono-x-small truncate" style={{ color: "#888" }}>{detail}</div>}
+          <div className="text-label-small text-accent-black">{label}</div>
+          {detail && <div className="text-mono-x-small text-black-alpha-24 truncate">{detail}</div>}
         </div>
         <div className="flex items-center gap-6 flex-shrink-0">
           {exitCode !== 0 && (
-            <span className="text-mono-x-small px-6 py-1 rounded-4" style={{ color: "#ff5f57", background: "rgba(255,95,87,0.15)" }}>
+            <span className="text-mono-x-small text-accent-crimson bg-accent-crimson/8 px-6 py-1 rounded-4">
               exit {exitCode}
             </span>
           )}
           {exitCode === 0 && (
-            <svg className="w-14 h-14" style={{ color: "#28c840" }} fill="none" viewBox="0 0 16 16">
+            <svg className="w-14 h-14 text-accent-forest" fill="none" viewBox="0 0 16 16">
               <path d="M13.3 4.3L6 11.6 2.7 8.3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           )}
-          <svg fill="none" height="12" viewBox="0 0 24 24" width="12" className={cn("transition-transform", expanded && "rotate-180")} style={{ color: "#666" }} stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <svg fill="none" height="12" viewBox="0 0 24 24" width="12" className={cn("transition-transform text-black-alpha-24", expanded && "rotate-180")} stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <path d="M6 9l6 6 6-6" />
           </svg>
         </div>
       </button>
 
       {expanded && (
-        <div className="px-10 py-8 max-h-300 overflow-auto no-scrollbar" style={{ borderTop: "1px solid #333" }}>
+        <div className="border-t border-border-faint px-14 py-10 max-h-300 overflow-auto no-scrollbar">
           <StreamdownBlock>{[
             "```bash",
             command,
@@ -1270,18 +1270,18 @@ export default function PlanVisualization({
                   </div>
                 </div>
               ) : (
-                <div key={i} className="my-12 rounded-10 overflow-hidden" style={{ background: "#1e1e1e" }}>
+                <div key={i} className="my-12 rounded-10 border border-border-faint overflow-hidden">
                   <div className="flex items-center gap-8 px-14 py-10">
-                    <div className="flex items-center gap-4 flex-shrink-0">
-                      <div className="w-8 h-8 rounded-full" style={{ background: "#ff5f57" }} />
-                      <div className="w-8 h-8 rounded-full" style={{ background: "#febc2e" }} />
-                      <div className="w-8 h-8 rounded-full" style={{ background: "#28c840" }} />
+                    <div className="w-24 h-24 rounded-6 bg-black-alpha-4 flex-center flex-shrink-0">
+                      <svg fill="none" height="12" viewBox="0 0 24 24" width="12" className="text-black-alpha-40" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" />
+                      </svg>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-label-small" style={{ color: "#e0e0e0" }}>{bashInfo.label}</div>
-                      {bashInfo.detail && <div className="text-mono-x-small truncate" style={{ color: "#888" }}>{bashInfo.detail}</div>}
+                      <div className="text-label-small text-accent-black">{bashInfo.label}</div>
+                      {bashInfo.detail && <div className="text-mono-x-small text-black-alpha-24 truncate">{bashInfo.detail}</div>}
                     </div>
-                    <div className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin flex-shrink-0" style={{ borderColor: "#28c840", borderTopColor: "transparent" }} />
+                    <div className="w-10 h-10 rounded-full border-2 border-heat-100 border-t-transparent animate-spin flex-shrink-0" />
                   </div>
                 </div>
               );
