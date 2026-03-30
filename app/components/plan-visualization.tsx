@@ -779,62 +779,10 @@ function BashResult({ command, stdout, stderr, exitCode }: { command: string; st
 
 // --- Skill load rendering ---
 
-const SHORT_TEXT_THRESHOLD = 200;
-
-function TextBlock({ text, isLatest }: { text: string; isLatest: boolean }) {
-  const isShort = text.length < SHORT_TEXT_THRESHOLD;
-  const [collapsed, setCollapsed] = useState(!isLatest && !isShort);
-  const preview = useMemo(() => {
-    // Clean labels for code-fenced content
-    const trimmed = text.trim();
-    if (trimmed.startsWith("```json")) return "JSON";
-    if (trimmed.startsWith("```csv")) return "CSV";
-    if (trimmed.startsWith("```markdown") || trimmed.startsWith("```md")) return "Markdown";
-    if (trimmed.startsWith("```")) {
-      const lang = trimmed.slice(3).split("\n")[0].trim();
-      return lang ? lang.charAt(0).toUpperCase() + lang.slice(1) : "Response";
-    }
-    const firstLine = text.split("\n").find((l) => l.trim() && !l.startsWith("#"))?.trim() ?? text.slice(0, 100);
-    return firstLine.length > 120 ? firstLine.slice(0, 120) + "..." : firstLine;
-  }, [text]);
-
-  if (isShort) {
-    return (
-      <div className="my-12">
-        <StreamdownBlock>{text}</StreamdownBlock>
-      </div>
-    );
-  }
-
+function TextBlock({ text }: { text: string }) {
   return (
-    <div className="my-12 rounded-10 border border-border-faint overflow-hidden">
-      <button
-        type="button"
-        className="w-full flex items-center gap-8 px-14 py-10 hover:bg-black-alpha-2 transition-colors text-left cursor-pointer"
-        onClick={() => setCollapsed(!collapsed)}
-      >
-        <svg fill="none" height="16" viewBox="0 0 24 24" width="16" className="flex-shrink-0 text-black-alpha-32">
-          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
-          <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
-        </svg>
-        <span className="flex-1 min-w-0 text-body-small text-black-alpha-48 truncate">
-          {collapsed ? preview : "Response"}
-        </span>
-        <span className="text-mono-x-small text-black-alpha-24 bg-black-alpha-4 px-6 py-1 rounded-4 flex-shrink-0">
-          {(text.length / 1000).toFixed(1)}k
-        </span>
-        <svg fill="none" height="12" viewBox="0 0 24 24" width="12" className={cn("transition-transform text-black-alpha-24", collapsed && "-rotate-90")} stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-          <path d="M6 9l6 6 6-6" />
-        </svg>
-      </button>
-      <div className={cn(
-        "transition-all duration-300 overflow-hidden",
-        collapsed ? "max-h-0 opacity-0" : "max-h-[4000px] opacity-100",
-      )}>
-        <div className="border-t border-border-faint p-14 max-h-[600px] overflow-auto no-scrollbar">
-          <StreamdownBlock>{text}</StreamdownBlock>
-        </div>
-      </div>
+    <div className="my-12">
+      <StreamdownBlock>{text}</StreamdownBlock>
     </div>
   );
 }
@@ -1163,7 +1111,7 @@ export default function PlanVisualization({
       {timeline.map((item, i) => {
         switch (item.type) {
           case "text":
-            return <TextBlock key={i} text={item.text!} isLatest={i === timeline.length - 1} />;
+            return <TextBlock key={i} text={item.text!} />;
           case "search":
             return (
               <SearchResults
