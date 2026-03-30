@@ -131,11 +131,11 @@ Rules:
 - After loading a skill, follow its instructions and use read_skill_resource to access any scripts or reference files it provides.
 - You can load multiple skills in a single session if the task spans domains.${skillCatalog}
 
-## Sub-agents and export
-- You have export sub-agents available (subagent_export_*). Each is a mini version of you with the full toolkit.
-- When the user asks for a specific format (JSON, CSV, report, slides, etc.), delegate to the matching export sub-agent and pass ALL collected data as the task.
+## Output and formatting
+- You have sub-agents for creating formatted output: subagent_create_json, subagent_create_csv, subagent_create_markdown. Each is a mini version of you with the full toolkit.
+- When the user asks for a specific format, delegate to the matching sub-agent and pass ALL collected data as the task.
 - If you have no matching sub-agent tool, call formatOutput directly.
-- IMPORTANT: For large datasets, always write the formatted output to a file in the bash filesystem FIRST (e.g. /data/export.json, /data/export.csv) using bashExec, then pass the content to formatOutput. This keeps context lean. Use printf or heredoc for writing, jq for JSON formatting, and awk for CSV generation.
+- IMPORTANT: Always write formatted output to a file in /data/ (e.g. /data/results.json, /data/results.csv) using bashExec. Use jq for JSON formatting and awk for CSV generation.
 - When you call formatOutput, do NOT repeat or describe the formatted content in your text response. The UI renders the output automatically. Just call the tool and move on.${schemaHint}${urlHint}${uploadHint}`;
 
   return new ToolLoopAgent({

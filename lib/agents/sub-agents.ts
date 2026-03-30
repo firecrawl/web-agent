@@ -23,14 +23,9 @@ interface BuiltInSubAgent {
 }
 
 const BUILTIN_SUBAGENTS: BuiltInSubAgent[] = [
-  { id: "export_json", name: "JSON Exporter", skill: "export-json", description: "Format collected data as structured JSON", maxSteps: 5 },
-  { id: "export_csv", name: "CSV Exporter", skill: "export-csv", description: "Format collected data as a CSV table", maxSteps: 5 },
-  { id: "export_report", name: "Report Writer", skill: "export-report", description: "Format collected data as a markdown report", maxSteps: 5 },
-  { id: "export_html", name: "HTML Exporter", skill: "export-html", description: "Format collected data as a styled HTML document", maxSteps: 5 },
-  { id: "export_slides", name: "Slide Deck Builder", skill: "export-slides", description: "Structure collected data as a slide deck outline", maxSteps: 5 },
-  { id: "export_spreadsheet", name: "Spreadsheet Builder", skill: "export-spreadsheet", description: "Structure collected data as a multi-sheet spreadsheet", maxSteps: 5 },
-  { id: "export_pdf", name: "PDF Document Builder", skill: "export-pdf", description: "Structure collected data as a print-ready document", maxSteps: 5 },
-  { id: "export_document", name: "Document Writer", skill: "export-document", description: "Structure collected data as a formal document", maxSteps: 5 },
+  { id: "create_json", name: "JSON Creator", skill: "export-json", description: "Format collected data as structured JSON and save to /data/", maxSteps: 5 },
+  { id: "create_csv", name: "CSV Creator", skill: "export-csv", description: "Format collected data as a CSV table and save to /data/", maxSteps: 5 },
+  { id: "create_markdown", name: "Markdown Creator", skill: "export-report", description: "Format collected data as clean markdown and save to /data/", maxSteps: 5 },
 ];
 
 function makeSubagentTool(
