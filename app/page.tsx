@@ -1135,24 +1135,42 @@ export default function AgentPage() {
         {/* Bottom section */}
         {!isRunning && messages.length > 0 && (
           <div className="mt-20 pt-16 border-t border-border-faint">
-            {/* Contextual follow-up suggestions */}
-            {suggestions.length > 0 && (
-              <div className="flex flex-wrap gap-6 mb-10">
-                {suggestions.map((s, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    className="px-12 py-6 rounded-full text-body-small text-black-alpha-56 border border-border-faint bg-accent-white hover:border-heat-100 hover:text-heat-100 hover:bg-heat-4 transition-all"
-                    onClick={() => {
-                      setSuggestions([]);
-                      sendMessage({ text: s });
-                    }}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            )}
+            {/* Generate buttons — always on top */}
+            <div className="grid grid-cols-3 gap-8 mb-10">
+              {[
+                { label: "Generate CSV", format: "CSV", skill: "export-csv" },
+                { label: "Generate JSON", format: "JSON", skill: "export-json" },
+                { label: "Generate Markdown", format: "Markdown", skill: "export-report" },
+              ].map((btn) => (
+                <button
+                  key={btn.format}
+                  type="button"
+                  className="px-12 py-8 rounded-10 border border-border-faint text-label-small text-black-alpha-48 hover:border-heat-40 hover:text-heat-100 hover:bg-heat-4 transition-all text-center"
+                  onClick={() => {
+                    sendMessage({ text: `Load the "${btn.skill}" skill and format all collected data as ${btn.format}. Follow the skill instructions. Stream the output inline.` });
+                  }}
+                >
+                  {btn.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Follow-up suggestions — stacked block level */}
+            <div className="flex flex-col gap-4 mb-10">
+              {suggestions.map((s, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className="w-full text-left px-14 py-10 rounded-10 border border-border-faint bg-accent-white text-body-small text-black-alpha-56 hover:border-heat-40 hover:text-accent-black hover:bg-heat-4 transition-all"
+                  onClick={() => {
+                    setSuggestions([]);
+                    sendMessage({ text: s });
+                  }}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
 
             {/* Follow-up input */}
             <div
@@ -1199,26 +1217,6 @@ export default function AgentPage() {
                   </button>
                 )}
               </div>
-            </div>
-
-            {/* Generate buttons */}
-            <div className="grid grid-cols-3 gap-8 mt-10">
-              {[
-                { label: "Generate CSV", format: "CSV", skill: "export-csv" },
-                { label: "Generate JSON", format: "JSON", skill: "export-json" },
-                { label: "Generate Markdown", format: "Markdown", skill: "export-report" },
-              ].map((btn) => (
-                <button
-                  key={btn.format}
-                  type="button"
-                  className="px-12 py-8 rounded-10 border border-border-faint text-label-small text-black-alpha-48 hover:border-heat-40 hover:text-heat-100 hover:bg-heat-4 transition-all text-center"
-                  onClick={() => {
-                    sendMessage({ text: `Load the "${btn.skill}" skill and format all collected data as ${btn.format}. Follow the skill instructions. Stream the output inline.` });
-                  }}
-                >
-                  {btn.label}
-                </button>
-              ))}
             </div>
 
           </div>
