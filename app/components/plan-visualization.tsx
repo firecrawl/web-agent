@@ -807,16 +807,17 @@ interface WorkerLiveProgress {
   tokens: number;
 }
 
-function WorkerCard({ id, prompt, result, workerStatus, liveProgress, stepDetails }: {
+function WorkerCard({ id, prompt, result, workerStatus, liveProgress, stepDetails, compact }: {
   id: string;
   prompt: string;
   result?: string;
   workerStatus: "running" | "done" | "error";
   liveProgress?: WorkerLiveProgress;
   stepDetails?: { toolCalls: { name: string; input: string }[]; text: string }[];
+  compact?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const steps = liveProgress?.steps ?? result ? (stepDetails?.length ?? 0) : 0;
+  const steps = liveProgress?.steps ?? (stepDetails?.length ?? 0);
   const tokens = liveProgress?.tokens ?? 0;
 
   return (
@@ -826,42 +827,41 @@ function WorkerCard({ id, prompt, result, workerStatus, liveProgress, stepDetail
     )}>
       <button
         type="button"
-        className="w-full flex items-center gap-8 px-14 py-10 text-left hover:bg-black-alpha-2 transition-colors"
+        className={cn("w-full flex items-center gap-8 text-left hover:bg-black-alpha-2 transition-colors", compact ? "px-10 py-8" : "px-14 py-10")}
         onClick={() => setExpanded(!expanded)}
       >
         {workerStatus === "running" && (
-          <div className="w-10 h-10 rounded-full border-2 border-heat-100 border-t-transparent animate-spin flex-shrink-0" />
+          <div className="w-8 h-8 rounded-full border-2 border-heat-100 border-t-transparent animate-spin flex-shrink-0" />
         )}
         {workerStatus === "done" && (
-          <svg className="w-14 h-14 text-accent-forest flex-shrink-0" fill="none" viewBox="0 0 16 16">
+          <svg className="w-12 h-12 text-accent-forest flex-shrink-0" fill="none" viewBox="0 0 16 16">
             <path d="M13.3 4.3L6 11.6 2.7 8.3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         )}
         {workerStatus === "error" && (
-          <svg className="w-14 h-14 text-accent-crimson flex-shrink-0" fill="none" viewBox="0 0 16 16">
+          <svg className="w-12 h-12 text-accent-crimson flex-shrink-0" fill="none" viewBox="0 0 16 16">
             <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
         )}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-6">
-            <span className="text-label-medium text-accent-black">{id}</span>
+          <div className="flex items-center gap-4">
+            <span className={cn(compact ? "text-label-small" : "text-label-medium", "text-accent-black truncate")}>{id}</span>
             {steps > 0 && (
-              <span className="text-mono-x-small text-black-alpha-24">
-                {steps} step{steps !== 1 ? "s" : ""}{tokens > 0 ? ` · ~${tokens > 1000 ? `${(tokens / 1000).toFixed(1)}k` : tokens} tokens` : ""}
+              <span className="text-mono-x-small text-black-alpha-24 flex-shrink-0">
+                {steps}{!compact && tokens > 0 ? ` · ~${tokens > 1000 ? `${(tokens / 1000).toFixed(1)}k` : tokens}` : ""}
               </span>
             )}
           </div>
-          {workerStatus === "running" && liveProgress?.currentTool ? (
-            <div className="text-body-small text-heat-100 truncate animate-pulse">
-              {liveProgress.currentTool}{liveProgress.currentInput ? `: ${liveProgress.currentInput.slice(0, 60)}` : ""}
-            </div>
-          ) : (
-            <div className="text-body-small text-black-alpha-40 truncate">{prompt.slice(0, 80)}</div>
+          {!compact && (
+            workerStatus === "running" && liveProgress?.currentTool ? (
+              <div className="text-body-small text-heat-100 truncate animate-pulse">
+                {liveProgress.currentTool}{liveProgress.currentInput ? `: ${liveProgress.currentInput.slice(0, 60)}` : ""}
+              </div>
+            ) : (
+              <div className="text-body-small text-black-alpha-40 truncate">{prompt.slice(0, 80)}</div>
+            )
           )}
         </div>
-        <svg fill="none" height="12" viewBox="0 0 24 24" width="12" className={cn("transition-transform text-black-alpha-24", expanded && "rotate-180")} stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-          <path d="M6 9l6 6 6-6" />
-        </svg>
       </button>
       {expanded && (
         <div className="border-t border-border-faint">
@@ -903,6 +903,7 @@ function WorkersPanel({ item }: { item: TimelineItem }) {
   const isDone = !isRunning && results.length > 0;
   const resultMap = new Map(results.map((r) => [r.id, r]));
   const [collapsed, setCollapsed] = useState(false);
+  const [expandedWorkers, setExpandedWorkers] = useState(false);
 
   // Poll for live progress while workers are running
   const [liveProgress, setLiveProgress] = useState<Record<string, WorkerLiveProgress>>({});
@@ -942,25 +943,44 @@ function WorkersPanel({ item }: { item: TimelineItem }) {
           </svg>
         )}
       </button>
-      {!collapsed && (
-        <div className="flex flex-col gap-6">
-          {tasks.map((task) => {
-            const r = resultMap.get(task.id);
-            const live = liveProgress[task.id];
-            return (
-              <WorkerCard
-                key={task.id}
-                id={task.id}
-                prompt={task.prompt}
-                result={r?.result}
-                workerStatus={isRunning && !r ? "running" : r?.status === "error" ? "error" : "done"}
-                liveProgress={isRunning && !r ? live : undefined}
-                stepDetails={r?.stepDetails}
-              />
-            );
-          })}
-        </div>
-      )}
+      {!collapsed && (() => {
+        const showAll = tasks.length <= 9;
+        const [expanded, setExpanded] = [expandedWorkers, setExpandedWorkers];
+        const visible = showAll || expanded ? tasks : tasks.slice(0, 9);
+        const remaining = tasks.length - 9;
+
+        return (
+          <>
+            <div className={cn("grid gap-4", tasks.length <= 3 ? "grid-cols-1" : "grid-cols-3")}>
+              {visible.map((task) => {
+                const r = resultMap.get(task.id);
+                const live = liveProgress[task.id];
+                return (
+                  <WorkerCard
+                    key={task.id}
+                    id={task.id}
+                    prompt={task.prompt}
+                    result={r?.result}
+                    workerStatus={isRunning && !r ? "running" : r?.status === "error" ? "error" : "done"}
+                    liveProgress={isRunning && !r ? live : undefined}
+                    stepDetails={r?.stepDetails}
+                    compact={tasks.length > 3}
+                  />
+                );
+              })}
+            </div>
+            {!showAll && !expanded && remaining > 0 && (
+              <button
+                type="button"
+                className="mt-6 text-body-small text-black-alpha-32 hover:text-heat-100 transition-colors"
+                onClick={() => setExpanded(true)}
+              >
+                View {remaining} more workers
+              </button>
+            )}
+          </>
+        );
+      })()}
     </div>
   );
 }
