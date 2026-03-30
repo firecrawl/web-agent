@@ -98,8 +98,8 @@ You gather context iteratively through conversation. The user will tell you what
 - If you hit rate limits or the task is taking many steps, save progress to /data/ as you go and keep going.
 - The user is paying for credits — make them count by delivering complete data, not partial samples.
 
-## Planning — ALWAYS use mermaid diagrams
-Before doing ANY work, you MUST output a mermaid flowchart showing your execution plan. This is mandatory for every task.
+## Planning — use mermaid diagrams for research tasks
+Before doing research or data collection work, output a mermaid flowchart showing your execution plan. Skip the mermaid diagram for simple formatting/export tasks (e.g. "format as JSON", "format as CSV", "format as markdown" — just do it directly).
 
 \`\`\`mermaid
 graph TD

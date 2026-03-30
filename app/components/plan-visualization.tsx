@@ -678,7 +678,7 @@ interface WorkerLiveProgress {
   currentTool?: string;
   currentInput?: string;
   tokens: number;
-  stepLog?: { tool: string; input: string }[];
+  stepLog?: { tool: string; detail: string; input: Record<string, unknown> }[];
 }
 
 function WorkerCard({ id, prompt, result, workerStatus, liveProgress, stepDetails }: {
@@ -751,11 +751,14 @@ function WorkerCard({ id, prompt, result, workerStatus, liveProgress, stepDetail
             </div>
           )}
           {workerStatus === "running" && !result && liveProgress?.stepLog && liveProgress.stepLog.length > 0 && (
-            <div className="px-14 py-8 flex flex-col gap-2">
+            <div className="px-14 py-8 flex flex-col gap-3">
               {liveProgress.stepLog.map((step, si) => (
-                <div key={si} className="flex items-center gap-6">
-                  <span className="text-mono-x-small text-black-alpha-24 w-16 flex-shrink-0">{si + 1}</span>
-                  <span className="text-body-small text-black-alpha-48 truncate">{step.tool}{step.input ? `: ${step.input.slice(0, 60)}` : ""}</span>
+                <div key={si} className="flex items-start gap-6">
+                  <span className="text-mono-x-small text-black-alpha-24 w-16 flex-shrink-0 mt-2">{si + 1}</span>
+                  <div className="min-w-0 flex-1">
+                    <span className="text-mono-x-small text-black-alpha-32 bg-black-alpha-4 px-6 py-1 rounded-4">{step.tool}</span>
+                    {step.detail && <div className="text-body-small text-black-alpha-48 truncate mt-1">{step.detail}</div>}
+                  </div>
                 </div>
               ))}
             </div>

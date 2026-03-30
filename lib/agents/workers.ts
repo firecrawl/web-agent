@@ -18,7 +18,7 @@ export interface WorkerProgress {
   tokens: number;
   inputTokens: number;
   outputTokens: number;
-  stepLog: { tool: string; input: string }[];
+  stepLog: { tool: string; detail: string; input: Record<string, unknown> }[];
 }
 
 const g = globalThis as unknown as { __workerProgress?: Map<string, WorkerProgress> };
@@ -95,11 +95,29 @@ export function createWorkerTool(
               abortSignal,
               onStepFinish: ({ toolCalls, usage }) => {
                 const prev = workerProgress.get(task.id);
-                const lastTool = toolCalls?.[toolCalls.length - 1];
-                const tc = lastTool as Record<string, unknown> | undefined;
-                const toolName = lastTool?.toolName ?? "thinking";
-                const toolInput = tc?.args ? JSON.stringify(tc.args).slice(0, 80) : "";
                 const prevLog = prev?.stepLog ?? [];
+
+                // Build rich step entries from all tool calls in this step
+                const newSteps = (toolCalls ?? []).map((call) => {
+                  const c = (call ?? {}) as Record<string, unknown>;
+                  const args = (c.args ?? c.input ?? {}) as Record<string, unknown>;
+                  const name = (c.toolName as string) ?? "thinking";
+                  // Build a human-readable detail string
+                  let detail = "";
+                  if (name === "search") detail = `Searched: "${args.query ?? ""}"`;
+                  else if (name === "scrape") detail = `${args.url ?? ""}`;
+                  else if (name === "interact") detail = `${args.url ?? ""}`;
+                  else if (name === "bashExec" || name === "bash_exec") detail = String(args.command ?? "").slice(0, 80);
+                  else if (name === "load_skill") detail = String(args.name ?? args.skill ?? "");
+                  else detail = JSON.stringify(args).slice(0, 80);
+                  return { tool: name, detail, input: args };
+                });
+                if (newSteps.length === 0) newSteps.push({ tool: "thinking", detail: "", input: {} });
+
+                const lastTool = toolCalls?.[toolCalls.length - 1];
+                const toolName = lastTool?.toolName ?? "thinking";
+                const tc = lastTool as Record<string, unknown> | undefined;
+                const toolInput = tc?.args ? JSON.stringify(tc.args).slice(0, 80) : "";
                 workerProgress.set(task.id, {
                   id: task.id,
                   status: "running",
@@ -109,7 +127,7 @@ export function createWorkerTool(
                   tokens: (prev?.tokens ?? 0) + (usage?.totalTokens ?? 0),
                   inputTokens: (prev?.inputTokens ?? 0) + (usage?.inputTokens ?? 0),
                   outputTokens: (prev?.outputTokens ?? 0) + (usage?.outputTokens ?? 0),
-                  stepLog: [...prevLog, { tool: toolName, input: toolInput }],
+                  stepLog: [...prevLog, ...newSteps],
                 });
               },
             });
