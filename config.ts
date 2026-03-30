@@ -8,31 +8,31 @@ import type { ModelConfig } from "./lib/types";
 type ModelRef = Pick<ModelConfig, "provider" | "model">;
 
 export const config = {
-  // ─── Orchestrator ───
-  // The primary model that handles user queries, tool calls, and reasoning.
-  orchestrator: {
-    provider: "anthropic",
-    model: "claude-sonnet-4-6",
-  } satisfies ModelRef,
 
-  // ─── Sub-agent ───
-  // Model used by sub-agents (create_json, create_csv, create_markdown).
-  // Can be cheaper/faster since sub-agents do focused formatting tasks.
-  subAgent: {
-    provider: "anthropic",
-    model: "claude-sonnet-4-6",
-  } satisfies ModelRef,
+  // ═══════════════════════════════════════════
+  // Anthropic (Claude)
+  // ═══════════════════════════════════════════
+  // orchestrator: { provider: "anthropic", model: "claude-sonnet-4-6" } satisfies ModelRef,
+  // subAgent:     { provider: "anthropic", model: "claude-sonnet-4-6" } satisfies ModelRef,
+  // background:   { provider: "anthropic", model: "claude-haiku-4-5-20251001" } satisfies ModelRef,
 
-  // ─── Background tasks ───
-  // Lightweight model for non-critical tasks that don't need full reasoning.
-  background: {
-    provider: "anthropic",
-    model: "claude-haiku-4-5-20251001",
-  } satisfies ModelRef,
+  // ═══════════════════════════════════════════
+  // Google (Gemini)
+  // ═══════════════════════════════════════════
+  orchestrator: { provider: "google", model: "gemini-3-flash-preview" } satisfies ModelRef,
+  subAgent:     { provider: "google", model: "gemini-3-flash-preview" } satisfies ModelRef,
+  background:   { provider: "google", model: "gemini-2.5-flash" } satisfies ModelRef,
+
+  // ═══════════════════════════════════════════
+  // OpenAI (GPT)
+  // ═══════════════════════════════════════════
+  // orchestrator: { provider: "openai", model: "gpt-4.1" } satisfies ModelRef,
+  // subAgent:     { provider: "openai", model: "gpt-4.1" } satisfies ModelRef,
+  // background:   { provider: "openai", model: "o4-mini" } satisfies ModelRef,
 
   // ─── Task-specific overrides ───
-  // Override the model for specific background tasks.
-  // Set to null to use the background model above.
+  // Set a model here to override the background model for that task.
+  // null = use the background model above.
   tasks: {
     plan: null as ModelRef | null,             // Execution plan generation
     suggestions: null as ModelRef | null,       // Follow-up suggestion generation
