@@ -782,48 +782,40 @@ function WorkersPanel({ item }: { item: TimelineItem }) {
   }, [isRunning]);
 
   return (
-    <div className="my-12">
-      {isDone && collapsed ? (
-        <div
-          className="rounded-10 border border-border-faint overflow-hidden hover:border-black-alpha-16 transition-all cursor-pointer"
-          onClick={() => setCollapsed(false)}
-        >
-          <div className="flex items-center gap-8 px-14 py-10">
-            <svg className="w-14 h-14 text-accent-forest flex-shrink-0" fill="none" viewBox="0 0 16 16">
-              <path d="M13.3 4.3L6 11.6 2.7 8.3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <div className="flex-1 min-w-0">
-              <div className="text-label-medium text-accent-black">{results.length} workers completed</div>
-              <div className="text-body-small text-black-alpha-40">{tasks.map((t) => t.id).join(", ")}</div>
-            </div>
-            <svg fill="none" height="12" viewBox="0 0 24 24" width="12" className="text-black-alpha-24 flex-shrink-0" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <path d="M6 9l6 6 6-6" />
-            </svg>
+    <div className="my-12 rounded-10 border border-border-faint overflow-hidden">
+      {/* Card header */}
+      <button
+        type="button"
+        className="w-full flex items-center gap-8 px-14 py-10 hover:bg-black-alpha-2 transition-colors text-left"
+        onClick={() => setCollapsed(!collapsed)}
+      >
+        <div className="flex-1 min-w-0">
+          <div className="text-label-medium text-accent-black">
+            {isRunning
+              ? `${tasks.length} workers running`
+              : `${results.filter((r) => r.status === "done").length} workers completed`}
+          </div>
+          <div className="text-body-small text-black-alpha-40 truncate">
+            {isRunning
+              ? tasks.map((t) => { const l = liveProgress[t.id]; return l?.currentTool ? `${t.id}: ${l.currentTool}` : t.id; }).join(", ")
+              : tasks.map((t) => t.id).join(", ")}
           </div>
         </div>
-      ) : (
-        <button
-          type="button"
-          className="flex items-center gap-6 mb-8 hover:opacity-80 transition-opacity"
-          onClick={() => isDone && setCollapsed(true)}
-        >
-          {isDone && (
-            <svg className="w-14 h-14 text-accent-forest flex-shrink-0" fill="none" viewBox="0 0 16 16">
-              <path d="M13.3 4.3L6 11.6 2.7 8.3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          )}
-          <span className="text-label-small text-accent-black">
-            {isRunning ? `${tasks.length} workers` : `${results.length} workers completed`}
-          </span>
-          {isDone && (
-            <svg fill="none" height="12" viewBox="0 0 24 24" width="12" className="text-black-alpha-24 rotate-180" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <path d="M6 9l6 6 6-6" />
-            </svg>
-          )}
-        </button>
-      )}
+        {isRunning ? (
+          <div className="w-5 h-5 rounded-full bg-heat-100 animate-pulse flex-shrink-0" />
+        ) : (
+          <svg className="w-14 h-14 text-accent-forest flex-shrink-0" fill="none" viewBox="0 0 16 16">
+            <path d="M13.3 4.3L6 11.6 2.7 8.3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        )}
+        <svg fill="none" height="12" viewBox="0 0 24 24" width="12" className={cn("transition-transform text-black-alpha-24 flex-shrink-0", collapsed && "-rotate-90")} stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+
+      {/* Nested worker cards */}
       {!collapsed && (
-        <div className="flex flex-col gap-4">
+        <div className="border-t border-border-faint px-10 py-8 flex flex-col gap-4 bg-black-alpha-1">
           {tasks.map((task) => {
             const r = resultMap.get(task.id);
             const live = liveProgress[task.id];
