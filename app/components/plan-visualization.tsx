@@ -1014,6 +1014,23 @@ function extractTimeline(messages: UIMessage[]): TimelineItem[] {
             text: desc,
             status,
           });
+        } else if (toolName === "spawnWorkers") {
+          const outObj = output as { results?: { id: string; status: string; result: string; steps: number }[]; total?: number; completed?: number; failed?: number } | undefined;
+          const taskList = Array.isArray((input as Record<string, unknown>).tasks)
+            ? (input as Record<string, unknown>).tasks as { id: string; prompt: string }[]
+            : [];
+          const results = outObj?.results ?? [];
+          // Render each worker result as inline text
+          const workerSummary = results.map((r) =>
+            `### Worker: ${r.id} ${r.status === "done" ? "✓" : "✗"}\n${r.result}`
+          ).join("\n\n---\n\n");
+          items.push({
+            type: "text",
+            text: workerSummary || (status === "running"
+              ? `Running ${taskList.length} workers in parallel: ${taskList.map((t) => t.id).join(", ")}...`
+              : "Workers completed"),
+            status,
+          });
         } else if (toolName.startsWith("subagent_")) {
           const outObj = output as Record<string, unknown>;
           const result = typeof outObj.result === "string" ? outObj.result : undefined;

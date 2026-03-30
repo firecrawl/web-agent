@@ -1018,12 +1018,12 @@ export default function AgentPage() {
         <div className="w-full max-w-640 mt-20">
           <div className="grid grid-cols-2 gap-8">
             {[
-              "Compare pricing between Vercel, Netlify, and Cloudflare Pages",
-              "Find the top 10 YC W25 companies and extract their details",
-              "Get the current stock prices for NVDA, AAPL, and GOOGL",
-              "Scrape Hacker News front page and summarize the top stories",
-              "Research the best headless CMS platforms and compare features",
-              "Extract product listings from a Nike shoe category page",
+              "Compare pricing across Vercel, Netlify, Cloudflare Pages, and Railway — scrape each site in parallel and build a comparison table",
+              "Research NVDA, AAPL, GOOGL, MSFT, and AMZN — get current prices, market cap, and recent news for each in parallel",
+              "Scrape Hacker News front page and summarize the top 10 stories",
+              "Find the top YC W25 companies, scrape each company page, extract founders and descriptions",
+              "Compare features across the top 5 headless CMS platforms — scrape each docs site",
+              "Extract all Nike men's running shoes with prices from nike.com",
             ].map((prompt) => (
               <button
                 key={prompt}

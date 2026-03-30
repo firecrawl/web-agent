@@ -4,6 +4,7 @@ import type { AgentConfig } from "../types";
 import { resolveModel } from "../config/resolve-model";
 import { createSkillTools } from "../skills/tools";
 import { createSubAgentTools } from "./sub-agents";
+import { createWorkerTool } from "./workers";
 import { formatOutput } from "./tools";
 import { bashExec, initBashWithFiles } from "./bash-tool";
 import { discoverSkills } from "../skills/discovery";
@@ -106,18 +107,18 @@ graph TD
     A --> C[Scrape Site 2]
     B --> D[Compile & compare]
     C --> D
-    D --> E[Save to /data/]
+    D --> E[Output table]
 \`\`\`
 
 Rules:
 - Always use \`graph TD\` (top-down) layout
-- 4-10 nodes — show the key steps, not every detail
-- Label nodes with the action (Search, Scrape, Compare, Save, etc.)
-- Show parallel branches where applicable
+- 4-12 nodes — show the key steps
+- Label nodes with the action (Search, Scrape, Compare, Output, etc.)
+- Show parallel branches where applicable — especially when using spawnWorkers
 - After the diagram, immediately start executing
 
 Updating the plan:
-- If your approach changes mid-task (e.g. a source is unavailable, you discover new data, or the task is more complex than expected), output an UPDATED mermaid diagram showing the revised plan. Mark completed steps with ✓ and highlight what changed.
+- If your approach changes mid-task (source unavailable, new data discovered, task more complex than expected), output an UPDATED mermaid diagram. Mark completed steps with ✓ and highlight changes.
 - Example mid-task update:
 
 \`\`\`mermaid
@@ -127,12 +128,41 @@ graph TD
     A --> F[Scrape Site 3 - NEW]
     B --> D[Compile & compare]
     F --> D
-    D --> E[Save to /data/]
+    D --> E[Output table]
     style C fill:#fee,stroke:#f66
     style F fill:#efe,stroke:#6b6
 \`\`\`
 
-- Only update the plan when the approach materially changes — not for every small step.
+- Update the plan whenever: a worker fails, a new source is found, the approach pivots, or you're about to start a new phase.
+
+## Parallel workers — use spawnWorkers for independent tasks
+When you have 2+ independent data collection tasks (researching multiple companies, scraping multiple sites, analyzing multiple stocks), use the \`spawnWorkers\` tool to run them in parallel:
+
+spawnWorkers({ tasks: [
+  { id: "vercel", prompt: "Search for and scrape Vercel's pricing page. Extract all plan tiers with prices and features." },
+  { id: "netlify", prompt: "Search for and scrape Netlify's pricing page. Extract all plan tiers with prices and features." },
+  { id: "cloudflare", prompt: "Search for and scrape Cloudflare Pages pricing. Extract all plan tiers with prices and features." },
+]})
+
+Each worker gets its own isolated context and full toolkit. Workers return only a concise result — your context stays clean. Always show the parallel branches in your mermaid plan:
+
+\`\`\`mermaid
+graph TD
+    A[Plan] --> W{spawnWorkers}
+    W --> B[Worker: Vercel]
+    W --> C[Worker: Netlify]
+    W --> D[Worker: Cloudflare]
+    B --> E[Compile results]
+    C --> E
+    D --> E
+    E --> F[Output comparison table]
+\`\`\`
+
+Use spawnWorkers when:
+- Comparing 2+ companies, products, or services
+- Researching multiple stocks or financial instruments
+- Scraping multiple sites for the same type of data
+- Any task where work can be divided into independent chunks
 
 ## Style
 - Never use emojis in your responses.
@@ -181,6 +211,8 @@ graph TD
 - Only use bashExec to SAVE data to /data/ when: (a) the dataset is very large (100+ rows), (b) you need to process it further, or (c) you want to persist intermediate results between steps.
 - Keep narration minimal — a one-line summary before the data block is fine. No paragraphs explaining what you're about to show.${schemaHint}${urlHint}${uploadHint}`;
 
+  const spawnWorkers = createWorkerTool(model, firecrawlApiKey, skills);
+
   return new ToolLoopAgent({
     model,
     instructions,
@@ -188,6 +220,7 @@ graph TD
       ...fcTools,
       ...skillTools,
       ...subAgentTools,
+      spawnWorkers,
       formatOutput,
       bashExec,
     },
