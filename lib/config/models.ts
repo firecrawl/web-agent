@@ -18,6 +18,7 @@ export const AVAILABLE_MODELS = {
     { id: "o4-mini", name: "o4-mini", icon: "openai" },
   ],
   google: [
+    { id: "gemini-3.0-flash", name: "Gemini 3 Flash", icon: "gemini" },
     { id: "gemini-2.5-pro-preview-05-06", name: "Gemini 2.5 Pro", icon: "gemini" },
     { id: "gemini-2.5-flash-preview-05-20", name: "Gemini 2.5 Flash", icon: "gemini" },
   ],
