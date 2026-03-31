@@ -1,0 +1,15 @@
+{
+  "text": "```mermaid\ngraph TD\n    A[Scrape Hacker News] --> B[Extract Top 5 Titles and Points]\n    B --> C[Format as Markdown Table]\n```\n\n| Title | Points | Source |\n|-------|--------|--------|\n| Meta reports Q4 and FY 2025 results | 382 | [news.ycombinator.com](https://news.ycombinator.com/item?id=43555230) |\n| DeepSeek-V3 and R1 are now available on GitHub Models | 451 | [news.ycombinator.com](https://news.ycombinator.com/item?id=43552945) |\n| Show HN: DeepScroll \u2013 A browser extension to scroll through DeepSeek's thinking | 108 | [news.ycombinator.com](https://news.ycombinator.com/item?id=43554448) |\n| Why you shouldn't use \"modern\" CSS resets | 136 | [news.ycombinator.com](https://news.ycombinator.com/item?id=43555026) |\n| OpenAI announces o3-mini | 1146 | [news.ycombinator.com](https://news.ycombinator.com/item?id=43550302) |",
+  "steps": [
+    {
+      "text": "```mermaid\ngraph TD\n    A[Scrape Hacker News] --> B[Extract Top 5 Titles and Points]\n    B --> C[Format as Markdown Table]\n```\n\n| Title | Points | Source |\n|-------|--------|--------|\n| Meta reports Q4 and FY 2025 results | 382 | [news.ycombinator.com](https://news.ycombinator.com/item?id=43555230) |\n| DeepSeek-V3 and R1 are now available on GitHub Models | 451 | [news.ycombinator.com](https://news.ycombinator.com/item?id=43552945) |\n| Show HN: DeepScroll \u2013 A browser extension to scroll through DeepSeek's thinking | 108 | [news.ycombinator.com](https://news.ycombinator.com/item?id=43554448) |\n| Why you shouldn't use \"modern\" CSS resets | 136 | [news.ycombinator.com](https://news.ycombinator.com/item?id=43555026) |\n| OpenAI announces o3-mini | 1146 | [news.ycombinator.com](https://news.ycombinator.com/item?id=43550302) |",
+      "toolCalls": [],
+      "toolResults": []
+    }
+  ],
+  "usage": {
+    "inputTokens": 6967,
+    "outputTokens": 499,
+    "totalTokens": 7466
+  }
+}

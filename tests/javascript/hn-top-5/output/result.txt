@@ -1,0 +1,18 @@
+language: javascript
+time: 3.0s
+steps: 1
+tokens: 7379
+
+```mermaid
+graph TD
+    A[Scrape Hacker News] --> B[Extract Top 5 Stories]
+    B --> C[Format Results Table]
+```
+
+| Rank | Title | Points | Source |
+|------|-------|--------|--------|
+| 1 | Google says it will remove 2B inactive accounts by the end of the year | 482 | [Hacker News](https://news.ycombinator.com/item?id=46614486) |
+| 2 | Simple data validation with SQLite and LLMs | 134 | [Hacker News](https://news.ycombinator.com/item?id=46616084) |
+| 3 | Scribe: High-performance observability for PostgreSQL | 118 | [Hacker News](https://news.ycombinator.com/item?id=46616335) |
+| 4 | DeepSeek: High-Efficiency Mixture-of-Experts Architecture | 89 | [Hacker News](https://news.ycombinator.com/item?id=46616852) |
+| 5 | Show HN: A tool to generate SVG diagrams from text | 76 | [Hacker News](https://news.ycombinator.com/item?id=46617210) |

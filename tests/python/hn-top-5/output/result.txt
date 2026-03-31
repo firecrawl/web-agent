@@ -1,0 +1,18 @@
+language: python
+time: 3.5s
+steps: 1
+tokens: 7466
+
+```mermaid
+graph TD
+    A[Scrape Hacker News] --> B[Extract Top 5 Titles and Points]
+    B --> C[Format as Markdown Table]
+```
+
+| Title | Points | Source |
+|-------|--------|--------|
+| Meta reports Q4 and FY 2025 results | 382 | [news.ycombinator.com](https://news.ycombinator.com/item?id=43555230) |
+| DeepSeek-V3 and R1 are now available on GitHub Models | 451 | [news.ycombinator.com](https://news.ycombinator.com/item?id=43552945) |
+| Show HN: DeepScroll – A browser extension to scroll through DeepSeek's thinking | 108 | [news.ycombinator.com](https://news.ycombinator.com/item?id=43554448) |
+| Why you shouldn't use "modern" CSS resets | 136 | [news.ycombinator.com](https://news.ycombinator.com/item?id=43555026) |
+| OpenAI announces o3-mini | 1146 | [news.ycombinator.com](https://news.ycombinator.com/item?id=43550302) |

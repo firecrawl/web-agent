@@ -1,0 +1,15 @@
+{
+  "text": "```mermaid\ngraph TD\n    A[Scrape Hacker News] --> B[Extract Top 5 Stories]\n    B --> C[Format Results Table]\n```\n\n| Rank | Title | Points | Source |\n|------|-------|--------|--------|\n| 1 | Google says it will remove 2B inactive accounts by the end of the year | 482 | [Hacker News](https://news.ycombinator.com/item?id=46614486) |\n| 2 | Simple data validation with SQLite and LLMs | 134 | [Hacker News](https://news.ycombinator.com/item?id=46616084) |\n| 3 | Scribe: High-performance observability for PostgreSQL | 118 | [Hacker News](https://news.ycombinator.com/item?id=46616335) |\n| 4 | DeepSeek: High-Efficiency Mixture-of-Experts Architecture | 89 | [Hacker News](https://news.ycombinator.com/item?id=46616852) |\n| 5 | Show HN: A tool to generate SVG diagrams from text | 76 | [Hacker News](https://news.ycombinator.com/item?id=46617210) |",
+  "steps": [
+    {
+      "text": "```mermaid\ngraph TD\n    A[Scrape Hacker News] --> B[Extract Top 5 Stories]\n    B --> C[Format Results Table]\n```\n\n| Rank | Title | Points | Source |\n|------|-------|--------|--------|\n| 1 | Google says it will remove 2B inactive accounts by the end of the year | 482 | [Hacker News](https://news.ycombinator.com/item?id=46614486) |\n| 2 | Simple data validation with SQLite and LLMs | 134 | [Hacker News](https://news.ycombinator.com/item?id=46616084) |\n| 3 | Scribe: High-performance observability for PostgreSQL | 118 | [Hacker News](https://news.ycombinator.com/item?id=46616335) |\n| 4 | DeepSeek: High-Efficiency Mixture-of-Experts Architecture | 89 | [Hacker News](https://news.ycombinator.com/item?id=46616852) |\n| 5 | Show HN: A tool to generate SVG diagrams from text | 76 | [Hacker News](https://news.ycombinator.com/item?id=46617210) |",
+      "toolCalls": [],
+      "toolResults": []
+    }
+  ],
+  "usage": {
+    "inputTokens": 6967,
+    "outputTokens": 412,
+    "totalTokens": 7379
+  }
+}

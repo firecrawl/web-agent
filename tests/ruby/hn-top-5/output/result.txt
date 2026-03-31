@@ -1,0 +1,12 @@
+language: ruby
+time: 5.1s
+steps: 2
+tokens: 7948
+
+| Title | Points | Source |
+|-------|--------|--------|
+| Axios compromised on NPM – Malicious versions drop remote access trojan | 1147 | [stepsecurity.io](https://www.stepsecurity.io/blog/axios-compromised-on-npm-malicious-versions-drop-remote-access-trojan) |
+| Ollama is now powered by MLX on Apple Silicon in preview | 395 | [ollama.com](https://ollama.com/blog/mlx) |
+| Artemis II is not safe to fly | 484 | [idlewords.com](https://idlewords.com/2026/03/artemis_ii_is_not_safe_to_fly.htm) |
+| Claude Code's source code has been leaked via a map file in their NPM registry | 570 | [twitter.com](https://twitter.com/Fried_rice/status/2038894956459290963) |
+| Audio tapes reveal mass rule-breaking in Milgram's obedience experiments | 50 | [psypost.org](https://www.psypost.org/audio-tapes-reveal-mass-rule-breaking-in-milgram-s-obedience-experiments-2026-03-26/) |
