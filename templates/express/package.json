@@ -1,0 +1,25 @@
+{
+  "name": "firecrawl-agent-express",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch server.ts",
+    "start": "tsx server.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "latest",
+    "@ai-sdk/google": "latest",
+    "@ai-sdk/openai": "latest",
+    "ai": "^6.0.0",
+    "express": "^5.1.0",
+    "firecrawl-aisdk": "^0.12.0",
+    "gray-matter": "^4.0.3",
+    "just-bash": "^2.14.0",
+    "papaparse": "^5.4.1",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "tsx": "^4.19.0"
+  }
+}
