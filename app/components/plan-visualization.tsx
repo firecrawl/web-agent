@@ -691,8 +691,10 @@ function WorkerCard({ id, prompt, result, workerStatus, liveProgress, stepDetail
 }) {
   const [expanded, setExpanded] = useState(false);
 
-  const activityText = workerStatus === "running" && liveProgress?.currentTool
-    ? `${liveProgress.currentTool}${liveProgress.currentInput ? `: ${liveProgress.currentInput.slice(0, 60)}` : ""}`
+  // Show latest action with full detail from step log
+  const lastStep = liveProgress?.stepLog?.[liveProgress.stepLog.length - 1];
+  const activityText = workerStatus === "running" && lastStep
+    ? lastStep.detail || lastStep.tool
     : prompt.slice(0, 80);
 
   return (
