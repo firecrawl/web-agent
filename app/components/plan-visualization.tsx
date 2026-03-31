@@ -782,6 +782,11 @@ function WorkersPanel({ item }: { item: TimelineItem }) {
   const resultMap = new Map(results.map((r) => [r.id, r]));
   const [collapsed, setCollapsed] = useState(isDone);
 
+  // Auto-collapse when all agents finish
+  useEffect(() => {
+    if (isDone) setCollapsed(true);
+  }, [isDone]);
+
   // Poll for live progress while workers are running
   const [liveProgress, setLiveProgress] = useState<Record<string, WorkerLiveProgress>>({});
   useEffect(() => {
