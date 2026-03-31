@@ -8,6 +8,7 @@ import { createWorkerTool } from "./workers";
 import { formatOutput } from "./tools";
 import { bashExec, initBashWithFiles } from "./bash-tool";
 import { discoverSkills } from "../skills/discovery";
+import { loadOrchestratorPrompt } from "../prompts/loader";
 
 export async function createOrchestrator(
   config: AgentConfig,
@@ -81,9 +82,17 @@ export async function createOrchestrator(
     ? `\n\nThe user uploaded files to the bash filesystem:\n${uploadDescriptions.map((d) => `- ${d}`).join("\n")}\nUse bashExec to explore them: 'head -5 /data/file.csv', 'cat /data/file.json | jq .', 'wc -l /data/file.txt', etc.`
     : "";
 
-  const instructions = `You are a web research agent powered by Firecrawl. You help users scrape, search, and extract structured data from the web.
+  const instructions = await loadOrchestratorPrompt({
+    TODAY: new Date().toISOString().split("T")[0],
+    FIRECRAWL_SYSTEM_PROMPT: fcSystemPrompt ?? "",
+    SKILL_CATALOG: skillCatalog,
+    SCHEMA_HINT: schemaHint,
+    URL_HINTS: urlHint,
+    UPLOAD_HINTS: uploadHint,
+  });
 
-Today's date is ${new Date().toISOString().split("T")[0]}.
+  // Legacy inline prompt removed — now loaded from prompts/orchestrator.md
+  void `
 
 ${fcSystemPrompt ?? ""}
 
@@ -210,7 +219,7 @@ Use spawnAgents when:
 - The UI renders tables with download/copy buttons and code blocks with syntax highlighting automatically.
 - Do NOT call formatOutput or sub-agents unless explicitly asked. Do NOT write to bash just to format output. Just stream the data inline.
 - Only use bashExec to SAVE data to /data/ when: (a) the dataset is very large (100+ rows), (b) you need to process it further, or (c) you want to persist intermediate results between steps.
-- Keep narration minimal — a one-line summary before the data block is fine. No paragraphs explaining what you're about to show.${schemaHint}${urlHint}${uploadHint}`;
+- Keep narration minimal — a one-line summary before the data block is fine. No paragraphs explaining what you're about to show.`;
 
   const spawnAgents = createWorkerTool(model, firecrawlApiKey, skills);
 

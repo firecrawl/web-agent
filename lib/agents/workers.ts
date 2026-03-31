@@ -6,6 +6,7 @@ import { formatOutput } from "./tools";
 import type { SkillMetadata } from "../types";
 import { createSkillTools } from "../skills/tools";
 import { config } from "@/config";
+import { loadWorkerPrompt } from "../prompts/loader";
 
 // --- Progress tracking (persists across HMR) ---
 
@@ -77,15 +78,10 @@ export function createWorkerTool(
       const results: WorkerResult[] = await Promise.all(
         limited.map(async (task) => {
           try {
+            const workerInstructions = await loadWorkerPrompt({ TASK_ID: task.id });
             const worker = new ToolLoopAgent({
               model,
-              instructions: `You are a focused worker agent. Complete the task and return a clean, concise result.
-- Use search, scrape, and interact as needed.
-- Return ONLY the findings — no narration, just the data.
-- For tabular data, use a markdown table.
-- For structured data, use JSON.
-- Keep your response under 500 words.
-- Save large datasets to /data/${task.id}.json using bashExec.`,
+              instructions: workerInstructions,
               tools: workerTools,
               stopWhen: stepCountIs(config.workerMaxSteps),
             });
