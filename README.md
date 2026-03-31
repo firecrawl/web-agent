@@ -4,14 +4,6 @@ AI-powered web research agent. Search, scrape, and extract structured data from 
 
 Built on the [Vercel AI SDK](https://sdk.vercel.ai/) and [Firecrawl](https://firecrawl.dev/).
 
-## Try it
-
-```bash
-curl -X POST http://localhost:3000/api/v1/run \
-  -H "Content-Type: application/json" \
-  -d '{"prompt": "Get the top 5 stories on Hacker News with title and points"}'
-```
-
 ## Quick start
 
 ```bash
@@ -22,17 +14,92 @@ cp .env.local.example .env.local   # add your FIRECRAWL_API_KEY
 npm run dev                         # http://localhost:3000
 ```
 
+Then call it:
+
+```bash
+curl -X POST http://localhost:3000/api/v1/run \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "Get the top 5 stories on Hacker News with title and points"}'
+```
+
 ## What it does
 
-You give it a prompt. It searches the web, scrapes pages, extracts data, and returns structured results. It handles pagination, parallel research, JavaScript-rendered pages, and output formatting automatically.
+You give it a prompt. It searches the web, scrapes pages, extracts data, and returns structured results.
 
 ```
 "Compare pricing for Vercel, Netlify, and Cloudflare Pages"
 
-  → Searches for each provider's pricing page
-  → Scrapes all three in parallel
-  → Extracts plan tiers, prices, features
-  → Returns a comparison table with sources
+  -> Searches for each provider's pricing page
+  -> Scrapes all three in parallel
+  -> Extracts plan tiers, prices, features
+  -> Returns a comparison table with sources
+```
+
+## How it works
+
+```mermaid
+graph LR
+    A[Prompt] --> B[Agent Core]
+    B --> C[Search]
+    B --> D[Scrape]
+    B --> E[Interact]
+    B --> F[Bash Sandbox]
+    C --> G[Results]
+    D --> G
+    E --> G
+    F --> G
+```
+
+The agent receives a prompt, plans its approach, then uses Firecrawl tools to gather data from the web. For complex tasks it spawns parallel workers that run independently and report back.
+
+```mermaid
+graph TD
+    A[Orchestrator] --> B{Parallel?}
+    B -->|Yes| C[Worker 1: Vercel]
+    B -->|Yes| D[Worker 2: Netlify]
+    B -->|Yes| E[Worker 3: Cloudflare]
+    C --> F[Compile Results]
+    D --> F
+    E --> F
+    F --> G[Formatted Output]
+    B -->|No| H[Sequential Steps]
+    H --> G
+```
+
+## Architecture
+
+```mermaid
+graph TD
+    subgraph "Agent Core (TypeScript)"
+        ORC[Orchestrator]
+        ORC --> TOOLS[Firecrawl Tools]
+        ORC --> SKILLS[Skills]
+        ORC --> WORKERS[Parallel Workers]
+        ORC --> BASH[Bash Sandbox]
+        ORC --> SUBS[Sub-Agents]
+    end
+
+    subgraph "Server Templates"
+        NEXT[Next.js - Full UI]
+        HONO[Hono - API Only]
+        EXPRESS[Express - API Only]
+    end
+
+    NEXT --> ORC
+    HONO --> ORC
+    EXPRESS --> ORC
+
+    subgraph "Clients (any language)"
+        PY[Python SDK]
+        GO[Go SDK]
+        JS[JS/TS SDK]
+        MORE[+ 14 more]
+    end
+
+    PY -->|POST /v1/run| NEXT
+    GO -->|POST /v1/run| HONO
+    JS -->|POST /v1/run| EXPRESS
+    MORE -->|POST /v1/run| NEXT
 ```
 
 ## Repository structure
