@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { AgentConfig, ModelConfig } from "@/lib/types";
+import type { AgentConfig, ModelConfig } from "@agent-core";
 import { AVAILABLE_MODELS, PROVIDER_META, type Provider } from "@/lib/config/models";
 import ProviderModelIcon from "./provider-icon";
 import { cn } from "@/utils/cn";

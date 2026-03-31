@@ -1,7 +1,8 @@
 import { createAgentUIStreamResponse } from "ai";
-import { createOrchestrator } from "@/lib/agents/orchestrator";
-import type { AgentConfig } from "@/lib/types";
-import { getFirecrawlKey } from "@/lib/config/keys";
+import { createOrchestrator, type OrchestratorOptions } from "@agent-core";
+import type { AgentConfig } from "@agent-core";
+import { getFirecrawlKey, getProviderKey } from "@/lib/config/keys";
+import { config as globalConfig } from "@/config";
 
 export const maxDuration = 300;
 
@@ -19,8 +20,22 @@ export async function POST(req: Request) {
     );
   }
 
+  const apiKeys: Record<string, string> = {};
+  for (const p of ["anthropic", "openai", "google", "gateway"] as const) {
+    const k = getProviderKey(p);
+    if (k) apiKeys[p] = k;
+  }
+
   try {
-    const agent = await createOrchestrator(config, firecrawlApiKey);
+    const opts: OrchestratorOptions = {
+      config,
+      firecrawlApiKey,
+      apiKeys,
+      maxWorkers: globalConfig.maxWorkers,
+      workerMaxSteps: globalConfig.workerMaxSteps,
+    };
+
+    const agent = await createOrchestrator(opts);
 
     return createAgentUIStreamResponse({
       agent,

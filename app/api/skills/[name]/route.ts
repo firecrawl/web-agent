@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
-import { parseSkillBody } from "@/lib/skills/parser";
+import { parseSkillBody } from "@agent-core/skills/parser";
 
 const SKILLS_DIR = path.join(process.cwd(), ".agents", "skills");
 

@@ -1,4 +1,4 @@
-import { discoverSkills } from "@/lib/skills/discovery";
+import { discoverSkills } from "@agent-core";
 
 export async function GET() {
   const skills = await discoverSkills();

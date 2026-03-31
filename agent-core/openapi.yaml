@@ -1,0 +1,291 @@
+openapi: 3.1.0
+info:
+  title: Firecrawl Agent API
+  description: |
+    AI-powered web research agent built on Firecrawl.
+    Search, scrape, and extract structured data from the web.
+  version: 0.1.0
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local development
+  - url: https://your-deployment.vercel.app/api/v1
+    description: Production
+
+paths:
+  /run:
+    post:
+      operationId: run
+      summary: Run the agent
+      description: |
+        Execute a web research task. Supports both streaming (SSE) and
+        non-streaming responses. This is the single consolidated endpoint
+        that replaces /query, /extract, and /plan.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RunRequest"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RunResponse"
+            text/event-stream:
+              schema:
+                description: SSE stream of AgentEvent objects (when stream=true)
+                type: string
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /skills:
+    get:
+      operationId: listSkills
+      summary: List available skills
+      description: Returns all discovered skills the agent can use.
+      responses:
+        "200":
+          description: List of skills
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Skill"
+
+  /workers/progress:
+    get:
+      operationId: getWorkerProgress
+      summary: Get parallel worker progress
+      description: Poll for progress of currently running parallel workers.
+      responses:
+        "200":
+          description: Worker progress map
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: "#/components/schemas/WorkerProgress"
+
+components:
+  schemas:
+    RunRequest:
+      type: object
+      required:
+        - prompt
+      properties:
+        prompt:
+          type: string
+          description: The research task or question.
+          example: "Get pricing for Vercel, Netlify, and Cloudflare Pages"
+        stream:
+          type: boolean
+          default: false
+          description: If true, response is an SSE stream of AgentEvent objects.
+        format:
+          type: string
+          enum: [json, csv, markdown]
+          description: Desired output format. If set, agent will format data accordingly.
+        schema:
+          type: object
+          description: JSON Schema for structured output (used with format=json).
+        columns:
+          type: array
+          items:
+            type: string
+          description: Column names for CSV output.
+        urls:
+          type: array
+          items:
+            type: string
+          description: Seed URLs to start from instead of searching.
+        model:
+          $ref: "#/components/schemas/ModelConfig"
+        subAgentModel:
+          $ref: "#/components/schemas/ModelConfig"
+        maxSteps:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 15
+          description: Maximum agent steps before stopping.
+        skills:
+          type: array
+          items:
+            type: string
+          description: Skills to pre-load for this run.
+
+    RunResponse:
+      type: object
+      properties:
+        text:
+          type: string
+          description: The agent's final text response.
+        data:
+          type: string
+          description: Formatted output (present when format was specified).
+        format:
+          type: string
+          enum: [json, csv, markdown, text]
+          description: The format of the data field.
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/StepDetail"
+        usage:
+          $ref: "#/components/schemas/Usage"
+
+    ModelConfig:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum: [anthropic, openai, google, gateway]
+          description: LLM provider.
+        model:
+          type: string
+          description: Model identifier (e.g. "gemini-3-flash-preview", "claude-sonnet-4-6").
+
+    StepDetail:
+      type: object
+      properties:
+        text:
+          type: string
+        toolCalls:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              input:
+                type: object
+        toolResults:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              output:
+                type: object
+
+    Usage:
+      type: object
+      properties:
+        inputTokens:
+          type: integer
+        outputTokens:
+          type: integer
+        totalTokens:
+          type: integer
+
+    Skill:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        resources:
+          type: array
+          items:
+            type: string
+
+    WorkerProgress:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum: [running, done, error]
+        steps:
+          type: integer
+        currentTool:
+          type: string
+        tokens:
+          type: integer
+        stepLog:
+          type: array
+          items:
+            type: object
+            properties:
+              tool:
+                type: string
+              detail:
+                type: string
+
+    AgentEvent:
+      description: Server-sent event payload (when stream=true)
+      oneOf:
+        - type: object
+          properties:
+            type:
+              const: text
+            content:
+              type: string
+        - type: object
+          properties:
+            type:
+              const: tool-call
+            name:
+              type: string
+            input:
+              type: object
+        - type: object
+          properties:
+            type:
+              const: tool-result
+            name:
+              type: string
+            output:
+              type: object
+        - type: object
+          properties:
+            type:
+              const: usage
+            usage:
+              $ref: "#/components/schemas/Usage"
+        - type: object
+          properties:
+            type:
+              const: done
+            text:
+              type: string
+            steps:
+              type: array
+              items:
+                $ref: "#/components/schemas/StepDetail"
+            usage:
+              $ref: "#/components/schemas/Usage"
+        - type: object
+          properties:
+            type:
+              const: error
+            error:
+              type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string

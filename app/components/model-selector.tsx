@@ -1,7 +1,7 @@
 "use client";
 
 import { AVAILABLE_MODELS, type Provider } from "@/lib/config/models";
-import type { ModelConfig } from "@/lib/types";
+import type { ModelConfig } from "@agent-core";
 import { cn } from "@/utils/cn";
 
 const PROVIDERS: { id: Provider; name: string }[] = [

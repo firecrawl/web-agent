@@ -1,10 +1,19 @@
 import { generateText } from "ai";
-import type { AgentConfig } from "@/lib/types";
-import { discoverSkills } from "@/lib/skills/discovery";
+import type { AgentConfig } from "@agent-core";
+import { discoverSkills, resolveModel } from "@agent-core";
 import { getTaskModel } from "@/config";
-import { resolveModel } from "@/lib/config/resolve-model";
+import { getProviderKey } from "@/lib/config/keys";
 
 export const maxDuration = 60;
+
+function getApiKeys() {
+  const keys: Record<string, string> = {};
+  for (const p of ["anthropic", "openai", "google", "gateway"] as const) {
+    const k = getProviderKey(p);
+    if (k) keys[p] = k;
+  }
+  return keys;
+}
 
 export async function POST(req: Request) {
   const { prompt, config } = (await req.json()) as {
@@ -17,7 +26,7 @@ export async function POST(req: Request) {
     ? `\nAvailable skills: ${skills.map((s) => `${s.name} (${s.description.slice(0, 60)})`).join(", ")}`
     : "";
 
-  const model = await resolveModel(getTaskModel("plan"));
+  const model = await resolveModel(getTaskModel("plan"), getApiKeys());
 
   const { text } = await generateText({
     model,
@@ -28,7 +37,7 @@ Available tools:
 - scrape: Extract content from a URL (supports query parameter for targeted extraction)
 - interact: Click buttons, fill forms, handle JavaScript-heavy pages
 - bashExec: Process data with jq, awk, sed, grep, sort, etc.
-- formatOutput: Export results as JSON, CSV, markdown, or HTML
+- formatOutput: Export results as JSON, CSV, markdown
 - Sub-agents: Can delegate export formatting to specialized sub-agents${skillList}
 
 For each step, specify:

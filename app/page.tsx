@@ -3,14 +3,14 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import type { AgentConfig, ModelConfig } from "@/lib/types";
+import type { AgentConfig, ModelConfig } from "@agent-core";
 import { AVAILABLE_MODELS, PROVIDER_META, type Provider } from "@/lib/config/models";
 import { useACPChat } from "./hooks/use-acp-chat";
 import ProviderModelIcon from "./components/provider-icon";
 import AgentInput from "./components/agent-input";
 import PlanVisualization from "./components/plan-visualization";
 import SettingsPanel from "./components/settings-panel";
-import type { UploadedFile } from "@/lib/types";
+import type { UploadedFile } from "@agent-core";
 import HistoryPanel from "./components/history-panel";
 import StreamdownBlock from "@/components/shared/streamdown-block";
 import Sidebar from "./components/sidebar";

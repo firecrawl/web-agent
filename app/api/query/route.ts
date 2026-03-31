@@ -1,12 +1,8 @@
 import { ToolLoopAgent, stepCountIs } from "ai";
 import { FirecrawlTools } from "firecrawl-aisdk";
-import { resolveModel } from "@/lib/config/resolve-model";
+import { resolveModel, formatOutput, bashExec, createSkillTools, discoverSkills } from "@agent-core";
 import { getTaskModel } from "@/config";
-import { formatOutput } from "@/lib/agents/tools";
-import { bashExec } from "@/lib/agents/bash-tool";
-import { createSkillTools } from "@/lib/skills/tools";
-import { discoverSkills } from "@/lib/skills/discovery";
-import { getFirecrawlKey } from "@/lib/config/keys";
+import { getFirecrawlKey, getProviderKey } from "@/lib/config/keys";
 
 export const maxDuration = 300;
 
@@ -71,11 +67,17 @@ export async function POST(req: Request) {
   }
 
   try {
+    const apiKeys: Record<string, string> = {};
+    for (const p of ["anthropic", "openai", "google", "gateway"] as const) {
+      const k = getProviderKey(p);
+      if (k) apiKeys[p] = k;
+    }
+
     const queryDefault = getTaskModel("query");
     const model = await resolveModel({
       provider: (provider ?? queryDefault.provider) as "anthropic" | "openai" | "google" | "gateway",
       model: modelId ?? queryDefault.model,
-    });
+    }, apiKeys);
 
     const { systemPrompt: fcSystemPrompt, ...fcTools } = FirecrawlTools({
       apiKey: firecrawlApiKey,

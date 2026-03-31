@@ -3,7 +3,7 @@
 // Edit this file to change which models power the orchestrator,
 // sub-agents, and background tasks.
 
-import type { ModelConfig } from "./lib/types";
+import type { ModelConfig } from "@agent-core";
 
 type ModelRef = Pick<ModelConfig, "provider" | "model">;
 

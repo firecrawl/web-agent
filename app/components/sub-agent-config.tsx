@@ -1,6 +1,6 @@
 "use client";
 
-import type { SubAgentConfig, ModelConfig } from "@/lib/types";
+import type { SubAgentConfig, ModelConfig } from "@agent-core";
 import ModelSelector from "./model-selector";
 import SkillSelector from "./skill-selector";
 import { cn } from "@/utils/cn";

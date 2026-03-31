@@ -1,6 +1,16 @@
 import { generateText } from "ai";
 import { getTaskModel } from "@/config";
-import { resolveModel } from "@/lib/config/resolve-model";
+import { resolveModel } from "@agent-core";
+import { getProviderKey } from "@/lib/config/keys";
+
+function getApiKeys() {
+  const keys: Record<string, string> = {};
+  for (const p of ["anthropic", "openai", "google", "gateway"] as const) {
+    const k = getProviderKey(p);
+    if (k) keys[p] = k;
+  }
+  return keys;
+}
 
 export async function POST(req: Request) {
   const { prompt, summary } = (await req.json()) as {
@@ -9,7 +19,7 @@ export async function POST(req: Request) {
   };
 
   try {
-    const model = await resolveModel(getTaskModel("suggestions"));
+    const model = await resolveModel(getTaskModel("suggestions"), getApiKeys());
 
     const { text } = await generateText({
       model,

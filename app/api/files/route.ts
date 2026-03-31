@@ -1,4 +1,4 @@
-import { listBashFiles, readBashFile } from "@/lib/agents/bash-tool";
+import { listBashFiles, readBashFile } from "@agent-core";
 
 export async function GET(req: Request) {
   const url = new URL(req.url);

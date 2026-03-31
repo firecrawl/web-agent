@@ -2,9 +2,19 @@ import { generateText } from "ai";
 import fs from "fs/promises";
 import path from "path";
 import { getTaskModel } from "@/config";
-import { resolveModel } from "@/lib/config/resolve-model";
+import { resolveModel } from "@agent-core";
+import { getProviderKey } from "@/lib/config/keys";
 
 const SKILLS_DIR = path.join(process.cwd(), ".agents", "skills");
+
+function getApiKeys() {
+  const keys: Record<string, string> = {};
+  for (const p of ["anthropic", "openai", "google", "gateway"] as const) {
+    const k = getProviderKey(p);
+    if (k) keys[p] = k;
+  }
+  return keys;
+}
 
 export async function POST(req: Request) {
 
@@ -41,7 +51,7 @@ export async function POST(req: Request) {
     .join("\n");
 
   try {
-    const model = await resolveModel(getTaskModel("skillGeneration"));
+    const model = await resolveModel(getTaskModel("skillGeneration"), getApiKeys());
 
     const { text: skillContent } = await generateText({
       model,
@@ -75,7 +85,7 @@ One paragraph explaining the procedural knowledge captured here.
 ## Step-by-Step Process
 1. First step...
 2. Second step...
-(Imperative mood. Describe the process, not specific tool calls. E.g. "Search for X", "Navigate to the pricing page", "Extract the comparison table", not "Use the scrape tool with format json".)
+(Imperative mood. Describe the process, not specific tool calls.)
 
 ## Data Structure
 What fields/data points to extract and how they relate to each other.
