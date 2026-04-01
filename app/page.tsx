@@ -336,11 +336,20 @@ function PlusMenu({
           </div>
         )}
 
-        {/* Skills — flat list */}
+        {/* Skills */}
         {visibleSkills.length > 0 && (
-          <div className="pt-4">
-            <div className="px-10 py-3 text-mono-x-small text-black-alpha-32 uppercase tracking-wider">Skills</div>
-            {visibleSkills.map((skill) => {
+          <div>
+            <button
+              type="button"
+              className="w-full flex items-center gap-8 px-10 py-8 rounded-8 text-left hover:bg-black-alpha-2 transition-all"
+              onClick={() => setShowSkills(!showSkills)}
+            >
+              <svg fill="none" height="16" viewBox="0 0 24 24" width="16" className="text-black-alpha-40 flex-shrink-0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" />
+              </svg>
+              <span className="text-label-small text-accent-black flex-1">Skills{selectedSkills.length > 0 ? ` (${selectedSkills.length})` : ""}</span>
+            </button>
+            {showSkills && visibleSkills.map((skill) => {
               const active = selectedSkills.includes(skill.name);
               return (
                 <button
