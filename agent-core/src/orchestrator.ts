@@ -85,7 +85,7 @@ function buildInlinePresentationMode(): string {
 - CRITICAL: NEVER write data inline. No JSON code blocks. No markdown tables. No bullet-point lists of results. No summaries of the extracted data. The user has a viewer panel that shows formatOutput results — writing data in your text response means the user sees it TWICE.
 - When you have collected all the data, say ONE short sentence (e.g. "Found 10 oil tickers from Yahoo Finance.") and then IMMEDIATELY call formatOutput with format "json". Nothing else.
 - Do NOT echo, summarize, or preview the data before or after calling formatOutput. The viewer panel handles display.
-- Include a "source" field with the full URL for every object when sources are available.
+- ALWAYS include a "sources" array in every object with the full URLs you scraped the data from. This is mandatory, not optional. Example: "sources": ["https://openai.com/about", "https://crunchbase.com/organization/openai"]
 - Only use bashExec to SAVE data to /data/ when: (a) the dataset is very large (100+ rows), (b) you need to process it further, or (c) you want to persist intermediate results between steps.`;
 }
 
@@ -106,6 +106,7 @@ function buildStructuredPresentationMode(
     "- CRITICAL: Do NOT stream the data inline. Do NOT output markdown tables, JSON code blocks, bullet lists, or summaries of the data. The user sees the data in a separate viewer panel. Your text output should be at most one sentence, then call formatOutput.",
     "- You may save intermediate results to /data/ with bashExec as you go, but the FINAL output MUST go through formatOutput.",
     "- Use bashExec with jq to aggregate, transform, or merge data before calling formatOutput if needed.",
+    '- ALWAYS include a "sources" array in every object with the full URLs you scraped the data from. This is mandatory even if the schema doesn\'t explicitly include it.',
   ];
 
   if (schema) {
