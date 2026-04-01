@@ -168,7 +168,7 @@ function download(content: string, filename: string) {
   URL.revokeObjectURL(url);
 }
 
-function JsonViewer({ data }: { data: string }) {
+export function JsonViewer({ data }: { data: string }) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
   const parsed = useMemo(() => {

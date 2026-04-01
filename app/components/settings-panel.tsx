@@ -507,29 +507,6 @@ export default function SettingsPanel({ config, onChange }: { config: AgentConfi
                   />
                 ))}
 
-                {skills.length > 0 && (
-                  <>
-                    <SidebarSection label="Skills" />
-                    {skills.map((s) => (
-                      <SidebarItem
-                        key={s.name}
-                        active={activeSection === s.name}
-                        icon={
-                          <svg fill="none" height="14" viewBox="0 0 24 24" width="14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" />
-                            <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" />
-                          </svg>
-                        }
-                        label={s.name}
-                        right={config.skillInstructions?.[s.name] ? (
-                          <div className="w-6 h-6 rounded-full bg-heat-100 flex-shrink-0" />
-                        ) : undefined}
-                        onClick={() => { setActiveSection(s.name); setSaveMsg(""); }}
-                      />
-                    ))}
-                  </>
-                )}
-
                 <SidebarSection label="Config" />
                 <SidebarItem
                   active={activeSection === "general"}

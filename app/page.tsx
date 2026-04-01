@@ -14,7 +14,7 @@ import type { UploadedFile } from "@agent-core";
 import HistoryPanel from "./components/history-panel";
 import StreamdownBlock from "@/components/shared/streamdown-block";
 import Sidebar from "./components/sidebar";
-import ArtifactPanel from "./components/artifact-panel";
+import ArtifactPanel, { JsonViewer } from "./components/artifact-panel";
 import SymbolColored from "@/components/shared/icons/symbol-colored";
 import { cn } from "@/utils/cn";
 
@@ -1369,32 +1369,15 @@ export default function AgentPage() {
             )}
             {sparkResult && (
               <div className="my-12 rounded-10 border border-border-faint overflow-hidden">
-                <div className="flex items-center justify-between px-14 py-10">
-                  <div className="flex items-center gap-8">
-                    <ProviderModelIcon icon="firecrawl" size={16} />
-                    <span className="text-label-small text-accent-black">
-                      {config.model.model === "spark-1-pro" ? "Spark 1 Pro" : "Spark 1 Mini"}
-                    </span>
-                    <span className={cn(
-                      "text-mono-x-small px-4 py-1 rounded-4",
-                      sparkResult.status === "completed" ? "text-heat-100 bg-heat-8" : "text-black-alpha-48 bg-black-alpha-4",
-                    )}>
-                      {sparkResult.status}
-                    </span>
-                  </div>
-
-                </div>
-                <div className="border-t border-border-faint bg-background-lighter p-14 max-h-500 overflow-auto no-scrollbar">
-                  <pre className="text-mono-small text-accent-black whitespace-pre-wrap break-words">
-                    {typeof sparkResult.data === "string"
-                      ? sparkResult.data
-                      : JSON.stringify(sparkResult.data, null, 2)}
-                  </pre>
-                </div>
-                <div className="flex items-center gap-6 px-14 py-8 border-t border-border-faint">
+                <div className="flex items-center gap-8 px-14 py-10">
+                  <ProviderModelIcon icon="firecrawl" size={16} />
+                  <span className="text-label-small text-accent-black">
+                    {config.model.model === "spark-1-pro" ? "Spark 1 Pro" : "Spark 1 Mini"}
+                  </span>
+                  <span className="flex-1" />
                   <button
                     type="button"
-                    className="px-10 py-5 rounded-8 text-label-small text-black-alpha-48 hover:text-accent-black bg-black-alpha-4 hover:bg-black-alpha-8 transition-all"
+                    className="flex items-center gap-4 text-mono-x-small text-black-alpha-32 hover:text-accent-black transition-colors"
                     onClick={() => {
                       const text = typeof sparkResult.data === "string"
                         ? sparkResult.data
@@ -1402,19 +1385,35 @@ export default function AgentPage() {
                       navigator.clipboard.writeText(text);
                     }}
                   >
+                    <svg fill="none" height="12" viewBox="0 0 24 24" width="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                    </svg>
                     Copy
                   </button>
                   <button
                     type="button"
-                    className="px-10 py-5 rounded-8 text-label-small text-black-alpha-48 hover:text-accent-black bg-black-alpha-4 hover:bg-black-alpha-8 transition-all"
+                    className="flex items-center gap-4 text-mono-x-small text-black-alpha-32 hover:text-accent-black transition-colors"
                     onClick={() => {
-                      setSparkMode(false);
-                      setSparkResult(null);
-                      setHasSubmitted(false);
+                      const text = typeof sparkResult.data === "string"
+                        ? sparkResult.data
+                        : JSON.stringify(sparkResult.data, null, 2);
+                      const blob = new Blob([text], { type: "application/json" });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = "output.json";
+                      a.click();
+                      URL.revokeObjectURL(url);
                     }}
                   >
-                    New query
+                    <svg fill="none" height="12" viewBox="0 0 24 24" width="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                    </svg>
+                    Download
                   </button>
+                </div>
+                <div className="border-t border-border-faint bg-background-lighter max-h-500 overflow-auto no-scrollbar">
+                  <JsonViewer data={typeof sparkResult.data === "string" ? sparkResult.data : JSON.stringify(sparkResult.data, null, 2)} />
                 </div>
               </div>
             )}
