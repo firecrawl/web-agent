@@ -560,6 +560,7 @@ export default function AgentPage() {
   const [planLoading, setPlanLoading] = useState(false);
   const [planEditing, setPlanEditing] = useState(false);
   const [planEditText, setPlanEditText] = useState("");
+  const [sparkMode, setSparkMode] = useState(false);
   const [sparkResult, setSparkResult] = useState<{ data: unknown; status: string; creditsUsed?: number } | null>(null);
   const [sparkLoading, setSparkLoading] = useState(false);
   const [sparkError, setSparkError] = useState<string | null>(null);
@@ -829,6 +830,7 @@ export default function AgentPage() {
     }
     // Firecrawl Spark models: use /agent API directly
     if (config.model.provider === "firecrawl") {
+      setSparkMode(true);
       setSparkLoading(true);
       setSparkError(null);
       setSparkResult(null);
@@ -1277,6 +1279,7 @@ export default function AgentPage() {
             setConfig(defaultConfig);
             setConversationId(null);
             setSuggestions([]);
+            setSparkMode(false);
             setSparkResult(null);
             setSparkError(null);
             setSparkLoading(false);
@@ -1330,15 +1333,24 @@ export default function AgentPage() {
         </div>
 
         {/* Firecrawl Spark results */}
-        {config.model.provider === "firecrawl" ? (
+        {sparkMode ? (
           <div className="mt-8">
             {sparkLoading && (
-              <div className="flex flex-col items-center gap-16 py-40">
-                <div className="w-32 h-32 border-3 border-heat-100 border-t-transparent rounded-full animate-spin" />
-                <div className="text-label-medium text-black-alpha-48">
-                  Running Firecrawl {config.model.model === "spark-1-pro" ? "Spark 1 Pro" : "Spark 1 Mini"}...
+              <div className="rounded-12 border border-border-muted bg-accent-white overflow-hidden" style={{ boxShadow: "0px 4px 16px -4px rgba(0,0,0,0.06)" }}>
+                <div className="flex items-center gap-8 px-16 py-10 border-b border-border-faint bg-black-alpha-2">
+                  <ProviderModelIcon icon="firecrawl" size={16} />
+                  <span className="text-label-small text-accent-black">
+                    {config.model.model === "spark-1-pro" ? "Spark 1 Pro" : "Spark 1 Mini"}
+                  </span>
+                  <span className="text-mono-x-small px-6 py-1 rounded-4 bg-amber-50 text-amber-600 animate-pulse">processing</span>
                 </div>
-                <div className="text-body-small text-black-alpha-32">This may take a few minutes for complex queries</div>
+                <div className="flex flex-col items-center gap-12 py-32 px-16">
+                  <div className="w-28 h-28 border-3 border-heat-100 border-t-transparent rounded-full animate-spin" />
+                  <div className="text-body-small text-black-alpha-48 text-center">
+                    Searching, navigating, and extracting data...
+                  </div>
+                  <div className="text-mono-x-small text-black-alpha-24">This may take a few minutes for complex queries</div>
+                </div>
               </div>
             )}
             {sparkError && (
@@ -1348,7 +1360,7 @@ export default function AgentPage() {
                 <button
                   type="button"
                   className="mt-10 px-12 py-6 rounded-8 text-label-small bg-accent-crimson/10 text-accent-crimson hover:bg-accent-crimson/20 transition-all"
-                  onClick={() => { setHasSubmitted(false); setSparkError(null); }}
+                  onClick={() => { setHasSubmitted(false); setSparkMode(false); setSparkError(null); }}
                 >
                   Back
                 </button>
@@ -1397,6 +1409,7 @@ export default function AgentPage() {
                     type="button"
                     className="px-12 py-6 rounded-8 text-label-small bg-black-alpha-4 text-accent-black hover:bg-black-alpha-8 transition-all"
                     onClick={() => {
+                      setSparkMode(false);
                       setSparkResult(null);
                       setHasSubmitted(false);
                     }}
