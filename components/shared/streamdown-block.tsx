@@ -8,7 +8,7 @@ const plugins = { code, mermaid };
 const controls = {
   table: true as const,
   code: true as const,
-  mermaid: { download: true, copy: true, fullscreen: true, panZoom: true },
+  mermaid: { download: true, copy: true, fullscreen: true, panZoom: false },
 };
 
 // Silent error component — hides rendering errors while mermaid is streaming

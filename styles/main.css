@@ -137,10 +137,6 @@
   width: unset !important;
   height: unset !important;
 }
-/* Hide the reset zoom/pan button */
-[data-streamdown="mermaid-block"] button[title="Reset zoom and pan"] {
-  display: none !important;
-}
 [data-streamdown="mermaid-block"] > div:last-of-type:not([data-streamdown]) {
   max-height: none !important;
   height: auto !important;
