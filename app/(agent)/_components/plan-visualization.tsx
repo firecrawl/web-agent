@@ -800,14 +800,14 @@ function WorkerCard({ id, prompt, result, workerStatus, liveProgress, stepDetail
                 <div key={si} className="flex items-start gap-6">
                   <div className="w-16 h-16 rounded-full bg-black-alpha-4 flex-center flex-shrink-0 mt-2 text-mono-x-small text-black-alpha-32">{si + 1}</div>
                   <div className="min-w-0 flex-1">
-                    {step.toolCalls.map((tc, ti) => {
+                    {step.toolCalls.filter((tc) => tc.name !== "lookup_site_playbook" && tc.name !== "load_skill").map((tc, ti) => {
                       const tcUrl = extractUrl(tc.input);
                       const tcDomain = tcUrl ? getDomain(tcUrl) : null;
                       return (
                         <div key={ti} className="flex items-center gap-4 text-black-alpha-48">
                           {tcDomain && <Favicon domain={tcDomain} />}
                           <span className="text-mono-x-small truncate">
-                            {tc.name === "scrape" && tcDomain ? tcDomain : tc.name === "interact" && tcDomain ? `interact ${tcDomain}` : `${tc.name}: ${tc.input}`}
+                            {tc.name === "scrape" && tcDomain ? tcDomain : tc.name === "interact" && tcDomain ? `interact ${tcDomain}` : tc.name === "search" ? (() => { try { return JSON.parse(tc.input).query || tc.input; } catch { return tc.input; } })() : `${tc.name}: ${tc.input}`}
                           </span>
                         </div>
                       );
@@ -826,7 +826,7 @@ function WorkerCard({ id, prompt, result, workerStatus, liveProgress, stepDetail
           )}
           {workerStatus === "running" && !result && liveProgress?.stepLog && liveProgress.stepLog.length > 0 && (
             <div className="px-14 py-8 flex flex-col gap-3">
-              {liveProgress.stepLog.filter((s) => s.tool !== "thinking").map((step, si) => {
+              {liveProgress.stepLog.filter((s) => s.tool !== "thinking" && s.tool !== "lookup_site_playbook" && s.tool !== "load_skill").map((step, si) => {
                 const desc = describeWorkerStep(step);
                 const domain = desc.url ? getDomain(desc.url) : null;
                 return (
