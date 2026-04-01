@@ -162,7 +162,7 @@ export class FirecrawlAgent {
   /**
    * Pipe SSE events directly to an Express/Node response object.
    */
-  async pipeSSE(
+  async sse(
     params: RunParams,
     res: { setHeader(k: string, v: string): void; write(chunk: string): void; end(): void },
   ): Promise<void> {
