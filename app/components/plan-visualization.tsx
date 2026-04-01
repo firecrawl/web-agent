@@ -693,9 +693,12 @@ function WorkerCard({ id, prompt, result, workerStatus, liveProgress, stepDetail
 
   // Show latest action with full detail from step log
   const lastStep = liveProgress?.stepLog?.[liveProgress.stepLog.length - 1];
-  const activityText = workerStatus === "running" && lastStep
-    ? lastStep.detail || lastStep.tool
-    : prompt.slice(0, 80);
+  const lastMeaningfulStep = liveProgress?.stepLog?.filter((s) => s.tool !== "thinking").pop();
+  const activityText = workerStatus === "done"
+    ? (result ? result.slice(0, 80) : lastMeaningfulStep?.detail || prompt.slice(0, 80))
+    : workerStatus === "running" && lastStep
+      ? (lastStep.tool === "thinking" ? (lastMeaningfulStep?.detail || "Processing...") : (lastStep.detail || lastStep.tool))
+      : prompt.slice(0, 80);
 
   return (
     <div className={cn(
