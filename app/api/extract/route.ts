@@ -1,6 +1,6 @@
 import { generateText, stepCountIs, ToolLoopAgent } from "ai";
-import { FirecrawlTools } from "firecrawl-aisdk";
 import { resolveModel, formatOutput, bashExec, createSkillTools, discoverSkills } from "@agent-core";
+import { buildFirecrawlToolkit } from "@/lib/toolkit";
 import { getTaskModel } from "@/config";
 import { getFirecrawlKey, getProviderKey } from "@/lib/config/keys";
 
@@ -80,9 +80,7 @@ export async function POST(req: Request) {
       model: modelId ?? extractDefault.model,
     }, apiKeys);
 
-    const { systemPrompt: fcSystemPrompt, ...fcTools } = FirecrawlTools({
-      apiKey: firecrawlApiKey,
-    });
+    const toolkit = buildFirecrawlToolkit(firecrawlApiKey);
 
     const skills = await discoverSkills();
     const skillTools = createSkillTools(skills);
@@ -107,10 +105,10 @@ export async function POST(req: Request) {
 
     const urlHint = urls?.length ? `\n\nStart with these URLs: ${urls.join(", ")}` : "";
 
-    const system = `You are a web research agent powered by Firecrawl. Gather data from the web, then format and return it exactly as instructed. Be thorough but concise. Never use emojis.\n\n${fcSystemPrompt ?? ""}${formatInstructions}${urlHint}`;
+    const system = `You are a web research agent powered by Firecrawl. Gather data from the web, then format and return it exactly as instructed. Be thorough but concise. Never use emojis.\n\n${toolkit.systemPrompt ?? ""}${formatInstructions}${urlHint}`;
 
     const tools = {
-      ...fcTools,
+      ...toolkit.tools,
       ...skillTools,
       formatOutput,
       bashExec,

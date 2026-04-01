@@ -1,7 +1,26 @@
+import type { ToolSet } from "ai";
+
 export interface UploadedFile {
   name: string;
   type: string;
   content: string;
+}
+
+/**
+ * A pre-built toolkit that agent-core uses. The host application constructs
+ * this (e.g. from FirecrawlTools) and passes it in — agent-core never imports
+ * tool providers directly.
+ */
+export interface Toolkit {
+  /** Tools to attach to the agent (search, scrape, interact, map, etc.) */
+  tools: ToolSet;
+  /** System prompt snippet from the tool provider (e.g. Firecrawl usage instructions) */
+  systemPrompt?: string;
+  /**
+   * Factory to build a filtered toolset for sub-agents/workers.
+   * Called with an optional list of enabled tool names.
+   */
+  createFiltered?: (enabledTools?: string[]) => ToolSet;
 }
 
 export interface ModelConfig {
@@ -55,7 +74,10 @@ export interface AgentConfig {
 // --- Agent Core public API types ---
 
 export interface CreateAgentOptions {
-  firecrawlApiKey: string;
+  /** Pre-built toolkit (search, scrape, interact, etc.) */
+  toolkit: Toolkit;
+  /** @deprecated Use `toolkit` instead. Kept for backwards compatibility. */
+  firecrawlApiKey?: string;
   model: ModelConfig;
   subAgentModel?: ModelConfig;
   apiKeys?: Record<string, string>;

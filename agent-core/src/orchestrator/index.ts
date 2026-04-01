@@ -1,6 +1,5 @@
 import { ToolLoopAgent, stepCountIs, type LanguageModel } from "ai";
-import { FirecrawlTools } from "firecrawl-aisdk";
-import type { AgentConfig, ModelConfig } from "../types";
+import type { AgentConfig, ModelConfig, Toolkit } from "../types";
 import { resolveModel } from "../resolve-model";
 import { createSkillTools } from "../skills/tools";
 import { createSubAgentTools } from "./sub-agents";
@@ -134,7 +133,7 @@ function buildStructuredPresentationMode(
 
 export interface OrchestratorOptions {
   config: AgentConfig;
-  firecrawlApiKey: string;
+  toolkit: Toolkit;
   apiKeys?: Record<string, string>;
   skillsDir?: string;
   maxWorkers?: number;
@@ -146,7 +145,7 @@ export interface OrchestratorOptions {
 export async function createOrchestrator(options: OrchestratorOptions) {
   const {
     config,
-    firecrawlApiKey,
+    toolkit,
     apiKeys,
     skillsDir,
     maxWorkers = 6,
@@ -156,10 +155,6 @@ export async function createOrchestrator(options: OrchestratorOptions) {
 
   const model = await resolveModel(config.model, apiKeys);
   const skills = await discoverSkills(skillsDir);
-
-  const { systemPrompt: fcSystemPrompt, ...fcTools } = FirecrawlTools({
-    apiKey: firecrawlApiKey,
-  });
   const skillTools = createSkillTools(skills, config.skillInstructions);
 
   // Resolve sub-agent model (falls back to orchestrator model)
@@ -169,7 +164,7 @@ export async function createOrchestrator(options: OrchestratorOptions) {
 
   const subAgentTools = await createSubAgentTools(
     config.subAgents ?? [],
-    firecrawlApiKey,
+    toolkit,
     skills,
     subAgentModelResolved,
     config.skillInstructions,
@@ -325,13 +320,13 @@ ${skillCatalog}
 
   const instructions = await loadOrchestratorPrompt({
     TODAY: new Date().toISOString().split("T")[0],
-    FIRECRAWL_SYSTEM_PROMPT: fcSystemPrompt ?? "",
+    FIRECRAWL_SYSTEM_PROMPT: toolkit.systemPrompt ?? "",
     RESEARCH_PLAN: researchPlan,
     WORKFLOW_STEPS: workflowSteps,
     APP_SECTIONS: appSections.join("\n\n"),
   });
 
-  const spawnAgents = createWorkerTool(model, firecrawlApiKey, skills, {
+  const spawnAgents = createWorkerTool(model, toolkit, skills, {
     maxWorkers,
     workerMaxSteps,
   });
@@ -349,7 +344,7 @@ ${skillCatalog}
     model,
     instructions,
     tools: {
-      ...fcTools,
+      ...toolkit.tools,
       ...skillTools,
       ...subAgentTools,
       spawnAgents,

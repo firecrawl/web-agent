@@ -1,8 +1,7 @@
 import { ToolLoopAgent, tool, stepCountIs, type LanguageModel } from "ai";
-import { FirecrawlTools } from "firecrawl-aisdk";
 import { z } from "zod";
 import { bashExec, formatOutput } from "../tools";
-import type { SkillMetadata } from "../types";
+import type { SkillMetadata, Toolkit } from "../types";
 import { createSkillTools } from "../skills/tools";
 import { loadWorkerPrompt } from "./loader";
 
@@ -49,17 +48,14 @@ export interface WorkerToolOptions {
 
 export function createWorkerTool(
   model: LanguageModel,
-  firecrawlApiKey: string,
+  toolkit: Toolkit,
   skills: SkillMetadata[],
   options: WorkerToolOptions = {},
 ) {
   const { maxWorkers = 6, workerMaxSteps = 10 } = options;
 
-  const { systemPrompt: _, ...fcTools } = FirecrawlTools({
-    apiKey: firecrawlApiKey,
-  });
   const skillTools = createSkillTools(skills);
-  const workerTools = { ...fcTools, ...skillTools, formatOutput, bashExec };
+  const workerTools = { ...toolkit.tools, ...skillTools, formatOutput, bashExec };
 
   return tool({
     description: `Spawn parallel worker agents to handle independent tasks concurrently. Each worker gets its own isolated context and full toolkit (search, scrape, interact, bash). Workers return only a concise summary — the orchestrator context stays clean. Use this when you have 2+ independent data collection tasks.`,

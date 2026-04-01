@@ -1,6 +1,7 @@
 import { createAgent } from "@agent-core";
 import { getFirecrawlKey, getProviderKey } from "@/lib/config/keys";
 import { config as globalConfig, getTaskModel } from "@/config";
+import { buildFirecrawlToolkit } from "@/lib/toolkit";
 import type { RunParams, ModelConfig } from "@agent-core";
 
 export const maxDuration = 300;
@@ -71,8 +72,10 @@ export async function POST(req: Request) {
     if (k) apiKeys[p] = k;
   }
 
+  const toolkit = buildFirecrawlToolkit(firecrawlApiKey);
+
   const agent = createAgent({
-    firecrawlApiKey,
+    toolkit,
     model: model as ModelConfig,
     subAgentModel: subAgentModelOverride as ModelConfig | undefined,
     apiKeys,

@@ -3,6 +3,7 @@ import { createOrchestrator, type OrchestratorOptions } from "@agent-core";
 import type { AgentConfig } from "@agent-core";
 import { getFirecrawlKey, getProviderKey } from "@/lib/config/keys";
 import { config as globalConfig } from "@/config";
+import { buildFirecrawlToolkit } from "@/lib/toolkit";
 
 export const maxDuration = 300;
 
@@ -27,9 +28,11 @@ export async function POST(req: Request) {
   }
 
   try {
+    const toolkit = buildFirecrawlToolkit(firecrawlApiKey);
+
     const opts: OrchestratorOptions = {
       config,
-      firecrawlApiKey,
+      toolkit,
       apiKeys,
       maxWorkers: globalConfig.maxWorkers,
       workerMaxSteps: globalConfig.workerMaxSteps,

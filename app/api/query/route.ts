@@ -1,6 +1,6 @@
 import { ToolLoopAgent, stepCountIs } from "ai";
-import { FirecrawlTools } from "firecrawl-aisdk";
 import { resolveModel, formatOutput, bashExec, createSkillTools, discoverSkills } from "@agent-core";
+import { buildFirecrawlToolkit } from "@/lib/toolkit";
 import { getTaskModel } from "@/config";
 import { getFirecrawlKey, getProviderKey } from "@/lib/config/keys";
 
@@ -79,9 +79,7 @@ export async function POST(req: Request) {
       model: modelId ?? queryDefault.model,
     }, apiKeys);
 
-    const { systemPrompt: fcSystemPrompt, ...fcTools } = FirecrawlTools({
-      apiKey: firecrawlApiKey,
-    });
+    const toolkit = buildFirecrawlToolkit(firecrawlApiKey);
 
     const skills = await discoverSkills();
     const skillTools = createSkillTools(skills);
@@ -94,10 +92,10 @@ export async function POST(req: Request) {
       ? `\n\nStart with these URLs: ${urls.join(", ")}`
       : "";
 
-    const system = `You are a web research agent powered by Firecrawl. Gather data from the web using search, scrape, and interact tools. Be thorough and narrate what you're doing.\n\n${fcSystemPrompt ?? ""}${schemaHint}${urlHint}`;
+    const system = `You are a web research agent powered by Firecrawl. Gather data from the web using search, scrape, and interact tools. Be thorough and narrate what you're doing.\n\n${toolkit.systemPrompt ?? ""}${schemaHint}${urlHint}`;
 
     const tools = {
-      ...fcTools,
+      ...toolkit.tools,
       ...skillTools,
       formatOutput,
       bashExec,

@@ -24,5 +24,6 @@ export type {
   SubAgentConfig,
   SkillMetadata,
   SitePlaybook,
+  Toolkit,
   UploadedFile,
 } from "./types";

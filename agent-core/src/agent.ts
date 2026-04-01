@@ -1,13 +1,11 @@
 import { generateText } from "ai";
-import { FirecrawlTools } from "firecrawl-aisdk";
 import { createOrchestrator, type OrchestratorOptions } from "./orchestrator";
 import { resolveModel } from "./resolve-model";
 import { discoverSkills } from "./skills/discovery";
-import { formatOutput, bashExec } from "./tools";
-import { createSkillTools } from "./skills/tools";
 import { workerProgress } from "./worker";
 import type {
   CreateAgentOptions,
+  Toolkit,
   RunParams,
   RunResult,
   AgentEvent,
@@ -175,6 +173,10 @@ Do not use emojis.`,
 
   // --- Private helpers ---
 
+  private getToolkit(): Toolkit {
+    return this.options.toolkit;
+  }
+
   private async buildOrchestrator(params: RunParams) {
     const opts: OrchestratorOptions = {
       config: {
@@ -190,7 +192,7 @@ Do not use emojis.`,
         subAgents: params.subAgents ?? [],
         maxSteps: params.maxSteps ?? this.options.maxSteps,
       },
-      firecrawlApiKey: this.options.firecrawlApiKey,
+      toolkit: this.getToolkit(),
       apiKeys: this.options.apiKeys,
       skillsDir: this.options.skillsDir,
       maxWorkers: this.options.maxWorkers,
@@ -263,9 +265,11 @@ Do not use emojis.`,
  * @example
  * ```ts
  * import { createAgent } from '@firecrawl/agent-core'
+ * import { FirecrawlTools } from 'firecrawl-aisdk'
  *
+ * const { systemPrompt, ...tools } = FirecrawlTools({ apiKey: 'fc-...' })
  * const agent = createAgent({
- *   firecrawlApiKey: 'fc-...',
+ *   toolkit: { tools, systemPrompt },
  *   model: { provider: 'google', model: 'gemini-3-flash-preview' }
  * })
  *

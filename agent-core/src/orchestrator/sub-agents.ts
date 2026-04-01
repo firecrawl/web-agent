@@ -1,7 +1,6 @@
 import { ToolLoopAgent, tool, stepCountIs, type ToolSet, type LanguageModel } from "ai";
 import { z } from "zod";
-import { FirecrawlTools } from "firecrawl-aisdk";
-import type { SubAgentConfig, SkillMetadata } from "../types";
+import type { SubAgentConfig, SkillMetadata, Toolkit } from "../types";
 import { resolveModel } from "../resolve-model";
 import { createSkillTools } from "../skills/tools";
 import { parseSkillBody } from "../skills/parser";
@@ -98,25 +97,21 @@ async function loadSkillContent(
 }
 
 function buildFullToolset(
-  firecrawlApiKey: string,
+  toolkit: Toolkit,
   skills: SkillMetadata[],
   enabledTools?: ("search" | "scrape" | "interact" | "map")[],
   customInstructions?: Record<string, string>,
 ): ToolSet {
-  const fcToolOptions: Record<string, unknown> = { apiKey: firecrawlApiKey };
-  if (enabledTools) {
-    if (!enabledTools.includes("search")) fcToolOptions.search = false;
-    if (!enabledTools.includes("scrape")) fcToolOptions.scrape = false;
-    if (!enabledTools.includes("interact")) fcToolOptions.interact = false;
-  }
-  const { systemPrompt: _, ...fcTools } = FirecrawlTools(fcToolOptions);
+  const baseTools = (enabledTools && toolkit.createFiltered)
+    ? toolkit.createFiltered(enabledTools)
+    : toolkit.tools;
   const skillTools = createSkillTools(skills, customInstructions);
-  return { ...fcTools, ...skillTools, formatOutput, bashExec };
+  return { ...baseTools, ...skillTools, formatOutput, bashExec };
 }
 
 export async function createSubAgentTools(
   configs: SubAgentConfig[],
-  firecrawlApiKey: string,
+  toolkit: Toolkit,
   skills: SkillMetadata[],
   parentModel?: LanguageModel,
   customInstructions?: Record<string, string>,
@@ -129,7 +124,7 @@ export async function createSubAgentTools(
   for (const config of configs) {
     const model = await resolveModel(config.model, apiKeys);
     const tools = buildFullToolset(
-      firecrawlApiKey,
+      toolkit,
       skills,
       config.tools,
       customInstructions,
@@ -164,7 +159,7 @@ When finished, write a clear summary of what you found.${preloadedSkills}`,
   if (!builtinModel) return subAgentTools;
 
   const builtinTools = buildFullToolset(
-    firecrawlApiKey,
+    toolkit,
     skills,
     undefined,
     customInstructions,
