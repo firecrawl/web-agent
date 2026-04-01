@@ -161,7 +161,7 @@ export async function createOrchestrator(options: OrchestratorOptions) {
     : model;
 
   const subAgentTools = await createSubAgentTools(
-    config.subAgents,
+    config.subAgents ?? [],
     firecrawlApiKey,
     skills,
     subAgentModelResolved,
