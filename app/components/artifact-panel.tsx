@@ -4,6 +4,49 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import type { UIMessage } from "ai";
 import { cn } from "@/utils/cn";
 import StreamdownBlock from "@/components/shared/streamdown-block";
+import { codeToHtml } from "shiki/bundle/web";
+
+const shikiLangMap: Record<string, string> = {
+  curl: "bash",
+  fetch: "javascript",
+  python: "python",
+};
+
+function HighlightedCode({ code, lang }: { code: string; lang: string }) {
+  const [html, setHtml] = useState<string | null>(null);
+  const prevKey = useRef("");
+
+  useEffect(() => {
+    const key = `${lang}:${code}`;
+    if (key === prevKey.current) return;
+    prevKey.current = key;
+
+    const shikiLang = shikiLangMap[lang] ?? lang;
+    codeToHtml(code, {
+      lang: shikiLang,
+      theme: "github-light",
+    })
+      .then((result) => {
+        if (prevKey.current === key) setHtml(result);
+      })
+      .catch(() => setHtml(null));
+  }, [code, lang]);
+
+  if (!html) {
+    return (
+      <pre className="px-14 pb-10 text-[12px] font-mono leading-[1.6] text-accent-black whitespace-pre-wrap overflow-auto max-h-[280px]">
+        {code}
+      </pre>
+    );
+  }
+
+  return (
+    <div
+      className="px-14 pb-10 text-[12px] leading-[1.6] overflow-auto max-h-[280px] [&_pre]:!bg-transparent [&_pre]:!p-0 [&_pre]:whitespace-pre-wrap [&_code]:!font-mono"
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
+  );
+}
 
 function isToolPart(part: { type: string }): boolean {
   return part.type.startsWith("tool-") || part.type === "dynamic-tool";
@@ -409,9 +452,7 @@ export default function ArtifactPanel({ messages, isRunning, onRequestFormat, on
               <span className="text-mono-x-small text-black-alpha-24">Schema inferred from output — rerun with this schema for consistent results</span>
             </div>
           )}
-          <pre className="px-14 pb-10 text-[12px] font-mono leading-[1.6] text-accent-black whitespace-pre-wrap overflow-auto max-h-[280px]">
-            {buildCodeSnippet(codeLang, prompt ?? "", codeSchema, urls)}
-          </pre>
+          <HighlightedCode code={buildCodeSnippet(codeLang, prompt ?? "", codeSchema, urls)} lang={codeLang} />
         </div>
       )}
 
