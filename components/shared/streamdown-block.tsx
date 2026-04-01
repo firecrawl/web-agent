@@ -3,12 +3,24 @@
 import { Streamdown } from "streamdown";
 import { code } from "@streamdown/code";
 import { mermaid } from "@streamdown/mermaid";
+import dynamic from "next/dynamic";
+
+const VegaChart = dynamic(() => import("./vega-chart"), { ssr: false });
 
 const plugins = { code, mermaid };
 const controls = {
   table: true as const,
   code: true as const,
   mermaid: { download: true, copy: true, fullscreen: true, panZoom: false },
+};
+
+const components = {
+  code: ({ children, className, ...props }: { children?: React.ReactNode; className?: string; [key: string]: unknown }) => {
+    if (className === "language-vega-lite" && typeof children === "string") {
+      return <VegaChart spec={children} />;
+    }
+    return <code className={className} {...props}>{children}</code>;
+  },
 };
 
 // Silent error component — hides rendering errors while mermaid is streaming
@@ -37,6 +49,7 @@ export default function StreamdownBlock({
       <Streamdown
         plugins={plugins}
         controls={controls}
+        components={components}
         mermaid={mermaidConfig}
         animated
         caret="block"
