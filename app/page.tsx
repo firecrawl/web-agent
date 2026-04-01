@@ -1244,11 +1244,11 @@ export default function AgentPage() {
         <PlanVisualization messages={messages} isRunning={isRunning} preloadedSkills={config.skills.length > 0 ? config.skills : undefined} onArtifactClick={() => setArtifactOpen(true)} />
 
         {/* Bottom section */}
-        {!isRunning && messages.length > 0 && (
+        {messages.length > 0 && (
           <div className="mt-20 pt-16 border-t border-border-faint">
             {/* Follow-up input */}
             <div
-              className="bg-accent-white rounded-12 overflow-hidden"
+              className={cn("bg-accent-white rounded-12 overflow-hidden transition-opacity", isRunning && "opacity-50 pointer-events-none")}
               style={{
                 boxShadow:
                   "0px 2px 12px -2px rgba(0,0,0,0.04), 0px 0px 0px 1px rgba(0,0,0,0.06)",
@@ -1257,11 +1257,12 @@ export default function AgentPage() {
               <div className="flex items-center gap-8 px-16 py-12">
                 <input
                   className="flex-1 bg-transparent text-body-medium text-accent-black placeholder:text-black-alpha-32 focus:outline-none"
-                  placeholder="Ask a follow-up..."
+                  placeholder={isRunning ? "Waiting for response..." : "Ask a follow-up..."}
                   value={followUp}
+                  disabled={isRunning}
                   onChange={(e) => setFollowUp(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" && followUp.trim()) {
+                    if (e.key === "Enter" && followUp.trim() && !isRunning) {
                       e.preventDefault();
                       setSuggestions([]);
                       sendMessage({ text: followUp });
@@ -1294,7 +1295,7 @@ export default function AgentPage() {
             </div>
 
             {/* Suggestions */}
-            {suggestions.length > 0 && (
+            {!isRunning && suggestions.length > 0 && (
               <div className="flex flex-col gap-4 mt-8">
                 {suggestions.slice(0, 3).map((s, i) => (
                   <button
