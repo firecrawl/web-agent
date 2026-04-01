@@ -158,8 +158,10 @@ function PlusMenu({
   onSchemaChange: (schema: Record<string, unknown> | undefined) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [showSchemaInput, setShowSchemaInput] = useState(false);
+  const [showSchema, setShowSchema] = useState(false);
+  const [schemaMode, setSchemaMode] = useState<"describe" | "paste">("describe");
   const [schemaDesc, setSchemaDesc] = useState("");
+  const [schemaPaste, setSchemaPaste] = useState("");
   const [schemaLoading, setSchemaLoading] = useState(false);
   const [showSkills, setShowSkills] = useState(false);
   const [maxH, setMaxH] = useState(400);
@@ -180,7 +182,7 @@ function PlusMenu({
     const rect = parent.getBoundingClientRect();
     const available = rect.top - 12; // 12px padding from top of viewport
     setMaxH(Math.max(200, Math.min(400, available)));
-  }, [showSkills, showSchemaInput]);
+  }, [showSkills, showSchema]);
 
   const visibleSkills = (skills ?? []).filter((s) => s.category !== "Export");
 
@@ -236,89 +238,108 @@ function PlusMenu({
           </div>
         )}
 
-        {/* Describe schema */}
+        {/* Schema */}
         <button
           type="button"
-          className="w-full flex items-center gap-8 px-10 py-8 rounded-8 text-left hover:bg-black-alpha-2 transition-all"
-          onClick={() => setShowSchemaInput(!showSchemaInput)}
+          className={cn(
+            "w-full flex items-center gap-8 px-10 py-8 rounded-8 text-left transition-all",
+            schema ? "bg-heat-8" : "hover:bg-black-alpha-2",
+          )}
+          onClick={() => setShowSchema(!showSchema)}
         >
-          <svg fill="none" height="16" viewBox="0 0 24 24" width="16" className="text-black-alpha-40 flex-shrink-0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg fill="none" height="16" viewBox="0 0 24 24" width="16" className={cn("flex-shrink-0", schema ? "text-heat-100" : "text-black-alpha-40")} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M8 3H7a2 2 0 00-2 2v5a2 2 0 01-2 2 2 2 0 012 2v5a2 2 0 002 2h1M16 3h1a2 2 0 012 2v5a2 2 0 002 2 2 2 0 00-2 2v5a2 2 0 01-2 2h-1" />
           </svg>
-          <span className="text-label-small text-accent-black">Describe schema</span>
+          <span className={cn("text-label-small flex-1", schema ? "text-heat-100" : "text-accent-black")}>Schema{schema ? " (set)" : ""}</span>
+          {schema && (
+            <button
+              type="button"
+              className="text-black-alpha-24 hover:text-accent-crimson transition-colors flex-shrink-0"
+              onClick={(e) => { e.stopPropagation(); onSchemaChange(undefined); setSchemaDesc(""); setSchemaPaste(""); }}
+            >
+              <svg fill="none" height="10" viewBox="0 0 24 24" width="10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
+            </button>
+          )}
         </button>
-        {showSchemaInput && (
+        {showSchema && (
           <div className="px-10 pt-2 pb-2">
-            <textarea
-              className="w-full bg-black-alpha-4 rounded-8 px-10 py-6 text-body-small text-accent-black placeholder:text-black-alpha-32 focus:outline-none resize-none"
-              rows={2}
-              placeholder="e.g. company name, funding amount, list of investors, website"
-              value={schemaDesc}
-              onChange={(e) => setSchemaDesc(e.target.value)}
-              onKeyDown={async (e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  if (!schemaDesc.trim() || schemaLoading) return;
-                  setSchemaLoading(true);
-                  try {
-                    const resp = await fetch("/api/schema/generate", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ description: schemaDesc }),
-                    });
-                    const data = await resp.json();
-                    if (data.schema) {
-                      onSchemaChange(data.schema);
-                      setShowSchemaInput(false);
+            {/* Describe / Paste toggle */}
+            <div className="flex gap-2 mb-6">
+              <button
+                type="button"
+                className={cn("px-8 py-3 rounded-6 text-mono-x-small transition-all", schemaMode === "describe" ? "bg-black-alpha-8 text-accent-black" : "text-black-alpha-32 hover:text-black-alpha-48")}
+                onClick={() => setSchemaMode("describe")}
+              >Describe</button>
+              <button
+                type="button"
+                className={cn("px-8 py-3 rounded-6 text-mono-x-small transition-all", schemaMode === "paste" ? "bg-black-alpha-8 text-accent-black" : "text-black-alpha-32 hover:text-black-alpha-48")}
+                onClick={() => setSchemaMode("paste")}
+              >Paste JSON</button>
+            </div>
+            {schemaMode === "describe" ? (
+              <>
+                <textarea
+                  className="w-full bg-black-alpha-4 rounded-8 px-10 py-6 text-body-small text-accent-black placeholder:text-black-alpha-32 focus:outline-none resize-none"
+                  rows={2}
+                  placeholder="e.g. company name, funding amount, list of investors, website"
+                  value={schemaDesc}
+                  onChange={(e) => setSchemaDesc(e.target.value)}
+                  onKeyDown={async (e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      if (!schemaDesc.trim() || schemaLoading) return;
+                      setSchemaLoading(true);
+                      try {
+                        const resp = await fetch("/api/schema/generate", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ description: schemaDesc }),
+                        });
+                        const data = await resp.json();
+                        if (data.schema) {
+                          onSchemaChange(data.schema);
+                          setShowSchema(false);
+                        }
+                      } catch { /* ignore */ }
+                      setSchemaLoading(false);
                     }
-                  } catch { /* ignore */ }
-                  setSchemaLoading(false);
-                }
-              }}
-            />
-            <div className="flex items-center justify-between mt-4">
-              <span className="text-mono-x-small text-black-alpha-32">
-                {schemaLoading ? "Generating..." : "Enter to generate"}
-              </span>
-              {schema && (
-                <button
-                  type="button"
-                  className="text-mono-x-small text-black-alpha-32 hover:text-accent-crimson transition-colors"
-                  onClick={() => { onSchemaChange(undefined); setSchemaDesc(""); }}
-                >
-                  Clear schema
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-        {schema && !showSchemaInput && (
-          <div className="px-10 pt-2 pb-2">
-            <div className="bg-black-alpha-4 rounded-8 px-10 py-6 text-mono-x-small text-black-alpha-48 break-all max-h-[80px] overflow-auto">
-              {schemaDesc || JSON.stringify(schema, null, 2).slice(0, 200)}
-            </div>
+                  }}
+                />
+                <div className="text-mono-x-small text-black-alpha-32 mt-4">
+                  {schemaLoading ? "Generating..." : "Enter to generate"}
+                </div>
+              </>
+            ) : (
+              <>
+                <textarea
+                  className="w-full bg-black-alpha-4 rounded-8 px-10 py-6 text-mono-x-small text-accent-black placeholder:text-black-alpha-32 focus:outline-none resize-none"
+                  rows={4}
+                  placeholder='{"type":"object","properties":{"name":{"type":"string"}}}'
+                  value={schemaPaste}
+                  onChange={(e) => setSchemaPaste(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      try {
+                        const parsed = JSON.parse(schemaPaste);
+                        onSchemaChange(parsed);
+                        setShowSchema(false);
+                      } catch { /* invalid JSON, ignore */ }
+                    }
+                  }}
+                />
+                <div className="text-mono-x-small text-black-alpha-32 mt-4">
+                  Enter to apply
+                </div>
+              </>
+            )}
           </div>
         )}
 
-        {/* Divider */}
-        <div className="border-t border-border-faint my-2" />
-
-        {/* Skills dropdown */}
-        <button
-          type="button"
-          className="w-full flex items-center gap-8 px-10 py-8 rounded-8 text-left hover:bg-black-alpha-2 transition-all"
-          onClick={() => setShowSkills(!showSkills)}
-        >
-          <svg fill="none" height="16" viewBox="0 0 24 24" width="16" className="text-black-alpha-40 flex-shrink-0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" />
-          </svg>
-          <span className="text-label-small text-accent-black flex-1">Skills{selectedSkills.length > 0 ? ` (${selectedSkills.length})` : ""}</span>
-          <svg fill="none" height="12" viewBox="0 0 24 24" width="12" className={cn("transition-transform text-black-alpha-24 flex-shrink-0", showSkills && "rotate-180")} stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <path d="M6 9l6 6 6-6" />
-          </svg>
-        </button>
-        {showSkills && (
-          <div className="max-h-[200px] overflow-y-auto px-4 pb-2" style={{ scrollbarWidth: "thin" }}>
+        {/* Skills — flat list */}
+        {visibleSkills.length > 0 && (
+          <div className="pt-4">
+            <div className="px-10 py-3 text-mono-x-small text-black-alpha-32 uppercase tracking-wider">Skills</div>
             {visibleSkills.map((skill) => {
               const active = selectedSkills.includes(skill.name);
               return (
