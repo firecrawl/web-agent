@@ -5,7 +5,7 @@ import { getTaskModel } from "@/config";
 import { resolveModel } from "@agent-core";
 import { getProviderKey } from "@/lib/config/keys";
 
-const SKILLS_DIR = path.join(process.cwd(), ".agents", "skills");
+const SKILLS_DIR = path.join(process.cwd(), "agent-core", "src", "skills", "definitions");
 
 function getApiKeys() {
   const keys: Record<string, string> = {};
@@ -115,7 +115,7 @@ Output ONLY the SKILL.md content. No extra commentary.`,
 
     return Response.json({
       name: slug,
-      path: `.agents/skills/${slug}/SKILL.md`,
+      path: `agent-core/src/skills/definitions/${slug}/SKILL.md`,
       content: skillContent,
     });
   } catch (error) {

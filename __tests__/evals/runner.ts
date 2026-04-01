@@ -12,12 +12,29 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Load .env.local
+const envPath = path.join(__dirname, "..", "..", ".env.local");
+if (fs.existsSync(envPath)) {
+  for (const line of fs.readFileSync(envPath, "utf-8").split("\n")) {
+    const match = line.match(/^([^#=]+)=(.*)$/);
+    if (match && !process.env[match[1].trim()]) {
+      process.env[match[1].trim()] = match[2].trim();
+    }
+  }
+}
 const BASE_URL = process.env.EVAL_BASE_URL ?? "http://localhost:3002";
 const DATASET_DIR = path.join(__dirname, "..", "extract_v3_evals", "data", "extract");
 
-// Reuse the json_judge from extract_v3_evals
-const judgeModule = await import("../extract_v3_evals/evals/utils/json_judge.js");
-const scoreJsonPrediction = judgeModule.scoreJsonPrediction;
+// Reuse the json_judge from extract_v3_evals (lazy-loaded to avoid top-level await)
+let _scoreJsonPrediction: any;
+async function getJudge() {
+  if (!_scoreJsonPrediction) {
+    const mod = await import("../extract_v3_evals/dist/evals/utils/json_judge.js");
+    _scoreJsonPrediction = mod.scoreJsonPrediction;
+  }
+  return _scoreJsonPrediction;
+}
 
 interface ModelOverride {
   provider: string;
@@ -141,11 +158,15 @@ async function runTask(task: DatasetTask, index: number, model: ModelOverride | 
       body.subAgentModel = model;
     }
 
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 180_000); // 3 min timeout
     const resp = await fetch(`${BASE_URL}/api/v1/run`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
+      signal: controller.signal,
     });
+    clearTimeout(timer);
 
     if (!resp.ok) {
       const errBody = await resp.text();
@@ -165,7 +186,7 @@ async function runTask(task: DatasetTask, index: number, model: ModelOverride | 
     }
 
     // Score with LLM judge
-    const judge = await scoreJsonPrediction({
+    const judge = await (await getJudge())({
       schema: task.schema,
       ground_truth: task.ground_truth,
       prediction,

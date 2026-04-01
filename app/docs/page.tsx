@@ -327,7 +327,7 @@ for line in res.iter_lines():
         {/* ── Skills ── */}
         <Section id="skills" title="Skills">
           <p className="text-body-medium text-black-alpha-48 mb-16">
-            Skills are reusable instruction sets in <code className="text-mono-small bg-black-alpha-4 px-4 py-1 rounded">.agents/skills/</code>. Pass skill names to any endpoint to preload domain knowledge.
+            Skills are reusable instruction sets in <code className="text-mono-small bg-black-alpha-4 px-4 py-1 rounded">agent-core/src/skills/definitions/</code>. Pass skill names to any endpoint to preload domain knowledge.
           </p>
 
           <div className="mb-16 grid grid-cols-2 gap-8">

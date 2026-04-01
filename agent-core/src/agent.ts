@@ -5,7 +5,7 @@ import { resolveModel } from "./resolve-model";
 import { discoverSkills } from "./skills/discovery";
 import { formatOutput, bashExec } from "./tools";
 import { createSkillTools } from "./skills/tools";
-import { workerProgress } from "./workers";
+import { workerProgress } from "./worker";
 import type {
   CreateAgentOptions,
   RunParams,

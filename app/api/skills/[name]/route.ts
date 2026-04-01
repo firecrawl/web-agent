@@ -1,8 +1,8 @@
 import fs from "fs/promises";
 import path from "path";
-import { parseSkillBody } from "@agent-core/skills/parser";
+import { parseSkillBody } from "@agent-core";
 
-const SKILLS_DIR = path.join(process.cwd(), ".agents", "skills");
+const SKILLS_DIR = path.join(process.cwd(), "agent-core", "src", "skills", "definitions");
 
 export async function GET(
   _req: Request,

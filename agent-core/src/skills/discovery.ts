@@ -1,9 +1,11 @@
 import fs from "fs/promises";
 import path from "path";
+import { fileURLToPath } from "url";
 import type { SkillMetadata, SitePlaybook } from "../types";
 import { parseSkillFrontmatter } from "./parser";
 
-const DEFAULT_SKILLS_DIR = path.join(process.cwd(), ".agents", "skills");
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const DEFAULT_SKILLS_DIR = path.join(__dirname, "definitions");
 
 async function discoverSitePlaybooks(skillDir: string): Promise<SitePlaybook[]> {
   const sitesDir = path.join(skillDir, "sites");

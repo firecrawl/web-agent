@@ -1,11 +1,11 @@
 import { ToolLoopAgent, tool, stepCountIs, type ToolSet, type LanguageModel } from "ai";
 import { z } from "zod";
 import { FirecrawlTools } from "firecrawl-aisdk";
-import type { SubAgentConfig, SkillMetadata } from "./types";
-import { resolveModel } from "./resolve-model";
-import { createSkillTools } from "./skills/tools";
-import { parseSkillBody } from "./skills/parser";
-import { formatOutput, bashExec } from "./tools";
+import type { SubAgentConfig, SkillMetadata } from "../types";
+import { resolveModel } from "../resolve-model";
+import { createSkillTools } from "../skills/tools";
+import { parseSkillBody } from "../skills/parser";
+import { formatOutput, bashExec } from "../tools";
 import fs from "fs/promises";
 import path from "path";
 

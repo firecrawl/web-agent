@@ -1,10 +1,10 @@
 import { ToolLoopAgent, tool, stepCountIs, type LanguageModel } from "ai";
 import { FirecrawlTools } from "firecrawl-aisdk";
 import { z } from "zod";
-import { bashExec, formatOutput } from "./tools";
-import type { SkillMetadata } from "./types";
-import { createSkillTools } from "./skills/tools";
-import { loadWorkerPrompt } from "./prompts/loader";
+import { bashExec, formatOutput } from "../tools";
+import type { SkillMetadata } from "../types";
+import { createSkillTools } from "../skills/tools";
+import { loadWorkerPrompt } from "./loader";
 
 // --- Progress tracking (persists across HMR) ---
 

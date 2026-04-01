@@ -39,7 +39,7 @@ export default function SkillSelector({
       <div className="text-body-small text-black-alpha-48">
         No skills found. Add SKILL.md files to{" "}
         <code className="text-mono-small bg-black-alpha-4 px-4 rounded-4">
-          .agents/skills/
+          agent-core/src/skills/definitions/
         </code>
       </div>
     );
