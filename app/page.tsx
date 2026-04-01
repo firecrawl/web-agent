@@ -560,6 +560,9 @@ export default function AgentPage() {
   const [planLoading, setPlanLoading] = useState(false);
   const [planEditing, setPlanEditing] = useState(false);
   const [planEditText, setPlanEditText] = useState("");
+  const [sparkResult, setSparkResult] = useState<{ data: unknown; status: string; creditsUsed?: number } | null>(null);
+  const [sparkLoading, setSparkLoading] = useState(false);
+  const [sparkError, setSparkError] = useState<string | null>(null);
 
 
   const [acpAgents, setAcpAgents] = useState<{ name: string; bin: string; displayName: string; available: boolean }[]>([]);
@@ -824,6 +827,38 @@ export default function AgentPage() {
         });
       return;
     }
+    // Firecrawl Spark models: use /agent API directly
+    if (config.model.provider === "firecrawl") {
+      setSparkLoading(true);
+      setSparkError(null);
+      setSparkResult(null);
+      setHasSubmitted(true);
+      fetch("/api/firecrawl-agent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: config.prompt,
+          model: config.model.model,
+          schema: config.schema,
+          urls: config.urls,
+        }),
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.error) {
+            setSparkError(data.error);
+          } else {
+            setSparkResult({ data: data.data, status: data.status, creditsUsed: data.creditsUsed });
+          }
+          setSparkLoading(false);
+        })
+        .catch((err) => {
+          setSparkError(err instanceof Error ? err.message : String(err));
+          setSparkLoading(false);
+        });
+      return;
+    }
+
     // Execute (with or without plan context)
     const promptWithPlan = planText
       ? `Execute this plan:\n\n${planText}\n\nOriginal request: ${config.prompt}`
@@ -1242,6 +1277,9 @@ export default function AgentPage() {
             setConfig(defaultConfig);
             setConversationId(null);
             setSuggestions([]);
+            setSparkResult(null);
+            setSparkError(null);
+            setSparkLoading(false);
             clearMessages();
             stop();
           }}
@@ -1291,6 +1329,86 @@ export default function AgentPage() {
           </div>
         </div>
 
+        {/* Firecrawl Spark results */}
+        {config.model.provider === "firecrawl" ? (
+          <div className="mt-8">
+            {sparkLoading && (
+              <div className="flex flex-col items-center gap-16 py-40">
+                <div className="w-32 h-32 border-3 border-heat-100 border-t-transparent rounded-full animate-spin" />
+                <div className="text-label-medium text-black-alpha-48">
+                  Running Firecrawl {config.model.model === "spark-1-pro" ? "Spark 1 Pro" : "Spark 1 Mini"}...
+                </div>
+                <div className="text-body-small text-black-alpha-32">This may take a few minutes for complex queries</div>
+              </div>
+            )}
+            {sparkError && (
+              <div className="rounded-12 border border-accent-crimson/20 bg-accent-crimson/5 p-16">
+                <div className="text-label-small text-accent-crimson mb-4">Error</div>
+                <div className="text-body-small text-accent-black">{sparkError}</div>
+                <button
+                  type="button"
+                  className="mt-10 px-12 py-6 rounded-8 text-label-small bg-accent-crimson/10 text-accent-crimson hover:bg-accent-crimson/20 transition-all"
+                  onClick={() => { setHasSubmitted(false); setSparkError(null); }}
+                >
+                  Back
+                </button>
+              </div>
+            )}
+            {sparkResult && (
+              <div className="rounded-12 border border-border-muted bg-accent-white overflow-hidden" style={{ boxShadow: "0px 4px 16px -4px rgba(0,0,0,0.06)" }}>
+                <div className="flex items-center justify-between px-16 py-10 border-b border-border-faint bg-black-alpha-2">
+                  <div className="flex items-center gap-8">
+                    <ProviderModelIcon icon="firecrawl" size={16} />
+                    <span className="text-label-small text-accent-black">
+                      {config.model.model === "spark-1-pro" ? "Spark 1 Pro" : "Spark 1 Mini"}
+                    </span>
+                    <span className={cn(
+                      "text-mono-x-small px-6 py-1 rounded-4",
+                      sparkResult.status === "completed" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700",
+                    )}>
+                      {sparkResult.status}
+                    </span>
+                  </div>
+                  {sparkResult.creditsUsed != null && (
+                    <span className="text-mono-x-small text-black-alpha-32">{sparkResult.creditsUsed} credits</span>
+                  )}
+                </div>
+                <div className="p-16 overflow-auto" style={{ maxHeight: "60vh", scrollbarWidth: "thin" }}>
+                  <pre className="text-mono-small text-accent-black whitespace-pre-wrap break-words">
+                    {typeof sparkResult.data === "string"
+                      ? sparkResult.data
+                      : JSON.stringify(sparkResult.data, null, 2)}
+                  </pre>
+                </div>
+                <div className="flex items-center gap-8 px-16 py-10 border-t border-border-faint">
+                  <button
+                    type="button"
+                    className="px-12 py-6 rounded-8 text-label-small bg-black-alpha-4 text-accent-black hover:bg-black-alpha-8 transition-all"
+                    onClick={() => {
+                      const text = typeof sparkResult.data === "string"
+                        ? sparkResult.data
+                        : JSON.stringify(sparkResult.data, null, 2);
+                      navigator.clipboard.writeText(text);
+                    }}
+                  >
+                    Copy
+                  </button>
+                  <button
+                    type="button"
+                    className="px-12 py-6 rounded-8 text-label-small bg-black-alpha-4 text-accent-black hover:bg-black-alpha-8 transition-all"
+                    onClick={() => {
+                      setSparkResult(null);
+                      setHasSubmitted(false);
+                    }}
+                  >
+                    New query
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <>
         {/* Activity feed */}
         <PlanVisualization messages={messages} isRunning={isRunning} preloadedSkills={config.skills.length > 0 ? config.skills : undefined} onArtifactClick={() => setArtifactOpen(true)} />
 
@@ -1365,6 +1483,9 @@ export default function AgentPage() {
             )}
 
           </div>
+        )}
+
+          </>
         )}
 
         {/* Session stats scoreboard */}

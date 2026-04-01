@@ -24,7 +24,7 @@ export interface Toolkit {
 }
 
 export interface ModelConfig {
-  provider: "gateway" | "anthropic" | "openai" | "google" | "acp";
+  provider: "gateway" | "anthropic" | "openai" | "google" | "firecrawl" | "acp";
   model: string;
   apiKey?: string;
   bin?: string;
