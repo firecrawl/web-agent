@@ -371,14 +371,13 @@ export default function ArtifactPanel({ messages, isRunning, onRequestFormat, on
     <div className="h-full border-l border-border-faint bg-background-base flex flex-col flex-shrink-0 w-[50%] transition-all duration-200 overflow-hidden">
       {/* Header */}
       <div className="px-14 py-10 border-b border-border-faint flex items-center gap-8">
-        <span className="text-mono-x-small text-black-alpha-48 bg-black-alpha-4 px-8 py-2 rounded-4">{label}</span>
         {isStreaming ? (
           <span className="text-mono-x-small text-black-alpha-32 flex-1 flex items-center gap-4">
             <span className="inline-block w-4 h-4 rounded-full bg-heat-100 animate-pulse" />
             Streaming...
           </span>
         ) : (
-          <span className="text-mono-x-small text-black-alpha-32 flex-1">{sizeStr}</span>
+          <span className="flex-1" />
         )}
         {!isStreaming && (
           <>
