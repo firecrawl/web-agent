@@ -239,7 +239,7 @@ function PlusMenu({
 
       {/* Right panel */}
       {activePanel && (
-        <div className="w-280 flex-shrink-0 overflow-y-auto" style={{ scrollbarWidth: "thin" }}>
+        <div className="w-360 flex-shrink-0 overflow-y-auto" style={{ scrollbarWidth: "thin" }}>
           {/* Plan */}
           {activePanel === "plan" && (
             <div className="p-14 flex flex-col gap-8">
