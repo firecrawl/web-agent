@@ -1389,9 +1389,7 @@ export default function AgentPage() {
                       {sparkResult.status}
                     </span>
                   </div>
-                  <span className="text-mono-x-small text-black-alpha-32">
-                    {sparkResult.creditsUsed ?? 0} credit{sparkResult.creditsUsed !== 1 ? "s" : ""}
-                  </span>
+
                 </div>
                 <div className="border-t border-border-faint bg-background-lighter p-14 max-h-500 overflow-auto no-scrollbar">
                   <pre className="text-mono-small text-accent-black whitespace-pre-wrap break-words">
