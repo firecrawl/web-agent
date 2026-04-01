@@ -8,11 +8,11 @@ import "streamdown/styles.css";
 
 const suisseIntl = localFont({
   src: [
-    { path: "../public/fonts/SuisseIntl/400.woff2", weight: "400" },
-    { path: "../public/fonts/SuisseIntl/450.woff2", weight: "450" },
-    { path: "../public/fonts/SuisseIntl/500.woff2", weight: "500" },
-    { path: "../public/fonts/SuisseIntl/600.woff2", weight: "600" },
-    { path: "../public/fonts/SuisseIntl/700.woff2", weight: "700" },
+    { path: "../../public/fonts/SuisseIntl/400.woff2", weight: "400" },
+    { path: "../../public/fonts/SuisseIntl/450.woff2", weight: "450" },
+    { path: "../../public/fonts/SuisseIntl/500.woff2", weight: "500" },
+    { path: "../../public/fonts/SuisseIntl/600.woff2", weight: "600" },
+    { path: "../../public/fonts/SuisseIntl/700.woff2", weight: "700" },
   ],
   variable: "--font-suisse",
 });
