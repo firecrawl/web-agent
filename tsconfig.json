@@ -26,6 +26,9 @@
       "@/*": [
         "./*"
       ],
+      "@agent/*": [
+        "./app/(agent)/*"
+      ],
       "@agent-core": [
         "./agent-core/src/index.ts"
       ],
