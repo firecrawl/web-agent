@@ -206,7 +206,7 @@ function PlusMenu({
   return (
     <div
       ref={ref}
-      className="absolute bottom-full left-0 mb-6 bg-accent-white rounded-12 border border-border-muted overflow-hidden flex"
+      className="absolute bottom-full left-0 mb-6 bg-accent-white rounded-12 border border-border-muted overflow-hidden flex max-w-[520px]"
       style={{ boxShadow: "0px 16px 32px -8px rgba(0,0,0,0.08), 0px 4px 12px -2px rgba(0,0,0,0.04)", maxHeight: maxH }}
     >
       {/* Left nav */}
