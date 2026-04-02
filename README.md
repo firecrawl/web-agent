@@ -2,7 +2,7 @@
 
 AI-powered web research agent. Give it a prompt — it searches, scrapes, and extracts structured data from any website.
 
-Built on [Firecrawl](https://firecrawl.dev/) and the [Vercel AI SDK](https://sdk.vercel.ai/).
+Built on [Firecrawl](https://firecrawl.dev/) and [firecrawl-aisdk](https://www.npmjs.com/package/firecrawl-aisdk).
 
 ## Get started
 
