@@ -36,7 +36,7 @@ export function loadManifest(): Manifest {
   const manifestPath = path.resolve(__dirname, '../../agent-manifest.json');
   const raw = fs.readFileSync(manifestPath, 'utf-8');
   cached = JSON.parse(raw) as Manifest;
-  cachedSourceRoot = path.resolve(__dirname, '../../..');
+  cachedSourceRoot = path.resolve(__dirname, '../../../..');
   return cached;
 }
 

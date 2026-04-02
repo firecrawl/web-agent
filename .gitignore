@@ -9,4 +9,4 @@ data/
 tmp/
 .DS_Store
 .playwright-mcp/
-cli/dist/
+.internal/cli/dist/

@@ -26,7 +26,7 @@ firecrawl agent init my-agent -t express --key anthropic=sk-...  # API server wi
 
 > **Note:** `firecrawl agent init` is coming soon to the [Firecrawl CLI](https://www.npmjs.com/package/firecrawl-cli). While this repo is in development, build the CLI locally:
 > ```bash
-> cd cli && npm install && npm run build && npm link
+> cd .internal/cli && npm install && npm run build && npm link
 > firecrawl-agent init my-agent
 > ```
 
@@ -64,7 +64,7 @@ All templates share the same [agent core](./agent-core/) and expose the same API
 | [`agent-core/`](./agent-core/) | Core agent logic, orchestrator, skills, tools, [OpenAPI spec](./agent-core/openapi.yaml) |
 | [`agent-templates/`](./agent-templates/) | Server templates - [Next.js](./agent-templates/next/), [Express](./agent-templates/express/), [Hono](./agent-templates/hono/) |
 | [`agent-sdks/`](./agent-sdks/) | SDKs for 17 languages, each with working examples |
-| [`cli/`](./cli/) | CLI tool - `init`, `dev`, `deploy` |
+| [`.internal/cli/`](./.internal/cli/) | CLI tool - `init`, `dev`, `deploy` |
 
 ## Architecture
 
