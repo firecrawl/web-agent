@@ -8,9 +8,9 @@ export interface TemplateEntry {
   name: string;
   description: string;
   path: string;
-  copyRoot: boolean;
   requiredEnvVars: string[];
   optionalEnvVars: string[];
+  envFile?: string;
   devCommand: string;
   deploy: string[];
 }

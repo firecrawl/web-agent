@@ -36,7 +36,7 @@ firecrawl agent init my-agent -t express --key anthropic=sk-...  # API server wi
 
 ```bash
 git clone https://github.com/firecrawl/firecrawl-agent.git
-cd firecrawl-agent
+cd firecrawl-agent/templates/next
 npm install
 cp .env.local.example .env.local   # add your FIRECRAWL_API_KEY
 npm run dev                         # http://localhost:3000

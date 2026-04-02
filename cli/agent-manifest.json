@@ -6,7 +6,6 @@
       "name": "Next.js (Full UI)",
       "description": "Complete web app with chat UI, conversation history, settings panel",
       "path": "templates/next",
-      "copyRoot": true,
       "requiredEnvVars": ["FIRECRAWL_API_KEY"],
       "optionalEnvVars": [
         "ANTHROPIC_API_KEY",
@@ -14,6 +13,7 @@
         "GOOGLE_GENERATIVE_AI_API_KEY",
         "AI_GATEWAY_API_KEY"
       ],
+      "envFile": ".env.local",
       "devCommand": "npm run dev",
       "deploy": ["vercel", "railway", "docker"]
     },
@@ -22,7 +22,6 @@
       "name": "Express (API only)",
       "description": "Lightweight Node.js API server with /v1/run endpoint",
       "path": "templates/express",
-      "copyRoot": false,
       "requiredEnvVars": ["FIRECRAWL_API_KEY"],
       "optionalEnvVars": [
         "ANTHROPIC_API_KEY",
@@ -37,7 +36,6 @@
       "name": "Hono (Serverless)",
       "description": "Fast, lightweight API — ideal for edge and serverless",
       "path": "templates/hono",
-      "copyRoot": false,
       "requiredEnvVars": ["FIRECRAWL_API_KEY"],
       "optionalEnvVars": [
         "ANTHROPIC_API_KEY",
