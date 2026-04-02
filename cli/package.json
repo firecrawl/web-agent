@@ -1,0 +1,25 @@
+{
+  "name": "firecrawl-agent-cli",
+  "version": "0.1.0",
+  "description": "CLI to scaffold and run Firecrawl Agent projects",
+  "bin": {
+    "firecrawl-agent": "dist/index.js"
+  },
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "commander": "^14.0.2",
+    "@inquirer/prompts": "^8.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

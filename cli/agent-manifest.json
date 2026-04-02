@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "templates": [
+    {
+      "id": "next",
+      "name": "Next.js (Full UI)",
+      "description": "Complete web app with chat UI, conversation history, settings panel",
+      "path": "templates/next",
+      "copyRoot": true,
+      "requiredEnvVars": ["FIRECRAWL_API_KEY"],
+      "optionalEnvVars": [
+        "ANTHROPIC_API_KEY",
+        "OPENAI_API_KEY",
+        "GOOGLE_GENERATIVE_AI_API_KEY",
+        "AI_GATEWAY_API_KEY"
+      ],
+      "devCommand": "npm run dev",
+      "deploy": ["vercel", "railway", "docker"]
+    },
+    {
+      "id": "express",
+      "name": "Express (API only)",
+      "description": "Lightweight Node.js API server with /v1/run endpoint",
+      "path": "templates/express",
+      "copyRoot": false,
+      "requiredEnvVars": ["FIRECRAWL_API_KEY"],
+      "optionalEnvVars": [
+        "ANTHROPIC_API_KEY",
+        "OPENAI_API_KEY",
+        "GOOGLE_GENERATIVE_AI_API_KEY"
+      ],
+      "devCommand": "npm run dev",
+      "deploy": ["railway", "docker"]
+    },
+    {
+      "id": "hono",
+      "name": "Hono (Serverless)",
+      "description": "Fast, lightweight API — ideal for edge and serverless",
+      "path": "templates/hono",
+      "copyRoot": false,
+      "requiredEnvVars": ["FIRECRAWL_API_KEY"],
+      "optionalEnvVars": [
+        "ANTHROPIC_API_KEY",
+        "OPENAI_API_KEY",
+        "GOOGLE_GENERATIVE_AI_API_KEY"
+      ],
+      "devCommand": "npm run dev",
+      "deploy": ["vercel", "railway", "docker"]
+    }
+  ],
+  "providers": [
+    {
+      "id": "anthropic",
+      "name": "Anthropic (Claude)",
+      "envVar": "ANTHROPIC_API_KEY",
+      "hint": "https://console.anthropic.com/settings/keys"
+    },
+    {
+      "id": "openai",
+      "name": "OpenAI (GPT)",
+      "envVar": "OPENAI_API_KEY",
+      "hint": "https://platform.openai.com/api-keys"
+    },
+    {
+      "id": "google",
+      "name": "Google Gemini",
+      "envVar": "GOOGLE_GENERATIVE_AI_API_KEY",
+      "hint": "https://aistudio.google.com/apikey"
+    }
+  ],
+  "deployPlatforms": [
+    {
+      "id": "vercel",
+      "name": "Vercel",
+      "configPath": "deploy/vercel",
+      "command": "npx vercel"
+    },
+    {
+      "id": "railway",
+      "name": "Railway",
+      "configPath": "deploy/railway",
+      "command": "railway up"
+    },
+    {
+      "id": "docker",
+      "name": "Docker",
+      "configPath": "deploy/docker",
+      "command": "docker build -t firecrawl-agent . && docker run -p 3000:3000 firecrawl-agent"
+    }
+  ]
+}
