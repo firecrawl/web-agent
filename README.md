@@ -82,7 +82,7 @@ graph BT
         TOOLKIT --> INTERACT
         ORC[Orchestrator] --> TOOLKIT
         ORC --> SKILLS[Skills]
-        ORC --> WORKERS[Parallel Workers]
+        ORC --> WORKERS["Parallel Workers (Subagents)"]
     end
 
     subgraph "Run it anywhere"
