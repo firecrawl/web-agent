@@ -42,6 +42,44 @@ cp .env.local.example .env.local   # add your FIRECRAWL_API_KEY
 npm run dev                         # http://localhost:3000
 ```
 
+## Usage
+
+**As a library** — import directly, no server needed:
+
+```typescript
+import { createAgent } from '@firecrawl/agent-core'
+
+const agent = createAgent({
+  firecrawlApiKey: process.env.FIRECRAWL_API_KEY!,
+  model: { provider: 'google', model: 'gemini-3-flash-preview' },
+})
+
+const result = await agent.run({ prompt: 'Compare pricing for Vercel vs Netlify' })
+```
+
+**As an API** — deploy any template, call `POST /v1/run` from any language. See the [API spec](./agent-core/openapi.yaml).
+
+## Templates
+
+| Template | What you get | Best for |
+|----------|-------------|----------|
+| [**Next.js**](./templates/next/) | Full web app — chat UI, conversation history, settings, streaming visualization | Teams, demos, full experience |
+| [**Express**](./templates/express/) | Lightweight API server with `POST /v1/run` | Backend services, self-hosted |
+| [**Hono**](./templates/hono/) | Fast serverless API with SSE streaming | Edge, serverless, Cloudflare |
+
+All templates share the same [agent core](./agent-core/) and expose the same API.
+
+## Project structure
+
+| Directory | What's inside |
+|-----------|--------------|
+| [`cli/`](./cli/) | CLI tool — `init`, `dev`, `deploy` commands |
+| [`agent-core/`](./agent-core/) | Core agent logic, orchestrator, skills, tools, [OpenAPI spec](./agent-core/openapi.yaml) |
+| [`templates/`](./templates/) | Server templates — [Next.js](./templates/next/), [Express](./templates/express/), [Hono](./templates/hono/) |
+| [`sdks/`](./sdks/) | Auto-generated clients for 17 languages |
+| [`examples/`](./examples/) | Working examples for every SDK language |
+| [`deploy/`](./deploy/) | Platform configs — [Vercel](./deploy/vercel/), [Railway](./deploy/railway/), [Docker](./deploy/docker/) |
+
 ## Architecture
 
 ```mermaid
@@ -73,50 +111,6 @@ graph BT
     HONO --> ORC
     LIB --> ORC
 ```
-
-## Use as an API or a library
-
-**API** — deploy any template, call `POST /v1/run` from any language:
-
-```bash
-curl -X POST http://localhost:3000/api/v1/run \
-  -H "Content-Type: application/json" \
-  -d '{"prompt": "Compare pricing for Vercel vs Netlify", "format": "json"}'
-```
-
-**Library** — import directly, no server needed:
-
-```typescript
-import { createAgent } from '@firecrawl/agent-core'
-
-const agent = createAgent({
-  firecrawlApiKey: process.env.FIRECRAWL_API_KEY!,
-  model: { provider: 'google', model: 'gemini-3-flash-preview' },
-})
-
-const result = await agent.run({ prompt: 'Compare pricing for Vercel vs Netlify' })
-```
-
-## Templates
-
-| Template | What you get | Best for |
-|----------|-------------|----------|
-| [**Next.js**](./templates/next/) | Full web app — chat UI, conversation history, settings, streaming visualization | Teams, demos, full experience |
-| [**Express**](./templates/express/) | Lightweight API server with `POST /v1/run` | Backend services, self-hosted |
-| [**Hono**](./templates/hono/) | Fast serverless API with SSE streaming | Edge, serverless, Cloudflare |
-
-All templates share the same [agent core](./agent-core/) and expose the same [API](./agent-core/openapi.yaml). Pick the one that fits your stack.
-
-## Project structure
-
-| Directory | What's inside |
-|-----------|--------------|
-| [`cli/`](./cli/) | CLI tool — `init`, `dev`, `deploy` commands |
-| [`agent-core/`](./agent-core/) | Core agent logic, orchestrator, skills, tools, [OpenAPI spec](./agent-core/openapi.yaml) |
-| [`templates/`](./templates/) | Server templates — [Next.js](./templates/next/), [Express](./templates/express/), [Hono](./templates/hono/) |
-| [`sdks/`](./sdks/) | Auto-generated clients for 17 languages |
-| [`examples/`](./examples/) | Working examples for every SDK language |
-| [`deploy/`](./deploy/) | Platform configs — [Vercel](./deploy/vercel/), [Railway](./deploy/railway/), [Docker](./deploy/docker/) |
 
 ## License
 
