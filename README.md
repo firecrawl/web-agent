@@ -4,22 +4,56 @@ AI-powered web research agent. Search, scrape, and extract structured data from 
 
 Built on the [Vercel AI SDK](https://sdk.vercel.ai/) and [Firecrawl](https://firecrawl.dev/).
 
-## Quick start
+## Get started
+
+Build the CLI, then scaffold a project in seconds:
 
 ```bash
-git clone https://github.com/nicholasgriffintn/firecrawl-agent.git
-cd firecrawl-agent
-npm install
-cp .env.local.example .env.local   # add your FIRECRAWL_API_KEY
-npm run dev                         # http://localhost:3000
+cd cli && npm install && npm run build && npm link
 ```
 
-Then call it:
+```bash
+firecrawl-agent init my-agent
+```
+
+```
+  firecrawl-agent
+  AI-powered web research agent
+
+? Template
+❯ Next.js (Full UI)      Complete web app with chat UI, history, settings
+  Express (API only)     Lightweight Node.js API server with /v1/run endpoint
+  Hono (Serverless)      Fast, lightweight API — ideal for edge and serverless
+```
+
+That's it. The CLI detects your Firecrawl API key, scaffolds the project, installs dependencies, and you're running.
+
+### One-liners
 
 ```bash
-curl -X POST http://localhost:3000/api/v1/run \
-  -H "Content-Type: application/json" \
-  -d '{"prompt": "Get the top 5 stories on Hacker News with title and points"}'
+firecrawl-agent init my-agent -t next       # Full UI with chat, history, settings
+firecrawl-agent init my-agent -t express    # Lightweight API server
+firecrawl-agent init my-agent -t hono       # Serverless-ready API
+```
+
+### With API keys
+
+```bash
+firecrawl-agent init my-agent -t express \
+  --api-key fc-your-key \
+  --key anthropic=sk-ant-... \
+  --key openai=sk-...
+```
+
+Zero prompts. Scaffolds, installs, done.
+
+### From an external repo
+
+Any repo with an `agent-manifest.json` works as a template source:
+
+```bash
+firecrawl-agent init my-agent --from user/repo
+firecrawl-agent init my-agent --from ./local-templates
 ```
 
 ## What it does
@@ -66,6 +100,16 @@ graph TD
     H --> G
 ```
 
+## Templates
+
+| Template | What you get | Best for |
+|----------|-------------|----------|
+| **Next.js** | Full web app with chat UI, conversation history, settings panel, streaming visualization | Teams, demos, full experience |
+| **Express** | Lightweight API server with `POST /v1/run` endpoint | Backend services, self-hosted |
+| **Hono** | Fast serverless API with SSE streaming | Edge deployments, serverless |
+
+All templates share the same agent core and expose the same API. Pick the one that fits your stack.
+
 ## Architecture
 
 ```mermaid
@@ -105,6 +149,7 @@ graph TD
 ## Repository structure
 
 ```
+cli/               CLI tool — scaffold, dev, deploy
 agent-core/        Core agent logic, OpenAPI spec
 templates/         Server templates (Next.js, Hono, Express)
 sdks/              Auto-generated clients for 17 languages
@@ -115,6 +160,7 @@ scripts/           SDK generation and testing tools
 
 | Directory | README | What you'll find |
 |-----------|--------|-----------------|
+| [cli/](./cli/) | | `firecrawl-agent init`, `dev`, `deploy` commands |
 | [agent-core/](./agent-core/) | [README](./agent-core/README.md) | `createAgent()` API, architecture, configuration |
 | [templates/](./templates/) | [README](./templates/README.md) | Next.js (full UI), Hono (API-only), Express |
 | [sdks/](./sdks/) | [README](./sdks/README.md) | Python, Go, JS, Ruby, Java, Rust, and 11 more |
@@ -200,6 +246,22 @@ The agent discovers skills from `.agents/skills/`. Each skill is a markdown file
 ```
 
 See [agent-core/README.md](./agent-core/README.md) for details.
+
+## CLI reference
+
+```
+firecrawl-agent init [project-name]     Create a new project
+  -t, --template <id>                   next, express, or hono
+  --api-key <key>                       Firecrawl API key
+  --key <provider=key>                  Provider key (repeatable)
+  --from <source>                       External repo or local path
+  --skip-install                        Skip npm install
+
+firecrawl-agent dev [dir]               Start the dev server
+
+firecrawl-agent deploy [dir]            Deploy your project
+  -p, --platform <id>                   vercel, railway, or docker
+```
 
 ## For AI agents
 
