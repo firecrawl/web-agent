@@ -20,8 +20,7 @@ firecrawl agent init my-agent
 Auto-detects your Firecrawl API key, scaffolds the project, and installs dependencies. Or skip prompts:
 
 ```bash
-firecrawl agent init my-agent -t next                            # Full UI
-firecrawl agent init my-agent -t express --key anthropic=sk-...  # API server with keys
+firecrawl agent init my-agent -t next
 ```
 
 > **Note:** `firecrawl agent init` is coming soon to the [Firecrawl CLI](https://www.npmjs.com/package/firecrawl-cli). While this repo is in development, build the CLI locally:
