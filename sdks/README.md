@@ -1,65 +1,71 @@
-[Home](../README.md) > SDKs
-
 # SDKs
 
 Auto-generated typed clients for calling the Firecrawl Agent API from any language.
 
-All SDKs are generated from [agent-core/openapi.yaml](../agent-core/openapi.yaml) using [OpenAPI Generator](https://openapi-generator.tech/).
+Generated from [agent-core/openapi.yaml](../agent-core/openapi.yaml) using [OpenAPI Generator](https://openapi-generator.tech/).
 
-**See also**: [Agent Core](../agent-core/) | [Templates](../templates/) | [Examples](../examples/) | [Deploy](../deploy/)
+## Quick start
 
-## Available SDKs
+1. Scaffold and start an agent:
 
-| Language | Directory | Package Manager | Install |
-|----------|-----------|-----------------|---------|
-| Python | `python/` | pip | `pip install ./sdks/python` |
-| Go | `go/` | go get | `go get github.com/...` |
-| JavaScript/TypeScript | `javascript/` | npm | `npm install ./sdks/javascript` |
-| Ruby | `ruby/` | gem | `gem build && gem install` |
-| Java | `java/` | Maven | `mvn install` |
-| Kotlin | `kotlin/` | Gradle | `gradle build` |
-| Swift | `swift/` | SPM | Add as package dependency |
-| Rust | `rust/` | cargo | `cargo build` |
-| C# | `csharp/` | NuGet | `dotnet build` |
-| PHP | `php/` | Composer | `composer install` |
-| Dart | `dart/` | pub | `dart pub get` |
-| Elixir | `elixir/` | hex | `mix deps.get` |
-| Scala | `scala/` | sbt | `sbt compile` |
-| R | `r/` | CRAN | `install.packages()` |
-| Perl | `perl/` | CPAN | `perl Makefile.PL && make` |
-| C++ | `cpp/` | CMake | `cmake && make` |
-| PowerShell | `powershell/` | PSGallery | `Import-Module` |
+```bash
+firecrawl-agent init my-agent -t express
+firecrawl-agent dev my-agent
+```
 
-## Usage
-
-Every SDK works the same way. Point it at your deployed agent and call `run()`:
+2. Call it from any language:
 
 **Python:**
 ```python
-from firecrawl_agent import DefaultApi, RunRequest, Configuration
-
-api = DefaultApi(Configuration(host="https://your-agent.railway.app/api/v1"))
-result = api.run(RunRequest(prompt="get pricing for Vercel", format="json"))
+import requests
+result = requests.post("http://localhost:3000/v1/run", json={
+    "prompt": "get pricing for Vercel",
+    "format": "json"
+}).json()
 ```
 
 **Go:**
 ```go
-cfg := firecrawlagent.NewConfiguration()
-cfg.Servers[0].URL = "https://your-agent.railway.app/api/v1"
-client := firecrawlagent.NewAPIClient(cfg)
-result, _, _ := client.DefaultAPI.Run(ctx).RunRequest(...).Execute()
+body, _ := json.Marshal(map[string]any{"prompt": "get pricing for Vercel"})
+resp, _ := http.Post("http://localhost:3000/v1/run", "application/json", bytes.NewReader(body))
 ```
 
 **TypeScript:**
 ```typescript
-import { DefaultApi, Configuration } from '@firecrawl/agent-sdk'
-const api = new DefaultApi(new Configuration({ basePath: 'https://your-agent.railway.app/api/v1' }))
-const result = await api.run({ prompt: 'get pricing for Vercel' })
+const result = await fetch("http://localhost:3000/v1/run", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ prompt: "get pricing for Vercel" }),
+}).then(r => r.json())
 ```
+
+Or use the typed SDK clients below for full type safety.
+
+## Available SDKs
+
+| Language | Directory | Install |
+|----------|-----------|---------|
+| Python | `python/` | `pip install ./sdks/python` |
+| Go | `go/` | `go get` |
+| JavaScript/TypeScript | `javascript/` | `npm install ./sdks/javascript` |
+| Ruby | `ruby/` | `gem build && gem install` |
+| Java | `java/` | `mvn install` |
+| Kotlin | `kotlin/` | `gradle build` |
+| Swift | `swift/` | SPM dependency |
+| Rust | `rust/` | `cargo build` |
+| C# | `csharp/` | `dotnet build` |
+| PHP | `php/` | `composer install` |
+| Dart | `dart/` | `dart pub get` |
+| Elixir | `elixir/` | `mix deps.get` |
+| Scala | `scala/` | `sbt compile` |
+| R | `r/` | `install.packages()` |
+| Perl | `perl/` | `perl Makefile.PL && make` |
+| C++ | `cpp/` | `cmake && make` |
+| PowerShell | `powershell/` | `Import-Module` |
 
 ## Regenerating
 
-When `agent-core/openapi.yaml` changes, regenerate all SDKs:
+When [openapi.yaml](../agent-core/openapi.yaml) changes:
 
 ```bash
 ./scripts/generate-sdks.sh
