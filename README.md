@@ -6,16 +6,10 @@ Built on [Firecrawl](https://firecrawl.dev/) and [firecrawl-aisdk](https://www.n
 
 ## Get started
 
-### Option 1: CLI
-
-Build the CLI once, then scaffold projects from anywhere:
+### CLI
 
 ```bash
-cd cli && npm install && npm run build && npm link
-```
-
-```bash
-firecrawl-agent init my-agent
+firecrawl agent init my-agent
 ```
 
 ```
@@ -25,17 +19,20 @@ firecrawl-agent init my-agent
   Hono (Serverless)      Fast, lightweight API — ideal for edge and serverless
 ```
 
-The CLI auto-detects your Firecrawl API key, scaffolds the project, and installs dependencies. Or skip prompts entirely:
+Auto-detects your Firecrawl API key, scaffolds the project, and installs dependencies. Or skip prompts:
 
 ```bash
-firecrawl-agent init my-agent -t next                            # Full UI
-firecrawl-agent init my-agent -t express --key anthropic=sk-...  # API server with keys
-firecrawl-agent init my-agent --from user/repo                   # From external repo
+firecrawl agent init my-agent -t next                            # Full UI
+firecrawl agent init my-agent -t express --key anthropic=sk-...  # API server with keys
 ```
 
-See [`cli/`](./cli/) for the full CLI reference.
+> **Note:** `firecrawl agent init` is coming soon to the [Firecrawl CLI](https://www.npmjs.com/package/firecrawl-cli). While this repo is in development, build the CLI locally:
+> ```bash
+> cd cli && npm install && npm run build && npm link
+> firecrawl-agent init my-agent
+> ```
 
-### Option 2: Clone
+### Clone
 
 ```bash
 git clone https://github.com/firecrawl/firecrawl-agent.git
