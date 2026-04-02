@@ -1,5 +1,7 @@
 # Firecrawl Agent
 
+<img src=".internal/agent.jpg" alt="Firecrawl Agent" />
+
 AI-powered web research agent built on the [Firecrawl AI SDK](https://www.npmjs.com/package/firecrawl-aisdk) toolkit. Give it a prompt - it searches, scrapes, and extracts structured data from any website.
 
 Use it as a [library](./agent-core/), deploy it as an [API service](./agent-templates/), call it from [17 languages](./agent-sdks/), or scaffold a full-stack app with the [CLI](#get-started). MIT licensed.
