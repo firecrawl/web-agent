@@ -57,5 +57,5 @@ AGENT_URL=https://my-agent.railway.app/api/v1 python agent-sdks/python/examples/
 When [openapi.yaml](../agent-core/openapi.yaml) changes:
 
 ```bash
-./scripts/generate-sdks.sh
+./.internal/generate-sdks.sh
 ```
