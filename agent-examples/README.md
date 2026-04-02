@@ -14,45 +14,45 @@ firecrawl-agent dev my-agent
 2. Run any example:
 
 ```bash
-cd examples/python-basic && python main.py
-cd examples/go-basic && go run main.go
-cd examples/curl && bash run.sh
+cd agent-examples/curl && bash run.sh
+cd agent-examples/python-basic && python main.py
+cd agent-examples/go-basic && go run main.go
 ```
 
 All examples hit `POST /v1/run` on `http://localhost:3000/api/v1` by default.
 
 ## All examples
 
-| Example | Language | Run |
-|---------|----------|-----|
-| [curl](./curl/) | Shell | `bash run.sh` |
-| [python-basic](./python-basic/) | Python | `python main.py` |
-| [python-langchain](./python-langchain/) | Python | `python main.py` |
-| [typescript-ai-sdk](./typescript-ai-sdk/) | TypeScript | `npx tsx index.ts` |
-| [go-basic](./go-basic/) | Go | `go run main.go` |
-| [ruby](./ruby/) | Ruby | `ruby main.rb` |
-| [java](./java/) | Java | `javac Main.java && java Main` |
-| [rust](./rust/) | Rust | `rustc main.rs && ./main` |
-| [php](./php/) | PHP | `php main.php` |
-| [dart](./dart/) | Dart | `dart run main.dart` |
-| [kotlin](./kotlin/) | Kotlin | `kotlinc -script main.kts` |
-| [csharp](./csharp/) | C# | `dotnet run` |
-| [elixir](./elixir/) | Elixir | `elixir main.exs` |
-| [perl](./perl/) | Perl | `perl main.pl` |
-| [r](./r/) | R | `Rscript main.R` |
-| [cpp](./cpp/) | C++ | `clang++ -std=c++17 main.cpp && ./a.out` |
-| [scala](./scala/) | Scala | `scala-cli run Main.scala` |
+| Example | Run |
+|---------|-----|
+| [curl](./curl/) | `bash run.sh` |
+| [python-basic](./python-basic/) | `python main.py` |
+| [python-langchain](./python-langchain/) | `python main.py` |
+| [typescript-ai-sdk](./typescript-ai-sdk/) | `npx tsx index.ts` |
+| [go-basic](./go-basic/) | `go run main.go` |
+| [ruby](./ruby/) | `ruby main.rb` |
+| [java](./java/) | `javac Main.java && java Main` |
+| [rust](./rust/) | `rustc main.rs && ./main` |
+| [php](./php/) | `php main.php` |
+| [dart](./dart/) | `dart run main.dart` |
+| [kotlin](./kotlin/) | `kotlinc -script main.kts` |
+| [csharp](./csharp/) | `dotnet run` |
+| [elixir](./elixir/) | `elixir main.exs` |
+| [perl](./perl/) | `perl main.pl` |
+| [r](./r/) | `Rscript main.R` |
+| [cpp](./cpp/) | `clang++ -std=c++17 main.cpp && ./a.out` |
+| [scala](./scala/) | `scala-cli run Main.scala` |
 
 ## Configuration
 
 Override the agent URL with `AGENT_URL`:
 
 ```bash
-AGENT_URL=https://my-agent.railway.app/api/v1 python examples/python-basic/main.py
+AGENT_URL=https://my-agent.railway.app/api/v1 python agent-examples/python-basic/main.py
 ```
 
 ## Two integration paths
 
-**HTTP** - POST to `/v1/run`, get JSON back. All examples except typescript-ai-sdk use this. Works with any [template](../agent-templates/).
+**HTTP** - POST to `/v1/run`, get JSON back. Works with any [template](../agent-templates/).
 
 **Library** - import [agent-core](../agent-core/) directly as TypeScript. No server needed. See [typescript-ai-sdk](./typescript-ai-sdk/).

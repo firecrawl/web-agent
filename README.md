@@ -49,11 +49,11 @@ const result = await agent.run({ prompt: 'Compare pricing for Vercel vs Netlify'
 
 ## Templates
 
-| Template | What you get | Best for |
-|----------|-------------|----------|
-| [**Next.js**](./agent-templates/next/) | Full web app - chat UI, conversation history, settings, streaming visualization | Teams, demos, full experience |
-| [**Express**](./agent-templates/express/) | Lightweight API server with `POST /v1/run` | Backend services, self-hosted |
-| [**Hono**](./agent-templates/hono/) | Fast serverless API with SSE streaming | Edge, serverless, Cloudflare |
+| Template | Install | What you get |
+|----------|---------|-------------|
+| [**Next.js**](./agent-templates/next/) | `firecrawl-agent init my-agent -t next` | Full web app - chat UI, history, settings, streaming |
+| [**Express**](./agent-templates/express/) | `firecrawl-agent init my-agent -t express` | Lightweight API server with `POST /v1/run` |
+| [**Hono**](./agent-templates/hono/) | `firecrawl-agent init my-agent -t hono` | Fast serverless API with SSE streaming |
 
 All templates share the same [agent core](./agent-core/) and expose the same API.
 

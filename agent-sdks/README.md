@@ -43,25 +43,25 @@ Or use the typed SDK clients below for full type safety.
 
 ## Available SDKs
 
-| Language | Directory | Install |
-|----------|-----------|---------|
-| Python | `python/` | `pip install ./sdks/python` |
-| Go | `go/` | `go get` |
-| JavaScript/TypeScript | `javascript/` | `npm install ./sdks/javascript` |
-| Ruby | `ruby/` | `gem build && gem install` |
-| Java | `java/` | `mvn install` |
-| Kotlin | `kotlin/` | `gradle build` |
-| Swift | `swift/` | SPM dependency |
-| Rust | `rust/` | `cargo build` |
-| C# | `csharp/` | `dotnet build` |
-| PHP | `php/` | `composer install` |
-| Dart | `dart/` | `dart pub get` |
-| Elixir | `elixir/` | `mix deps.get` |
-| Scala | `scala/` | `sbt compile` |
-| R | `r/` | `install.packages()` |
-| Perl | `perl/` | `perl Makefile.PL && make` |
-| C++ | `cpp/` | `cmake && make` |
-| PowerShell | `powershell/` | `Import-Module` |
+| Language | Install |
+|----------|---------|
+| [Python](./python/) | `pip install ./agent-sdks/python` |
+| [Go](./go/) | `go get` |
+| [JavaScript/TypeScript](./javascript/) | `npm install ./agent-sdks/javascript` |
+| [Ruby](./ruby/) | `gem build && gem install` |
+| [Java](./java/) | `mvn install` |
+| [Kotlin](./kotlin/) | `gradle build` |
+| [Swift](./swift/) | SPM dependency |
+| [Rust](./rust/) | `cargo build` |
+| [C#](./csharp/) | `dotnet build` |
+| [PHP](./php/) | `composer install` |
+| [Dart](./dart/) | `dart pub get` |
+| [Elixir](./elixir/) | `mix deps.get` |
+| [Scala](./scala/) | `sbt compile` |
+| [R](./r/) | `install.packages()` |
+| [Perl](./perl/) | `perl Makefile.PL && make` |
+| [C++](./cpp/) | `cmake && make` |
+| [PowerShell](./powershell/) | `Import-Module` |
 
 ## Regenerating
 

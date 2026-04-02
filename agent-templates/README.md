@@ -10,11 +10,11 @@ firecrawl-agent init my-agent -t <template>
 
 ## Templates
 
-| Template | Framework | UI | Best for |
-|----------|-----------|-----|----------|
-| [**next**](./next/) | Next.js | Full app | Chat UI, history, settings, visualization |
-| [**express**](./express/) | Express | API only | Backend services, self-hosted |
-| [**hono**](./hono/) | Hono | API only | Serverless, edge, fast cold starts |
+| Template | Install | Best for |
+|----------|---------|----------|
+| [**Next.js**](./next/) | `firecrawl-agent init my-agent -t next` | Full app - chat UI, history, settings |
+| [**Express**](./express/) | `firecrawl-agent init my-agent -t express` | API server, backend services |
+| [**Hono**](./hono/) | `firecrawl-agent init my-agent -t hono` | Serverless, edge, fast cold starts |
 
 ## How they work
 
