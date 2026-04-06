@@ -54,8 +54,194 @@ const result = await agent.run({
   format?: 'json' | 'csv' | 'markdown',
   columns?: string[],                // column names for CSV
   skills?: string[],                 // skills to pre-load
+  skillInstructions?: Record<string, string>,  // per-skill custom instructions
+  subAgents?: SubAgentConfig[],      // custom sub-agents for this run
   maxSteps?: number,                 // override per-run
+  exportSkill?: boolean,             // generate reusable skill from the run
 })
+```
+
+#### Sub-agents
+
+Define specialized sub-agents with their own instructions, tools, skills, and step limits:
+
+```typescript
+const result = await agent.run({
+  prompt: 'Build a competitive analysis of Vercel, Netlify, and Cloudflare Pages',
+  subAgents: [
+    {
+      id: 'pricing_analyst',
+      name: 'Pricing Analyst',
+      description: 'Extract and compare pricing tiers across platforms',
+      instructions: 'Focus exclusively on pricing data. Extract every tier, its price, and included limits. Ignore marketing copy.',
+      model: { provider: 'anthropic', model: 'claude-sonnet-4-20250514' },
+      tools: ['scrape'],
+      skills: ['price-tracker'],
+      maxSteps: 20,
+    },
+    {
+      id: 'feature_reviewer',
+      name: 'Feature Reviewer',
+      description: 'Catalog features and developer experience across platforms',
+      instructions: 'Look at docs and changelog, not just marketing pages. Note what each platform does that the others do not.',
+      model: { provider: 'google', model: 'gemini-3-flash-preview' },
+      tools: ['search', 'scrape'],
+      skills: ['deep-research'],
+      maxSteps: 15,
+    },
+  ],
+  format: 'json',
+})
+```
+
+```typescript
+// E-commerce: one agent per retailer, each with site-specific instructions
+const result = await agent.run({
+  prompt: 'Find the best price for a Sony WH-1000XM5 across major retailers',
+  subAgents: [
+    {
+      id: 'amazon',
+      name: 'Amazon Scraper',
+      description: 'Check Amazon product listing and price',
+      instructions: 'Navigate to the product page directly. Extract current price, Prime price if different, and any active coupons.',
+      model: { provider: 'google', model: 'gemini-3-flash-preview' },
+      tools: ['search', 'scrape', 'interact'],
+      skills: ['e-commerce'],
+      maxSteps: 8,
+    },
+    {
+      id: 'bestbuy',
+      name: 'Best Buy Scraper',
+      description: 'Check Best Buy product listing and price',
+      instructions: 'Check both the regular price and any open-box/renewed options. Note member pricing if visible.',
+      model: { provider: 'google', model: 'gemini-3-flash-preview' },
+      tools: ['search', 'scrape'],
+      skills: ['e-commerce'],
+      maxSteps: 8,
+    },
+  ],
+})
+```
+
+```typescript
+// Financial research: give each agent a different data source
+const result = await agent.run({
+  prompt: 'Get a complete financial overview of NVIDIA',
+  subAgents: [
+    {
+      id: 'sec_filings',
+      name: 'SEC Filing Analyst',
+      description: 'Pull key metrics from latest 10-K and 10-Q',
+      instructions: 'Go to SEC EDGAR directly. Extract revenue, net income, EPS, and guidance from the most recent quarterly filing.',
+      model: { provider: 'anthropic', model: 'claude-sonnet-4-20250514' },
+      tools: ['search', 'scrape'],
+      skills: ['financial-data'],
+      maxSteps: 12,
+    },
+    {
+      id: 'analyst_consensus',
+      name: 'Analyst Consensus Tracker',
+      description: 'Gather analyst ratings and price targets',
+      instructions: 'Check Yahoo Finance and TipRanks. Get the consensus rating, average price target, and range.',
+      model: { provider: 'google', model: 'gemini-3-flash-preview' },
+      tools: ['search', 'scrape'],
+      skills: ['finance'],
+      maxSteps: 10,
+    },
+  ],
+  schema: {
+    ticker: 'NVDA',
+    revenue: null,
+    netIncome: null,
+    eps: null,
+    analystRating: null,
+    priceTarget: { average: null, low: null, high: null },
+    sources: [],
+  },
+  format: 'json',
+})
+```
+
+#### Skill instructions
+
+Override or augment skill behavior per-run without editing the skill files:
+
+```typescript
+// Tell the deep-research skill to only use specific sources
+const result = await agent.run({
+  prompt: 'Research the environmental impact of lithium mining',
+  skills: ['deep-research'],
+  skillInstructions: {
+    'deep-research': 'Only use peer-reviewed sources: Google Scholar, PubMed, Nature, Science Direct. Ignore news articles and blog posts.',
+  },
+})
+```
+
+```typescript
+// Customize e-commerce extraction for a specific use case
+const result = await agent.run({
+  prompt: 'Get all running shoes under $150 from Nike.com',
+  urls: ['https://www.nike.com/w/running-shoes'],
+  skills: ['e-commerce'],
+  skillInstructions: {
+    'e-commerce': 'Only extract shoes priced under $150. Include colorways available. Skip kids sizes.',
+  },
+})
+```
+
+#### Export skill
+
+Turn any run into a reusable, deterministic skill (SKILL.md + workflow.mjs + schema.json):
+
+```typescript
+// Run a task and export it as a repeatable workflow
+const result = await agent.run({
+  prompt: 'Get the top 10 trending repositories on GitHub',
+  urls: ['https://github.com/trending'],
+  exportSkill: true,
+})
+
+// result.exportedSkill contains:
+// - name: 'github-trending'
+// - skillMd: full SKILL.md with self-healing instructions
+// - workflow: deterministic Node.js script using @mendable/firecrawl-js
+// - schema: JSON schema for validating the output
+console.log(result.exportedSkill.name)      // 'github-trending'
+console.log(result.exportedSkill.workflow)   // #!/usr/bin/env node ...
+```
+
+```typescript
+// Export a complex multi-step workflow as a skill, then save it
+const result = await agent.run({
+  prompt: 'Get YC batch W25 companies with their funding and team size from HN and Crunchbase',
+  exportSkill: true,
+  format: 'json',
+  schema: {
+    companies: [{ name: '', url: '', funding: '', teamSize: null, sources: [] }],
+  },
+})
+
+// Save the exported skill to your skills directory
+if (result.exportedSkill) {
+  const dir = `./skills/${result.exportedSkill.name}`
+  fs.mkdirSync(dir, { recursive: true })
+  fs.writeFileSync(`${dir}/SKILL.md`, result.exportedSkill.skillMd)
+  fs.writeFileSync(`${dir}/workflow.mjs`, result.exportedSkill.workflow)
+  fs.writeFileSync(`${dir}/schema.json`, result.exportedSkill.schema)
+}
+// Next time: agent.run({ prompt: '...', skills: ['yc-w25-companies'] })
+```
+
+```typescript
+// Monitor a page on a schedule — export once, run the script directly after
+const result = await agent.run({
+  prompt: 'Track the price of RTX 5090 on Newegg, Best Buy, and Amazon',
+  exportSkill: true,
+})
+
+// The workflow.mjs can now run standalone without the agent:
+// FIRECRAWL_API_KEY=fc-... node workflow.mjs
+// Exit 0 = data collected, exit 1 = partial, exit 2 = stale URLs (re-run agent)
 ```
 
 ### `agent.stream(params)`
@@ -101,6 +287,70 @@ createAgent()
 ## OpenAPI spec
 
 [`openapi.yaml`](./openapi.yaml) describes the HTTP API. All [templates](../agent-templates/) implement it, all [SDKs](../agent-sdks/) are generated from it.
+
+### API examples
+
+All features available in the library are also available via the HTTP API:
+
+**Sub-agents via API:**
+
+```bash
+curl -X POST http://localhost:3000/v1/run \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "prompt": "Compare Vercel and Netlify pricing",
+    "subAgents": [
+      {
+        "id": "vercel",
+        "name": "Vercel Researcher",
+        "description": "Extract Vercel pricing tiers",
+        "instructions": "Go directly to vercel.com/pricing. Extract every tier with price and limits.",
+        "tools": ["scrape"],
+        "skills": ["price-tracker"],
+        "maxSteps": 12
+      },
+      {
+        "id": "netlify",
+        "name": "Netlify Researcher",
+        "description": "Extract Netlify pricing tiers",
+        "instructions": "Go directly to netlify.com/pricing. Extract every tier with price and limits.",
+        "tools": ["scrape"],
+        "skills": ["price-tracker"],
+        "maxSteps": 12
+      }
+    ],
+    "format": "json"
+  }'
+```
+
+**Export skill via API:**
+
+```bash
+curl -X POST http://localhost:3000/v1/run \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "prompt": "Get the top Show HN posts from Hacker News",
+    "urls": ["https://news.ycombinator.com/show"],
+    "exportSkill": true
+  }'
+
+# Response includes exportedSkill with name, skillMd, workflow, and schema
+```
+
+**Skill instructions via API:**
+
+```bash
+curl -X POST http://localhost:3000/v1/run \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "prompt": "Research LLM pricing across providers",
+    "skills": ["deep-research"],
+    "skillInstructions": {
+      "deep-research": "Only use official pricing pages. No blog posts or third-party comparisons."
+    },
+    "format": "json"
+  }'
+```
 
 ## Files
 
