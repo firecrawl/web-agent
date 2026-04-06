@@ -69,34 +69,51 @@ All templates share the same [agent core](./agent-core/) and expose the same API
 ## Architecture
 
 ```mermaid
-graph BT
-    subgraph "firecrawl-aisdk"
-        SEARCH[Search]
-        SCRAPE[Scrape]
-        INTERACT[Interact]
+block-beta
+    columns 1
+
+    block:USE["Use it as..."]
+        columns 4
+        LIB["Library"]
+        API["API Service"]
+        APP["Next.js App"]
+        SDK["Any Language (SDKs)"]
     end
 
-    subgraph "Agent Core"
-        TOOLKIT[Firecrawl Toolkit] --> SEARCH
-        TOOLKIT --> SCRAPE
-        TOOLKIT --> INTERACT
-        ORC[Orchestrator] --> TOOLKIT
-        ORC --> SKILLS[Skills]
-        ORC --> WORKERS["Parallel Workers (Subagents)"]
+    block:AGENT["agent-core"]
+        columns 4
+        ORC["Orchestrator"]
+        SKILLS["Skills"]
+        SUB["Sub-Agents"]
+        OUT["Output (JSON, CSV, MD)"]
     end
 
-    subgraph "Run it anywhere"
-        NEXT["Next.js - Full UI"]
-        EXPRESS["Express - API server"]
-        HONO["Hono - Serverless"]
-        LIB["Library - direct import"]
+    block:FIRE["firecrawl-aisdk"]
+        columns 4
+        SEARCH["search"]
+        SCRAPE["scrape"]
+        INTERACT["interact (browser)"]
+        MAP["map"]
     end
 
-    NEXT --> ORC
-    EXPRESS --> ORC
-    HONO --> ORC
-    LIB --> ORC
+    block:PLATFORM["Firecrawl Platform"]
+        columns 2
+        HOSTED["firecrawl.dev API"]
+        DEEP["/agent endpoint (deep research)"]
+    end
+
+    USE --> AGENT
+    AGENT --> FIRE
+    FIRE --> PLATFORM
 ```
+
+**[Firecrawl Platform](https://firecrawl.dev)** — hosted API for web scraping, search, and browser automation. Includes a built-in `/agent` endpoint for deep research tasks.
+
+**[firecrawl-aisdk](https://www.npmjs.com/package/firecrawl-aisdk)** — AI SDK tools that wrap the Firecrawl API. Drop search, scrape, interact, and map into any Vercel AI SDK agent.
+
+**[agent-core](./agent-core/)** — opinionated agent framework on top. Adds an orchestrator, skills system, parallel sub-agents, and structured output. Configurable — enable/disable tools, swap models, add custom skills.
+
+**Use it however you want** — import as a [library](./agent-core/), deploy as an [API service](./agent-templates/express/), run a full [Next.js app](./agent-templates/next/) with chat UI, or call it from any language via the [OpenAPI spec](./agent-core/openapi.yaml).
 
 ## License
 
