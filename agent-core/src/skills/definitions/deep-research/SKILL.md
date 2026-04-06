@@ -9,7 +9,7 @@ category: Research
 ## Search Strategy
 - Break the topic into 3-5 distinct angles
 - 2-3 queries per angle using different terminology
-- Use `site:` operator for targeted searches (e.g. `site:reddit.com`, `site:arxiv.org`)
+- Use `site:` operator for targeted searches (e.g. `site:arxiv.org`, `site:github.com`)
 - Include official, comparison, and review-oriented queries
 - Aim for 5-10 unique, high-quality sources
 

@@ -276,14 +276,10 @@ function PlusMenu({
 
   const visibleSkills = (skills ?? []).filter((s) => s.category !== "Export");
 
-  const menuItems: { id: "plan" | "upload" | "schema" | "skills"; label: string; icon: React.ReactNode; badge?: string }[] = [
+  const menuItems: { id: "plan" | "schema" | "skills"; label: string; icon: React.ReactNode; badge?: string }[] = [
     {
       id: "plan", label: "Plan", badge: planMode ? "on" : undefined,
       icon: <svg fill="none" height="16" viewBox="0 0 24 24" width="16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" /><rect x="9" y="3" width="6" height="4" rx="1" /><path d="M9 12h6M9 16h4" /></svg>,
-    },
-    {
-      id: "upload", label: "Upload", badge: uploads.length > 0 ? String(uploads.length) : undefined,
-      icon: <svg fill="none" height="16" viewBox="0 0 24 24" width="16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" /></svg>,
     },
     {
       id: "schema", label: "Schema", badge: schema ? "set" : undefined,
@@ -296,17 +292,18 @@ function PlusMenu({
   ];
 
   return (
+    <>
+    <div className="fixed inset-0 bg-black/10 z-40" onClick={onClose} />
     <div
       ref={ref}
-      className="fixed bg-accent-white rounded-12 border border-border-muted overflow-hidden flex"
+      className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-accent-white rounded-16 border border-border-muted overflow-hidden flex w-[560px]"
       style={{
-        boxShadow: "0px 16px 32px -8px rgba(0,0,0,0.08), 0px 4px 12px -2px rgba(0,0,0,0.04)",
-        maxHeight: maxH,
-        ...(pos ? { left: pos.left, bottom: pos.bottom, width: pos.width } : { left: 0, bottom: 0 }),
+        boxShadow: "0px 24px 48px -12px rgba(0,0,0,0.12), 0px 8px 16px -4px rgba(0,0,0,0.06)",
+        maxHeight: "min(480px, 80vh)",
       }}
     >
       {/* Left nav */}
-      <div className="w-160 flex-shrink-0 py-6 px-6 flex flex-col gap-1 border-r border-border-faint">
+      <div className="w-160 flex-shrink-0 py-8 px-6 flex flex-col gap-1 border-r border-border-faint bg-black-alpha-2">
         {menuItems.map((item) => (
           <button
             key={item.id}
@@ -320,7 +317,7 @@ function PlusMenu({
             <span className={cn("flex-shrink-0", activePanel === item.id || item.badge ? "text-accent-black" : "text-black-alpha-40")}>{item.icon}</span>
             <span className={cn("text-label-small flex-1", activePanel === item.id ? "text-accent-black" : item.badge ? "text-accent-black" : "text-accent-black")}>{item.label}</span>
             {item.badge && (
-              <span className="text-mono-x-small text-heat-100 bg-heat-8 px-4 py-1 rounded-4">{item.badge}</span>
+              <span className="text-mono-x-small text-black-alpha-48 bg-black-alpha-4 px-4 py-1 rounded-4">{item.badge}</span>
             )}
           </button>
         ))}
@@ -328,7 +325,7 @@ function PlusMenu({
 
       {/* Right panel */}
       {activePanel && (
-        <div className="w-360 flex-shrink-0 overflow-y-auto" style={{ scrollbarWidth: "thin" }}>
+        <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: "thin" }}>
           {/* Plan */}
           {activePanel === "plan" && (
             <div className="p-14 flex flex-col gap-8">
@@ -506,6 +503,7 @@ function PlusMenu({
         </div>
       )}
     </div>
+    </>
   );
 }
 
