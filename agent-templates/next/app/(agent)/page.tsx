@@ -1474,17 +1474,16 @@ export default function AgentPage() {
         {sparkMode ? (
           <div className="mt-8">
             {sparkLoading && (
-              <div className="my-12 rounded-10 border border-heat-40 shadow-sm overflow-hidden">
+              <div className="my-12 rounded-10 border border-border-faint overflow-hidden">
                 <div className="flex items-center gap-8 px-14 py-10">
                   <ProviderModelIcon icon="firecrawl" size={16} />
                   <span className="text-label-small text-accent-black">
                     {config.model.model === "spark-1-pro" ? "Spark 1 Pro" : "Spark 1 Mini"}
                   </span>
-                  <span className="text-mono-x-small text-heat-100 bg-heat-8 px-4 py-1 rounded-4 animate-pulse">processing</span>
                 </div>
                 <div className="border-t border-border-faint bg-background-lighter p-14">
                   <div className="flex items-center gap-10">
-                    <div className="w-16 h-16 border-2 border-heat-100 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+                    <div className="w-16 h-16 border-2 border-black-alpha-16 border-t-transparent rounded-full animate-spin flex-shrink-0" />
                     <span className="text-body-small text-black-alpha-48">Searching, navigating, and extracting data...</span>
                   </div>
                   <div className="text-mono-x-small text-black-alpha-24 mt-6 ml-26">This may take a few minutes for complex queries</div>
@@ -1557,7 +1556,7 @@ export default function AgentPage() {
                     Download
                   </button>
                 </div>
-                <div className="border-t border-border-faint bg-background-lighter max-h-500 overflow-auto no-scrollbar">
+                <div className="border-t border-border-faint bg-background-lighter max-h-[70vh] overflow-auto no-scrollbar">
                   <JsonViewer data={typeof sparkResult.data === "string" ? sparkResult.data : JSON.stringify(sparkResult.data, null, 2)} />
                 </div>
               </div>
