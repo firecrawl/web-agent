@@ -276,47 +276,55 @@ Set API keys via `apiKeys` option or environment variables (`GOOGLE_GENERATIVE_A
 
 ```mermaid
 graph TD
-    A[createAgent] --> B[Orchestrator]
+    subgraph "agent-core"
+        CA["createAgent()"] --> ORC[Orchestrator]
+        ORC --> SK[Skills Engine]
+        ORC --> WK["spawnAgents (parallel workers)"]
+        ORC --> SA[Sub-Agents]
+        ORC --> OUT[formatOutput + bashExec]
+        SK --> SKM[SKILL.md files]
+        SK --> PB[Site playbooks]
+        SA --> SAI[Per-agent model + instructions]
+        SA --> SAT[Scoped tools + skills]
+        WK --> W1[Worker]
+        WK --> W2[Worker]
+        WK --> W3[Worker]
+    end
 
-    B --> T[Firecrawl Toolkit]
-    T --> T1[search]
-    T --> T2[scrape]
-    T --> T3[interact]
+    subgraph "firecrawl-aisdk"
+        FT[FirecrawlTools] --> SEARCH[search]
+        FT --> SCRAPE[scrape]
+        FT --> INTERACT[interact]
+        FT --> MAP[map]
+    end
 
-    B --> S[Skills]
-    S --> S1[SKILL.md files]
-    S --> S2[Site playbooks]
+    subgraph "Vercel AI SDK"
+        TLA[ToolLoopAgent]
+        RM[resolveModel]
+    end
 
-    B --> W[spawnAgents]
-    W --> W1[Worker 1]
-    W --> W2[Worker 2]
-    W --> W3[Worker N]
+    ORC -- "tools" --> FT
+    ORC -- "extends" --> TLA
+    CA -- "multi-provider" --> RM
 
-    B --> SA[Sub-Agents]
-    SA --> SA1[Custom instructions]
-    SA --> SA2[Per-agent model]
-    SA --> SA3[Scoped tools + skills]
-
-    B --> O[Output]
-    O --> O1[formatOutput]
-    O --> O2[bashExec]
-
-    style A fill:#f5f5f5,stroke:#333
-    style B fill:#ff6b35,stroke:#333,color:#fff
-    style T fill:#fff,stroke:#ddd
-    style S fill:#fff,stroke:#ddd
-    style W fill:#fff,stroke:#ddd
-    style SA fill:#fff,stroke:#ddd
-    style O fill:#fff,stroke:#ddd
+    style CA fill:#ff6b35,stroke:#c44d1a,color:#fff
+    style ORC fill:#ff6b35,stroke:#c44d1a,color:#fff
+    style FT fill:#1a1a2e,stroke:#16213e,color:#fff
+    style TLA fill:#000,stroke:#333,color:#fff
+    style RM fill:#000,stroke:#333,color:#fff
 ```
 
-The core is a **Vercel AI SDK `ToolLoopAgent`** with an opinionated setup:
+Agent-core wraps two packages into an opinionated agent framework:
 
-- **Firecrawl toolkit** — search, scrape, interact via [firecrawl-aisdk](https://www.npmjs.com/package/firecrawl-aisdk)
-- **Skills** — reusable SKILL.md files that teach the agent domain-specific procedures
-- **Parallel workers** — `spawnAgents` fans out independent tasks across concurrent workers
-- **Sub-agents** — named agents with their own model, tools, skills, and instructions
-- **Output** — `formatOutput` for structured data, `bashExec` for data processing
+**[firecrawl-aisdk](https://www.npmjs.com/package/firecrawl-aisdk)** provides the web tools — search, scrape, interact (browser automation), and map. Agent-core consumes these as a toolkit and passes them to the orchestrator and workers.
+
+**[Vercel AI SDK](https://sdk.vercel.ai/)** provides the agent loop (`ToolLoopAgent`) and multi-provider model resolution. Agent-core extends this with:
+
+- **Skills** — SKILL.md files that teach the agent domain-specific procedures (how to navigate a site, what to extract, how to paginate). Site playbooks are auto-matched by URL.
+- **Parallel workers** — `spawnAgents` fans out 2+ independent tasks across concurrent worker agents, each with their own context and tools.
+- **Sub-agents** — named agents with their own model, instructions, tool scope, and pre-loaded skills. Defined per-run or in config.
+- **Output** — `formatOutput` for structured JSON/CSV/markdown, `bashExec` for data processing with jq/awk/sed.
+- **Context compaction** — automatic summarization when approaching token limits, so long research sessions don't truncate.
 
 ## OpenAPI spec
 
