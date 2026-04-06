@@ -13,22 +13,13 @@ app.post("/v1/run", async (req, res) => {
 
   try {
     if (stream) {
-      res.setHeader("Content-Type", "text/event-stream");
-      res.setHeader("Cache-Control", "no-cache");
-      res.setHeader("Connection", "keep-alive");
-      res.flushHeaders();
-      for await (const event of agent.stream(params)) {
-        res.write(`data: ${JSON.stringify(event)}\n\n`);
-      }
-      res.end();
+      await agent.sse(params, res);
     } else {
       res.json(await agent.run(params));
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    if (!res.headersSent) return res.status(500).json({ error: message });
-    res.write(`data: ${JSON.stringify({ type: "error", error: message })}\n\n`);
-    res.end();
+    if (!res.headersSent) res.status(500).json({ error: message });
   }
 });
 
