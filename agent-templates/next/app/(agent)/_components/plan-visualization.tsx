@@ -986,12 +986,12 @@ function WorkersPanel({ item }: { item: TimelineItem }) {
       {/* Nested worker cards */}
       {!collapsed && (
         <div className="border-t border-border-faint px-10 py-8 flex flex-col gap-4 bg-black-alpha-1">
-          {tasks.map((task) => {
+          {tasks.map((task, ti) => {
             const r = resultMap.get(task.id);
             const live = liveProgress[task.id];
             return (
               <WorkerCard
-                key={task.id}
+                key={`${task.id}-${ti}`}
                 id={task.id}
                 prompt={task.prompt}
                 result={r?.result}
