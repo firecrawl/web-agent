@@ -4,6 +4,42 @@ The core agent logic. Built on [firecrawl-aisdk](https://www.npmjs.com/package/f
 
 This is what all [templates](../agent-templates/) share. You can also use it directly as a library.
 
+## Architecture
+
+```mermaid
+graph LR
+    subgraph firecrawl-aisdk
+        search
+        scrape
+        interact
+    end
+
+    subgraph "Vercel AI SDK"
+        ToolLoopAgent
+    end
+
+    subgraph agent-core
+        Orchestrator
+        Skills
+        Workers["Parallel Workers"]
+        SubAgents["Sub-Agents"]
+    end
+
+    firecrawl-aisdk -- "web tools" --> Orchestrator
+    ToolLoopAgent -- "agent loop" --> Orchestrator
+    Orchestrator --> Skills
+    Orchestrator --> Workers
+    Orchestrator --> SubAgents
+```
+
+Agent-core combines [firecrawl-aisdk](https://www.npmjs.com/package/firecrawl-aisdk) (web tools) with the [Vercel AI SDK](https://sdk.vercel.ai/) (agent loop) and adds:
+
+- **Skills** — SKILL.md files that teach the agent how to navigate specific sites, what to extract, how to paginate. Auto-matched by URL via site playbooks.
+- **Parallel workers** — `spawnAgents` fans out independent tasks across concurrent agents, each with their own context.
+- **Sub-agents** — named agents with their own model, instructions, and scoped tools/skills.
+- **Output** — `formatOutput` for structured JSON/CSV/markdown, `bashExec` for data processing.
+- **Context compaction** — automatic summarization when approaching token limits.
+
 ## Quick start
 
 **Via CLI** - scaffold a project that includes agent-core:
@@ -271,60 +307,6 @@ const plan = await agent.plan('compare pricing across 5 CDN providers')
 | OpenAI | `{ provider: 'openai', model: 'gpt-4o' }` |
 
 Set API keys via `apiKeys` option or environment variables (`GOOGLE_GENERATIVE_AI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`).
-
-## Architecture
-
-```mermaid
-graph TD
-    subgraph "agent-core"
-        CA["createAgent()"] --> ORC[Orchestrator]
-        ORC --> SK[Skills Engine]
-        ORC --> WK["spawnAgents (parallel workers)"]
-        ORC --> SA[Sub-Agents]
-        ORC --> OUT[formatOutput + bashExec]
-        SK --> SKM[SKILL.md files]
-        SK --> PB[Site playbooks]
-        SA --> SAI[Per-agent model + instructions]
-        SA --> SAT[Scoped tools + skills]
-        WK --> W1[Worker]
-        WK --> W2[Worker]
-        WK --> W3[Worker]
-    end
-
-    subgraph "firecrawl-aisdk"
-        FT[FirecrawlTools] --> SEARCH[search]
-        FT --> SCRAPE[scrape]
-        FT --> INTERACT[interact]
-        FT --> MAP[map]
-    end
-
-    subgraph "Vercel AI SDK"
-        TLA[ToolLoopAgent]
-        RM[resolveModel]
-    end
-
-    ORC -- "tools" --> FT
-    ORC -- "extends" --> TLA
-    CA -- "multi-provider" --> RM
-
-    style CA fill:#ff6b35,stroke:#c44d1a,color:#fff
-    style ORC fill:#ff6b35,stroke:#c44d1a,color:#fff
-    style FT fill:#1a1a2e,stroke:#16213e,color:#fff
-    style TLA fill:#000,stroke:#333,color:#fff
-    style RM fill:#000,stroke:#333,color:#fff
-```
-
-Agent-core wraps two packages into an opinionated agent framework:
-
-**[firecrawl-aisdk](https://www.npmjs.com/package/firecrawl-aisdk)** provides the web tools — search, scrape, interact (browser automation), and map. Agent-core consumes these as a toolkit and passes them to the orchestrator and workers.
-
-**[Vercel AI SDK](https://sdk.vercel.ai/)** provides the agent loop (`ToolLoopAgent`) and multi-provider model resolution. Agent-core extends this with:
-
-- **Skills** — SKILL.md files that teach the agent domain-specific procedures (how to navigate a site, what to extract, how to paginate). Site playbooks are auto-matched by URL.
-- **Parallel workers** — `spawnAgents` fans out 2+ independent tasks across concurrent worker agents, each with their own context and tools.
-- **Sub-agents** — named agents with their own model, instructions, tool scope, and pre-loaded skills. Defined per-run or in config.
-- **Output** — `formatOutput` for structured JSON/CSV/markdown, `bashExec` for data processing with jq/awk/sed.
-- **Context compaction** — automatic summarization when approaching token limits, so long research sessions don't truncate.
 
 ## OpenAPI spec
 
