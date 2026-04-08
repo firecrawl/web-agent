@@ -41,12 +41,8 @@ function rewriteImports(dir: string): void {
       let content = fs.readFileSync(fullPath, 'utf-8');
       // Rewrite old relative imports
       content = content.replace(/\.\.\/\.\.\/agent-core\/src/g, './agent-core/src');
-      // Rewrite workspace package imports to local barrel
-      // @firecrawl/agent-core → ./agent-core/src (in barrel files)
-      // For non-barrel .ts files, the @/agent-core alias resolves via tsconfig
-      if (entry.name === 'agent-core.ts' || entry.name === 'agent-core-types.ts') {
-        content = content.replace(/"@firecrawl\/agent-core"/g, '"./agent-core/src"');
-      }
+      // Rewrite workspace package imports to local path
+      content = content.replace(/"@firecrawl\/agent-core"/g, '"./agent-core/src"');
       fs.writeFileSync(fullPath, content, 'utf-8');
     } else if (entry.name === 'package.json') {
       let content = fs.readFileSync(fullPath, 'utf-8');
@@ -125,6 +121,14 @@ export async function scaffoldProject(opts: ScaffoldOptions): Promise<void> {
       if (name.endsWith('.test.ts')) return true;
       return false;
     });
+  }
+
+  // Copy project docs (CLAUDE.md, ARCHITECTURE.md)
+  for (const doc of ['CLAUDE.md', 'ARCHITECTURE.md']) {
+    const docSrc = path.join(sourceRoot, doc);
+    if (fs.existsSync(docSrc)) {
+      fs.copyFileSync(docSrc, path.join(projectDir, doc));
+    }
   }
 
   // Copy template files
