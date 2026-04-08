@@ -1700,23 +1700,6 @@ export default function AgentPage() {
               </div>
             )}
 
-            {!isRunning && experimentalFeatures.generateSkillMd && (
-              <div className="flex items-center gap-8 mt-12">
-                <button
-                  type="button"
-                  className="flex items-center gap-6 px-12 py-8 rounded-12 text-label-small border border-black-alpha-8 hover:border-black-alpha-16 hover:bg-black-alpha-4 transition-all"
-                  onClick={() => {
-                    setArtifactSkillMode(true);
-                    setArtifactOpen(true);
-                  }}
-                >
-                  <svg fill="none" height="12" viewBox="0 0 24 24" width="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-black-alpha-32">
-                    <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" />
-                  </svg>
-                  Save as Skill
-                </button>
-              </div>
-            )}
           </div>
         )}
       </div>
