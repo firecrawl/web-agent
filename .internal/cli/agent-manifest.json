@@ -46,6 +46,21 @@
       ],
       "devCommand": "npm run dev",
       "deploy": ["vercel", "railway", "docker"]
+    },
+    {
+      "id": "library",
+      "name": "Library",
+      "description": "Just agent-core — use in scripts, services, or your own app",
+      "path": "agent-templates/library",
+      "requiredEnvVars": ["FIRECRAWL_API_KEY"],
+      "optionalEnvVars": [
+        "ANTHROPIC_API_KEY",
+        "OPENAI_API_KEY",
+        "GOOGLE_GENERATIVE_AI_API_KEY",
+        "AI_GATEWAY_API_KEY"
+      ],
+      "devCommand": "npm start",
+      "deploy": []
     }
   ],
   "providers": [

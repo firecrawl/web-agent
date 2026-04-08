@@ -1,0 +1,24 @@
+{
+  "name": "my-firecrawl-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx index.ts",
+    "dev": "tsx watch index.ts",
+    "example": "tsx examples/basic.ts",
+    "example:stream": "tsx examples/streaming.ts",
+    "example:structured": "tsx examples/structured.ts",
+    "example:custom": "tsx examples/custom-agent.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "latest",
+    "@ai-sdk/google": "latest",
+    "@ai-sdk/openai": "latest",
+    "@firecrawl/agent-core": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.3.3"
+  }
+}
