@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 /**
  * Firecrawl Agent — library starting point.
  *

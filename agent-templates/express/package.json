@@ -2,6 +2,7 @@
   "name": "firecrawl-agent-express",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "tsx watch server.ts",
     "start": "tsx server.ts",
@@ -14,6 +15,7 @@
     "@ai-sdk/anthropic": "latest",
     "@ai-sdk/google": "latest",
     "@ai-sdk/openai": "latest",
+    "dotenv": "^16.0.0",
     "express": "^5.1.0"
   },
   "devDependencies": {

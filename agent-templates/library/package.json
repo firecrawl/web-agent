@@ -14,7 +14,8 @@
   "dependencies": {
     "@ai-sdk/anthropic": "latest",
     "@ai-sdk/google": "latest",
-    "@ai-sdk/openai": "latest"
+    "@ai-sdk/openai": "latest",
+    "dotenv": "^16.0.0"
   },
   "devDependencies": {
     "tsx": "^4.19.0",

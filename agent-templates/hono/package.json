@@ -15,6 +15,7 @@
     "@ai-sdk/anthropic": "latest",
     "@ai-sdk/google": "latest",
     "@ai-sdk/openai": "latest",
+    "dotenv": "^16.0.0",
     "@hono/node-server": "^1.14.0",
     "hono": "^4.7.0"
   },

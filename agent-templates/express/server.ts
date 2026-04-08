@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import { createAgent, createAgentFromEnv } from "./agent-core/src";
 import type { ModelConfig } from "./agent-core/src";
