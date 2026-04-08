@@ -47,13 +47,14 @@ export async function POST(req: Request) {
 
     const result = streamText({
       model,
-      system: `You generate SKILL.md files that capture procedural web knowledge — reusable playbooks an agent can follow to repeat a task.
+      system: `You generate a single SKILL.md file that captures the ENTIRE procedure as ONE unified skill — a reusable playbook an agent can follow to repeat the task end-to-end.
 
 CRITICAL RULES:
-1. **Generalize.** If the session scraped "AAPL" from Yahoo Finance, the skill must work for ANY ticker. Use parameters like {TICKER}, {COMPANY}, {URL}. The skill name must be generic (e.g. "yahoo-finance-financials" not "aapl-financials").
-2. **Match the actual method.** If the agent used \`scrape\` with a \`query\` parameter, say that. If it used \`interact\` with clicks, say that. NEVER describe a method that wasn't used in the transcript.
-3. **Focus on procedure, not data.** The data is fleeting. The method is what matters. Document HOW the agent got the data, not WHAT the data was.
-4. **Be proportional.** A 3-step session gets a concise skill. Don't pad with speculation.
+1. **ONE skill, entire procedure.** Combine ALL steps from the session into a single skill. Do NOT split into sub-skills or multiple procedures. The skill must capture the complete workflow from start to finish, including any parallel sub-agent work.
+2. **Generalize.** If the session scraped "AAPL" from Yahoo Finance, the skill must work for ANY ticker. Use parameters like {TICKER}, {COMPANY}, {URL}. The skill name must be generic (e.g. "yahoo-finance-financials" not "aapl-financials").
+3. **Match the actual method.** If the agent used \`scrape\` with a \`query\` parameter, say that. If it used \`interact\` with clicks, say that. NEVER describe a method that wasn't used in the transcript.
+4. **Focus on procedure, not data.** The data is fleeting. The method is what matters. Document HOW the agent got the data, not WHAT the data was.
+5. **Be proportional.** A 3-step session gets a concise skill. Don't pad with speculation.
 
 Given a session transcript, extract the winning path — what tools were called, with what inputs, in what order.
 
