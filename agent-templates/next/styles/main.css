@@ -129,7 +129,7 @@
 [data-streamdown="mermaid-block"] > div:not([data-streamdown]) svg {
   max-height: none !important;
   height: auto !important;
-  min-height: 300px;
+  min-height: 500px;
 }
 /* Don't blow up action button SVGs */
 [data-streamdown="mermaid-block-actions"] svg {

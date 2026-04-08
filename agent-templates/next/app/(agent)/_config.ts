@@ -38,8 +38,8 @@ export const config = {
   // background:   { provider: "custom-openai", model: "gpt-4.1", baseURL: "https://openrouter.ai/api/v1" } satisfies ModelRef,
 
   // ─── Parallel workers ───
-  maxWorkers: 6,               // Max concurrent worker agents
-  workerMaxSteps: 10,          // Max steps per worker
+  maxWorkers: 10,              // Max concurrent worker agents
+  workerMaxSteps: 30,          // Max steps per worker
 
   // ─── Task-specific overrides ───
   // Set a model here to override the background model for that task.

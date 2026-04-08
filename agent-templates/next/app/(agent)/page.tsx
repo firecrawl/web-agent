@@ -139,7 +139,7 @@ const defaultConfig: AgentConfig = {
   model: defaultModel,
   skills: [],
   subAgents: [],
-  maxSteps: 20,
+  maxSteps: 50,
 };
 
 const PLACEHOLDER_PHRASES = [
