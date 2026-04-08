@@ -292,6 +292,7 @@ Do not use emojis.`,
       skillsDir: this.options.skillsDir,
       maxWorkers: this.options.maxWorkers,
       workerMaxSteps: this.options.workerMaxSteps,
+      appSections: this.options.appSections,
     };
 
     // Add format-specific instructions to the prompt

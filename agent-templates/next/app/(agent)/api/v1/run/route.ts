@@ -2,6 +2,7 @@ import { createAgent } from "@/agent-core";
 import { getFirecrawlKey, getProviderApiKeys, hydrateModelConfig } from "@agent/_lib/config/keys";
 import { config as globalConfig, getTaskModel } from "@agent/_config";
 import type { RunParams, ModelConfig } from "@/agent-core";
+import { loadAppSections } from "@/prompts/loader";
 
 export const maxDuration = 300;
 
@@ -57,6 +58,12 @@ export async function POST(req: Request) {
 
   const apiKeys = getProviderApiKeys();
 
+  const appSections = await loadAppSections({
+    hasSchema: !!(rest.schema || rest.columns),
+    schema: rest.schema as Record<string, unknown> | undefined,
+    columns: rest.columns,
+  });
+
   const agent = createAgent({
     firecrawlApiKey,
     model: model as ModelConfig,
@@ -65,6 +72,7 @@ export async function POST(req: Request) {
     maxSteps,
     maxWorkers: globalConfig.maxWorkers,
     workerMaxSteps: globalConfig.workerMaxSteps,
+    appSections,
   });
 
   const runParams: RunParams = {

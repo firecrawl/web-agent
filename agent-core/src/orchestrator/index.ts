@@ -73,6 +73,8 @@ export interface OrchestratorOptions {
   maxWorkers?: number;
   workerMaxSteps?: number;
   compactionModel?: ModelConfig;
+  /** App-specific prompt sections appended after the core system prompt */
+  appSections?: string[];
 }
 
 export async function createOrchestrator(options: OrchestratorOptions) {
@@ -142,33 +144,36 @@ export async function createOrchestrator(options: OrchestratorOptions) {
     ? `\n\nAvailable skills (use load_skill to activate):\n${skills.map((s) => `- ${s.name}: ${s.description.slice(0, 100)}`).join("\n")}`
     : "";
 
-  const instructions = await loadOrchestratorPrompt({
-    TODAY: new Date().toISOString().split("T")[0],
-    FIRECRAWL_SYSTEM_PROMPT: toolkit.systemPrompt ?? "",
-    RESEARCH_PLAN: hasStructuredOutput
-      ? `\n${buildSchemaBlock(config.schema)}\n${buildFieldChecklist(config.schema)}\n${buildColumnsBlock(config.columns)}`
-      : "",
-    WORKFLOW_STEPS: `
+  // Context hints (URLs, uploads) — these are core because they're data, not policy
+  const contextSections: string[] = [];
+  if (config.urls?.length) {
+    contextSections.push(`<user_urls>\nStart with these URLs: ${config.urls.join(", ")}\n</user_urls>`);
+  }
+  if (uploadDescriptions.length > 0) {
+    contextSections.push(`<uploaded_files>\nThe user uploaded files to the bash filesystem:\n${uploadDescriptions.map((d) => `- ${d}`).join("\n")}\nUse bashExec to explore them: 'head -5 /data/file.csv', 'cat /data/file.json | jq .', 'wc -l /data/file.txt', etc.\n</uploaded_files>`);
+  }
+
+  const instructions = await loadOrchestratorPrompt(
+    {
+      TODAY: new Date().toISOString().split("T")[0],
+      FIRECRAWL_SYSTEM_PROMPT: toolkit.systemPrompt ?? "",
+      RESEARCH_PLAN: hasStructuredOutput
+        ? `\n${buildSchemaBlock(config.schema)}\n${buildFieldChecklist(config.schema)}\n${buildColumnsBlock(config.columns)}`
+        : "",
+      WORKFLOW_STEPS: `
 When handling a request:
 1. Determine the task type and what data the user needs.
-2. Output a mermaid flowchart showing your plan (see planning_policy below).
-3. If URLs are provided, call lookup_site_playbook for site-specific navigation.
-4. Execute the plan — search, scrape, paginate, spawn parallel agents as needed.
-5. Verify completeness against the schema/checklist before presenting results.
-6. Call formatOutput with the collected data. The task is not done until formatOutput is called.`,
-    SKILL_CATALOG: skillCatalog,
-    presentationMode: hasStructuredOutput ? "schema" : "inline",
-    FORMAT_INSTRUCTIONS: buildFormatInstructions(config.schema, config.columns),
-    SCHEMA_BLOCK: buildSchemaBlock(config.schema),
-    FIELD_CHECKLIST: buildFieldChecklist(config.schema),
-    COLUMNS_BLOCK: buildColumnsBlock(config.columns),
-    urlHint: config.urls?.length
-      ? `<user_urls>\nStart with these URLs: ${config.urls.join(", ")}\n</user_urls>`
-      : "",
-    uploadHint: uploadDescriptions.length > 0
-      ? `<uploaded_files>\nThe user uploaded files to the bash filesystem:\n${uploadDescriptions.map((d) => `- ${d}`).join("\n")}\nUse bashExec to explore them: 'head -5 /data/file.csv', 'cat /data/file.json | jq .', 'wc -l /data/file.txt', etc.\n</uploaded_files>`
-      : "",
-  });
+2. If URLs are provided, call lookup_site_playbook for site-specific navigation.
+3. Execute — search, scrape, paginate, spawn parallel agents as needed.
+4. Verify completeness against the schema/checklist before presenting results.
+5. Call formatOutput with the collected data. The task is not done until formatOutput is called.`,
+      SKILL_CATALOG: skillCatalog,
+      SCHEMA_BLOCK: buildSchemaBlock(config.schema),
+      FIELD_CHECKLIST: buildFieldChecklist(config.schema),
+      COLUMNS_BLOCK: buildColumnsBlock(config.columns),
+    },
+    [...contextSections, ...(options.appSections ?? [])],
+  );
 
   // 6. Context compaction
   const resolvedCompactionModel: LanguageModel = compactionModel

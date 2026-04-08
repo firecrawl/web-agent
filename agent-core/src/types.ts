@@ -106,6 +106,12 @@ export interface CreateAgentOptions {
   maxSteps?: number;
   maxWorkers?: number;
   workerMaxSteps?: number;
+  /**
+   * App-specific prompt sections appended to the base system prompt.
+   * Use this to inject UI-specific policies (planning style, presentation mode,
+   * workflow examples) without modifying agent-core.
+   */
+  appSections?: string[];
 }
 
 export interface RunParams {

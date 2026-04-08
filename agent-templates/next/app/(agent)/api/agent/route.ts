@@ -1,9 +1,9 @@
 import { createAgentUIStreamResponse } from "ai";
-import { createOrchestrator, type OrchestratorOptions } from "@/agent-core";
-import { buildFirecrawlToolkit } from "@/agent-core";
+import { createAgent } from "@/agent-core";
 import type { AgentConfig } from "@/agent-core";
 import { getFirecrawlKey, getProviderApiKeys, hydrateModelConfig } from "@agent/_lib/config/keys";
 import { config as globalConfig } from "@agent/_config";
+import { loadAppSections } from "@/prompts/loader";
 
 export const maxDuration = 300;
 
@@ -21,28 +21,37 @@ export async function POST(req: Request) {
     );
   }
 
-  const apiKeys = getProviderApiKeys();
-
   try {
-    const opts: OrchestratorOptions = {
-      config: {
-        ...config,
-        model: hydrateModelConfig(config.model),
-        subAgentModel: config.subAgentModel ? hydrateModelConfig(config.subAgentModel) : undefined,
-        operationModels: config.operationModels
-          ? Object.fromEntries(Object.entries(config.operationModels).map(([key, value]) => [key, hydrateModelConfig(value)]))
-          : undefined,
-      },
-      toolkit: buildFirecrawlToolkit(firecrawlApiKey),
-      apiKeys,
+    const appSections = await loadAppSections({
+      hasSchema: !!(config.schema || config.columns),
+      schema: config.schema,
+      columns: config.columns,
+    });
+
+    const agent = createAgent({
+      firecrawlApiKey,
+      model: hydrateModelConfig(config.model),
+      subAgentModel: config.subAgentModel ? hydrateModelConfig(config.subAgentModel) : undefined,
+      apiKeys: getProviderApiKeys(),
+      maxSteps: config.maxSteps,
       maxWorkers: globalConfig.maxWorkers,
       workerMaxSteps: globalConfig.workerMaxSteps,
-    };
+      appSections,
+    });
 
-    const agent = await createOrchestrator(opts);
+    const orchestrator = await agent.createRawAgent({
+      prompt: config.prompt,
+      urls: config.urls,
+      schema: config.schema,
+      columns: config.columns,
+      uploads: config.uploads,
+      skills: config.skills,
+      skillInstructions: config.skillInstructions,
+      subAgents: config.subAgents,
+    });
 
     return createAgentUIStreamResponse({
-      agent,
+      agent: orchestrator,
       uiMessages: messages as Parameters<
         typeof createAgentUIStreamResponse
       >[0]["uiMessages"],
