@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["@firecrawl/agent-core"],
   serverExternalPackages: [
     "gray-matter",
     "better-sqlite3",

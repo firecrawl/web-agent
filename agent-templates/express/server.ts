@@ -1,6 +1,6 @@
 import express from "express";
-import { createAgent, createAgentFromEnv } from "@firecrawl/agent-core";
-import type { ModelConfig } from "@firecrawl/agent-core";
+import { createAgent, createAgentFromEnv } from "./agent-core/src";
+import type { ModelConfig } from "./agent-core/src";
 
 const app = express();
 app.use(express.json());

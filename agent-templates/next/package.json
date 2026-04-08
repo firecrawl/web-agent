@@ -14,7 +14,6 @@
     "@ai-sdk/google": "latest",
     "@ai-sdk/openai": "latest",
     "@ai-sdk/react": "^3.0.0",
-    "@firecrawl/agent-core": "workspace:*",
     "@hookform/resolvers": "^5.2.2",
     "@lobehub/icons": "^5.2.0",
     "@radix-ui/react-accordion": "^1.2.12",

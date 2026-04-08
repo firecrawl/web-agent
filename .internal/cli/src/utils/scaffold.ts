@@ -22,6 +22,8 @@ function copyDirRecursive(src: string, dest: string, extraSkip?: (name: string) 
     if (SKIP.has(entry.name)) continue;
     if (extraSkip?.(entry.name)) continue;
     const srcPath = path.join(src, entry.name);
+    // Skip symlinks — agent-core is copied separately
+    try { if (fs.lstatSync(srcPath).isSymbolicLink()) continue; } catch { /* proceed */ }
     const destPath = path.join(dest, entry.name);
 
     if (entry.isDirectory()) {
@@ -32,31 +34,18 @@ function copyDirRecursive(src: string, dest: string, extraSkip?: (name: string) 
   }
 }
 
-function rewriteImports(dir: string): void {
+/** Clean up any leftover workspace references in scaffolded files. */
+function cleanupScaffold(dir: string): void {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const fullPath = path.join(dir, entry.name);
-    if (entry.isDirectory() && entry.name !== 'node_modules' && entry.name !== '.next') {
-      rewriteImports(fullPath);
-    } else if (entry.name.endsWith('.ts') || entry.name.endsWith('.tsx')) {
-      let content = fs.readFileSync(fullPath, 'utf-8');
-      // Rewrite old relative imports
-      content = content.replace(/\.\.\/\.\.\/agent-core\/src/g, './agent-core/src');
-      // Rewrite workspace package imports to local path
-      content = content.replace(/"@firecrawl\/agent-core"/g, '"./agent-core/src"');
-      fs.writeFileSync(fullPath, content, 'utf-8');
+    if (entry.isDirectory() && !SKIP.has(entry.name)) {
+      cleanupScaffold(fullPath);
     } else if (entry.name === 'package.json') {
-      let content = fs.readFileSync(fullPath, 'utf-8');
-      // Remove workspace dep — agent-core is local, its deps are hoisted
-      const pkg = JSON.parse(content);
+      const pkg = JSON.parse(fs.readFileSync(fullPath, 'utf-8'));
       if (pkg.dependencies?.['@firecrawl/agent-core']) {
         delete pkg.dependencies['@firecrawl/agent-core'];
+        fs.writeFileSync(fullPath, JSON.stringify(pkg, null, 2) + '\n', 'utf-8');
       }
-      fs.writeFileSync(fullPath, JSON.stringify(pkg, null, 2) + '\n', 'utf-8');
-    } else if (entry.name === 'next.config.ts') {
-      let content = fs.readFileSync(fullPath, 'utf-8');
-      // Remove transpilePackages for workspace dep (no longer needed when local)
-      content = content.replace(/\s*transpilePackages:\s*\["@firecrawl\/agent-core"\],?\n?/, '\n');
-      fs.writeFileSync(fullPath, content, 'utf-8');
     }
   }
 }
@@ -136,6 +125,8 @@ export async function scaffoldProject(opts: ScaffoldOptions): Promise<void> {
   for (const entry of fs.readdirSync(templateSrc, { withFileTypes: true })) {
     if (SKIP.has(entry.name)) continue;
     const srcPath = path.join(templateSrc, entry.name);
+    // Skip symlinks (agent-core is already copied above)
+    try { if (fs.lstatSync(srcPath).isSymbolicLink()) continue; } catch { /* proceed */ }
     const destPath = path.join(projectDir, entry.name);
 
     if (entry.isDirectory()) {
@@ -145,8 +136,8 @@ export async function scaffoldProject(opts: ScaffoldOptions): Promise<void> {
     }
   }
 
-  // Rewrite imports and deps for standalone project
-  rewriteImports(projectDir);
+  // Clean up any leftover workspace references
+  cleanupScaffold(projectDir);
 
   // Merge agent-core deps into the project package.json
   const agentCorePkgPath = path.join(sourceRoot, 'agent-core', 'package.json');

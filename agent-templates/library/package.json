@@ -14,8 +14,7 @@
   "dependencies": {
     "@ai-sdk/anthropic": "latest",
     "@ai-sdk/google": "latest",
-    "@ai-sdk/openai": "latest",
-    "@firecrawl/agent-core": "workspace:*"
+    "@ai-sdk/openai": "latest"
   },
   "devDependencies": {
     "tsx": "^4.19.0",

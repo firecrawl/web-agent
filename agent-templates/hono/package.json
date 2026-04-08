@@ -15,7 +15,6 @@
     "@ai-sdk/anthropic": "latest",
     "@ai-sdk/google": "latest",
     "@ai-sdk/openai": "latest",
-    "@firecrawl/agent-core": "workspace:*",
     "@hono/node-server": "^1.14.0",
     "hono": "^4.7.0"
   },

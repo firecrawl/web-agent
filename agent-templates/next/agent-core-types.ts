@@ -1,4 +1,3 @@
-// Type-only re-export for path alias convenience.
 export type {
   AgentConfig,
   ModelConfig,
@@ -13,4 +12,4 @@ export type {
   Toolkit,
   ExportedSkill,
   FirecrawlToolsConfig,
-} from "@firecrawl/agent-core";
+} from "./agent-core/src";

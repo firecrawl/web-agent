@@ -9,7 +9,7 @@
  *
  * See ARCHITECTURE.md for the full guide.
  */
-import { createAgent } from "@firecrawl/agent-core";
+import { createAgent } from "./agent-core/src";
 
 const agent = createAgent({
   firecrawlApiKey: process.env.FIRECRAWL_API_KEY!,
