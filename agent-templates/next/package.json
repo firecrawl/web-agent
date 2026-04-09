@@ -13,7 +13,7 @@
     "@ai-sdk/anthropic": "latest",
     "@ai-sdk/google": "latest",
     "@ai-sdk/openai": "latest",
-    "@ai-sdk/react": "^3.0.0",
+    "@ai-sdk/react": "^3.0.156",
     "@hookform/resolvers": "^5.2.2",
     "@lobehub/icons": "^5.2.0",
     "@radix-ui/react-accordion": "^1.2.12",
@@ -40,8 +40,7 @@
     "@streamdown/math": "^1.0.2",
     "@streamdown/mermaid": "^1.0.2",
     "@tailwindcss/typography": "^0.5.13",
-    "ai": "^6.0.0",
-
+    "ai": "^6.0.154",
     "class-variance-authority": "^0.7.0",
     "classnames": "^2.5.1",
     "clsx": "^2.1.0",
@@ -66,7 +65,6 @@
     "vega-lite": "^6.4.2"
   },
   "devDependencies": {
-
     "@types/node": "^20.10.4",
     "@types/papaparse": "^5.3.15",
     "@types/react": "^19.0.0",
