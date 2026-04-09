@@ -145,12 +145,8 @@ const defaultConfig: AgentConfig = {
 const PLACEHOLDER_PHRASES = [
   "What data do you want to extract?",
   "Compare pricing across competitor sites...",
-  "Scrape job listings and export as CSV...",
   "Research a company and summarize findings...",
-  "Monitor product prices across stores...",
   "Extract structured data from any webpage...",
-  "Build a lead list with company details...",
-  "Audit a site for SEO issues...",
 ];
 
 function useTypewriter(phrases: string[], typingSpeed = 50, pauseMs = 2000, deleteSpeed = 30) {
@@ -620,8 +616,7 @@ function ModelDropdown({
 
 export default function AgentPage() {
   const [config, setConfig] = useState<AgentConfig>(defaultConfig);
-  const [restoredModelPreference, setRestoredModelPreference] = useState<ModelConfig | null>(null);
-  const [modelPreferenceLoaded, setModelPreferenceLoaded] = useState(false);
+  const modelPreferenceLoaded = true; // Model always comes from _config.ts, no localStorage
   const typingPlaceholder = useTypewriter(PLACEHOLDER_PHRASES);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [followUp, setFollowUp] = useState("");
@@ -647,38 +642,7 @@ export default function AgentPage() {
   const [providerConfigLoaded, setProviderConfigLoaded] = useState(false);
   const [acpAvailabilityLoaded, setAcpAvailabilityLoaded] = useState(false);
 
-  useEffect(() => {
-    setRestoredModelPreference(
-      restoreModelPreference(window.localStorage.getItem(MODEL_PREFERENCE_STORAGE_KEY)),
-    );
-  }, []);
-
-  useEffect(() => {
-    if (modelPreferenceLoaded || !providerConfigLoaded || !acpAvailabilityLoaded) return;
-
-    const resolved = resolveInitialModel(restoredModelPreference, configuredProviders, acpAgents);
-    // Clear stale localStorage if the saved preference wasn't usable
-    if (restoredModelPreference && !isPreferredModelUsable(restoredModelPreference, configuredProviders, acpAgents)) {
-      window.localStorage.removeItem(MODEL_PREFERENCE_STORAGE_KEY);
-    }
-    setConfig((prev) => ({ ...prev, model: resolved }));
-    setModelPreferenceLoaded(true);
-  }, [
-    acpAgents,
-    acpAvailabilityLoaded,
-    configuredProviders,
-    modelPreferenceLoaded,
-    providerConfigLoaded,
-    restoredModelPreference,
-  ]);
-
-  useEffect(() => {
-    if (!modelPreferenceLoaded) return;
-    window.localStorage.setItem(
-      MODEL_PREFERENCE_STORAGE_KEY,
-      JSON.stringify(sanitizeModelPreference(config.model)),
-    );
-  }, [config.model, modelPreferenceLoaded]);
+  // Model defaults from _config.ts — no localStorage persistence to avoid hydration mismatches
   const [planMode, setPlanMode] = useState(false);
   const [planText, setPlanText] = useState<string | null>(null);
   const [planLoading, setPlanLoading] = useState(false);
