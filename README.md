@@ -6,7 +6,7 @@ AI-powered web research agent built on [Firecrawl](https://firecrawl.dev). Give 
 
 ## Hosted
 
-> **[firecrawl.dev/app/agent](https://firecrawl.dev/app/agent)** - Use the agent directly. Powered by Spark 1 models. No setup, no config, no API keys to manage. [Docs](https://docs.firecrawl.dev/features/agents)
+> **[firecrawl.dev/app/agent](https://firecrawl.dev/app/agent)** - Use the agent directly. Powered by Spark 1 models. No setup, no config, no API keys to manage. [Docs](https://docs.firecrawl.dev/features/agent)
 
 ## Open Source
 
