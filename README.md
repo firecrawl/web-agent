@@ -4,25 +4,27 @@
 
 AI-powered web research agent built on [Firecrawl](https://firecrawl.dev). Give it a prompt - it searches, scrapes, and extracts structured data from any website.
 
-## Stack
+## Hosted
+
+> **[firecrawl.dev/app/agent](https://firecrawl.dev/app/agent)** - Use the agent directly. Powered by Spark 1 models. No setup, no config, no API keys to manage. [Docs](https://docs.firecrawl.dev/features/agents)
+
+## Open Source
 
 Each layer builds on the one below it.
 
-| | Layer | Description |
-|---|:---:|---|
-| Hosted | [**Firecrawl Agent**](https://firecrawl.dev/app/agent) | Powered by Spark 1 models. No setup. |
-| | ↓ `firecrawl-agent init -t next` | |
-| Open Source | [**Next.js Template**](./agent-templates/next/) | Chat UI, streaming, skills, sub-agents, structured output |
-| | ↓ `firecrawl-agent init -t express` | |
-| Open Source | [**Express Template**](./agent-templates/express/) | API server with skills, sub-agents, structured output |
-| | ↓ Included in templates | |
-| Open Source | [**Agent Core**](./agent-core/) | Orchestrator, skills, sub-agents, structured output |
-| | ↓ `npm i firecrawl-aisdk` | |
-| Open Source | [**Firecrawl AI SDK**](https://npmjs.com/package/firecrawl-aisdk) | search, scrape, interact as Vercel AI SDK tools |
-| | ↓ `npm i firecrawl` | |
-| Open Source | [**Firecrawl SDK**](https://npmjs.com/package/firecrawl) | Core API client for scrape, search, crawl, extract |
-| | ↓ | |
-| | [**API Reference**](https://docs.firecrawl.dev/api-reference) | REST API, use from any language |
+| Layer | Description | Get started |
+|:---:|---|---|
+| [**Next.js Template**](./agent-templates/next/) | Chat UI, streaming, skills, sub-agents, structured output | `firecrawl-agent init -t next` |
+| ↑ | | |
+| [**Express Template**](./agent-templates/express/) | API server with skills, sub-agents, structured output | `firecrawl-agent init -t express` |
+| ↑ | | |
+| [**Agent Core**](./agent-core/) | Orchestrator, skills, sub-agents, structured output | Included in templates |
+| ↑ | | |
+| [**Firecrawl AI SDK**](https://npmjs.com/package/firecrawl-aisdk) | search, scrape, interact as Vercel AI SDK tools | `npm i firecrawl-aisdk` |
+| ↑ | | |
+| [**Firecrawl SDK**](https://npmjs.com/package/firecrawl) | Core API client for scrape, search, crawl, extract | `npm i firecrawl` |
+| ↑ | | |
+| [**API Reference**](https://docs.firecrawl.dev/api-reference) | REST API, use from any language | [docs.firecrawl.dev](https://docs.firecrawl.dev) |
 
 ### Examples
 
