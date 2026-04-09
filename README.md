@@ -8,29 +8,21 @@ AI-powered web research agent built on [Firecrawl](https://firecrawl.dev). Give 
 
 Each layer builds on the one below it.
 
-| Layer | Description |
-|:---:|---|
-| [**Hosted Agent**](https://firecrawl.dev/app/agent) | Use directly on firecrawl.dev, no setup |
-| ↑ | |
-| [**Next.js**](./agent-templates/next/) / [**Express**](./agent-templates/express/) | Full apps with UI, streaming, config |
-| ↑ | |
-| [**Agent Core**](./agent-core/) | Orchestrator, skills, sub-agents, structured output |
-| ↑ | |
-| [**Firecrawl AI SDK**](https://npmjs.com/package/firecrawl-aisdk) | search, scrape, interact as Vercel AI SDK tools |
-| ↑ | |
-| [**Firecrawl SDK**](https://npmjs.com/package/firecrawl) | Core API client for scrape, search, crawl, extract |
-| ↑ | |
-| [**API Reference**](https://docs.firecrawl.dev/api-reference) | REST API, use from any language |
-
-| | |
-|---|---|
-| **[Hosted Agent](https://firecrawl.dev/app/agent)** | Use the agent directly on firecrawl.dev. No setup, no keys to manage. |
-| **[Next.js Template](./agent-templates/next/)** | `firecrawl-agent init -t next` |
-| **[Express Template](./agent-templates/express/)** | `firecrawl-agent init -t express` |
-| **[Agent Core](./agent-core/)** | Included in templates, or [use directly](./agent-core/) |
-| **[Firecrawl AI SDK](https://npmjs.com/package/firecrawl-aisdk)** | `npm i firecrawl-aisdk` |
-| **[Firecrawl SDK](https://npmjs.com/package/firecrawl)** | `npm i firecrawl` |
-| **[API Reference](https://docs.firecrawl.dev/api-reference)** | REST API - use from any language |
+| | Layer | Description |
+|---|:---:|---|
+| Hosted | [**Firecrawl Agent**](https://firecrawl.dev/app/agent) | Powered by Spark 1 models. No setup. |
+| | ↓ `firecrawl-agent init -t next` | |
+| Open Source | [**Next.js Template**](./agent-templates/next/) | Chat UI, streaming, skills, sub-agents, structured output |
+| | ↓ `firecrawl-agent init -t express` | |
+| Open Source | [**Express Template**](./agent-templates/express/) | API server with skills, sub-agents, structured output |
+| | ↓ Included in templates | |
+| Open Source | [**Agent Core**](./agent-core/) | Orchestrator, skills, sub-agents, structured output |
+| | ↓ `npm i firecrawl-aisdk` | |
+| Open Source | [**Firecrawl AI SDK**](https://npmjs.com/package/firecrawl-aisdk) | search, scrape, interact as Vercel AI SDK tools |
+| | ↓ `npm i firecrawl` | |
+| Open Source | [**Firecrawl SDK**](https://npmjs.com/package/firecrawl) | Core API client for scrape, search, crawl, extract |
+| | ↓ | |
+| | [**API Reference**](https://docs.firecrawl.dev/api-reference) | REST API, use from any language |
 
 ### Examples
 
