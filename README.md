@@ -4,17 +4,14 @@
 
 AI-powered web research agent built on [Firecrawl](https://firecrawl.dev). Give it a prompt - it searches, scrapes, and extracts structured data from any website.
 
-## Choose your level
+## Stack
 
-|  | [Firecrawl AI SDK](https://npmjs.com/package/firecrawl-aisdk) | [Agent Core](./agent-core/) | [Templates](./agent-templates/) |
-|---|---|---|---|
-| **What it is** | Vercel AI SDK tools for search, scrape, interact | Orchestrator + skills + sub-agents + structured output | Full apps with UI, streaming, config |
-| **Best for** | Drop Firecrawl into any existing AI app | Custom agents with parallel workers and reusable skills | Ship a complete agent product |
-| **Install** | `npm i firecrawl-aisdk` | `npm i @firecrawl/agent-core` | `firecrawl-agent init my-app` |
-| **Skills** | Manual | Built-in | Built-in |
-| **Sub-agents** | Manual | Built-in | Built-in |
-| **Structured output** | Manual | Built-in (JSON, CSV, Markdown) | Built-in (JSON, CSV, Markdown) |
-| **Chat UI** | BYO | BYO | Included (Next.js) |
+| | Install |
+|---|---|
+| **[Next.js Template](./agent-templates/next/)** - Chat UI, streaming, skills, sub-agents, structured output | `firecrawl-agent init -t next` |
+| **[Express Template](./agent-templates/express/)** - API server with skills, sub-agents, structured output | `firecrawl-agent init -t express` |
+| **[Agent Core](./agent-core/)** - Orchestrator, skills, sub-agents, structured output as a library | `npm i @firecrawl/agent-core` |
+| **[Firecrawl AI SDK](https://npmjs.com/package/firecrawl-aisdk)** - search, scrape, interact as Vercel AI SDK tools | `npm i firecrawl-aisdk` |
 
 ---
 
