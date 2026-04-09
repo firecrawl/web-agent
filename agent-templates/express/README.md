@@ -1,8 +1,6 @@
 # Express Template
 
-Standard Node.js API server — use this for traditional deployments (Railway, Docker, VPS).
-
-Single `POST /v1/run` endpoint powered by [agent-core](../../agent-core/). See the [OpenAPI spec](../../agent-core/openapi.yaml) for full parameter docs.
+Node.js API server with `POST /v1/run` endpoint powered by [agent-core](../../agent-core/).
 
 ## Install
 
@@ -19,13 +17,15 @@ npm run dev
 
 ## Environment variables
 
+Create a `.env` file:
+
 ```
 FIRECRAWL_API_KEY=fc-...            # required
 ANTHROPIC_API_KEY=...               # at least one model provider
 OPENAI_API_KEY=...
 GOOGLE_GENERATIVE_AI_API_KEY=...
-MODEL_PROVIDER=google               # default provider
-MODEL_ID=gemini-3-flash-preview     # default model
+MODEL_PROVIDER=anthropic            # default provider
+MODEL_ID=claude-sonnet-4-6          # default model
 PORT=3000
 ```
 
@@ -39,13 +39,16 @@ curl -X POST http://localhost:3000/v1/run \
   -d '{"prompt": "Get pricing for Vercel", "format": "json"}'
 ```
 
-**Parameters:** `prompt` (required), `stream`, `format` (`json` | `csv` | `markdown`), `schema`, `urls`, `skills`, `subAgents`, `maxSteps`. See the [OpenAPI spec](../../agent-core/openapi.yaml) for details.
+**Parameters:** `prompt` (required), `stream`, `format` (`json` | `csv` | `markdown`), `schema`, `urls`, `skills`, `maxSteps`.
 
-**Streaming:** set `"stream": true` — returns Server-Sent Events with tool calls, results, and text as they happen.
+**Streaming:** set `"stream": true` for Server-Sent Events with tool calls and results as they happen.
 
-## Deploy
+## Examples
 
 ```bash
-firecrawl-agent deploy -p railway
-firecrawl-agent deploy -p docker
+npm run example:basic        # single prompt
+npm run example:structured   # JSON schema output
+npm run example:parallel     # parallel Subagents
+npm run example:skills       # load a Skill
+npm run example:stream       # streaming output
 ```

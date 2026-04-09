@@ -18,16 +18,14 @@ npm run dev                         # http://localhost:3000
 
 ## Features
 
-- **Chat interface** — streaming responses with real-time tool call visualization
-- **Plan visualization** — mermaid flowcharts showing the agent's research plan
-- **Parallel agent tracking** — live progress for each worker with browser view when using interact
-- **Structured output** — JSON viewer, CSV table, markdown renderer with download
-- **Save as Skill** — generate a reusable SKILL.md from any successful conversation
-- **Model selector** — switch between providers and models from the UI (BYOK — Bring Your Own Key)
-- **Settings panel** — configure API keys, default provider, custom OpenAI-compatible endpoints
-- **File upload** — upload CSV, JSON, or text files for the agent to process
-- **Conversation history** — SQLite-backed history with search (optional, off by default)
-- **Code snippets** — auto-generated curl/fetch/Python code for any result
+- **Chat interface** - streaming responses with real-time tool call visualization
+- **Plan visualization** - mermaid flowcharts showing the agent's research plan
+- **Parallel agent tracking** - live progress for each worker with browser view when using interact
+- **Structured output** - JSON viewer, CSV table, markdown renderer with download
+- **Save as Skill** - generate a reusable SKILL.md from any successful conversation
+- **Model selector** - switch between providers and models from the UI (BYOK - Bring Your Own Key)
+- **Settings panel** - configure API keys, default provider, custom OpenAI-compatible endpoints
+- **File upload** - upload CSV, JSON, or text files for the agent to process
 
 ## Configuration
 
@@ -35,7 +33,7 @@ All config lives in `app/(agent)/_config.ts`:
 
 ```typescript
 export const config = {
-  // Pick your provider — uncomment one block
+  // Pick your provider - uncomment one block
   orchestrator: { provider: "anthropic", model: "claude-sonnet-4-6" },
   subAgent:     { provider: "anthropic", model: "claude-sonnet-4-6" },
   background:   { provider: "anthropic", model: "claude-haiku-4-5-20251001" },
@@ -65,12 +63,12 @@ export const config = {
 
 ## API Endpoints
 
-The template exposes the same API as the Express and Hono templates, plus UI-specific routes:
+The template exposes the same API as the Express template, plus UI-specific routes:
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/agent` | POST | Main agent endpoint (AI SDK streaming) |
-| `/api/v1/run` | POST | REST API — same as Express/Hono templates |
+| `/api/v1/run` | POST | REST API - same as Express template |
 | `/api/query` | POST | Simple text query, returns text |
 | `/api/extract` | POST | Extract structured data with a schema |
 | `/api/plan` | POST | Generate an execution plan without running |
