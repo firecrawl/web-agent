@@ -3,7 +3,7 @@
  *
  *   npx tsx examples/basic.ts
  */
-import { createAgent } from "./agent-core/src";
+import { createAgent } from "../agent-core/src";
 
 const agent = createAgent({
   firecrawlApiKey: process.env.FIRECRAWL_API_KEY!,
