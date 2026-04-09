@@ -19,7 +19,6 @@ Each layer builds on the one below it. Start at the top for a ready-to-use app, 
 | Layer | Description | Get started |
 |:---:|---|---|
 | [**Next.js Template**](./agent-templates/next/) | Chat UI, streaming, skills, sub-agents, structured output | `firecrawl-agent init -t next` |
-| ↑ | | |
 | [**Express Template**](./agent-templates/express/) | API server with skills, sub-agents, structured output | `firecrawl-agent init -t express` |
 | ↑ | | |
 | [**Agent Core**](./agent-core/) | Orchestrator, skills, sub-agents, structured output | `firecrawl-agent init -t library` |
