@@ -642,7 +642,7 @@ export default function AgentPage() {
   const [providerConfigLoaded, setProviderConfigLoaded] = useState(false);
   const [acpAvailabilityLoaded, setAcpAvailabilityLoaded] = useState(false);
 
-  // Model defaults from _config.ts — no localStorage persistence to avoid hydration mismatches
+  // Model defaults from _config.ts, no localStorage persistence to avoid hydration mismatches
   const [planMode, setPlanMode] = useState(false);
   const [planText, setPlanText] = useState<string | null>(null);
   const [planLoading, setPlanLoading] = useState(false);
@@ -1302,11 +1302,11 @@ export default function AgentPage() {
         <div className="w-full max-w-640 mt-20">
           <div className="grid grid-cols-2 gap-8">
             {[
-              "Get AAPL financials from finance.yahoo.com/quote/AAPL — income statement, balance sheet, and cash flow",
+              "Get AAPL financials from finance.yahoo.com/quote/AAPL: income statement, balance sheet, and cash flow",
               "Extract the top 20 products from amazon.com/s?k=mechanical+keyboards with prices and ratings",
-              "Search for the 5 best AI code editors in 2025, scrape each homepage, and compare their features",
+              "Search for the 5 best AI code editors in 2026, scrape each homepage, and compare their features",
               "Scrape news.ycombinator.com front page, then scrape the top 5 article links in parallel",
-              "Research Anthropic, OpenAI, and Google DeepMind — scrape each site in parallel, extract team size, funding, and key products",
+              "Research Anthropic, OpenAI, and Google DeepMind: scrape each site in parallel, extract team size, funding, and key products",
             ].map((prompt) => (
               <button
                 key={prompt}
