@@ -147,15 +147,16 @@ function SearchResultItem({ result }: { result: SearchResult }) {
   );
 }
 
-function SearchResults({ query, results, creditsUsed }: { query: string; results: SearchResult[]; creditsUsed?: number; isLatest?: boolean }) {
-  const [collapsed, setCollapsed] = useState(false);
+function SearchResults({ query, results, creditsUsed, isLatest }: { query: string; results: SearchResult[]; creditsUsed?: number; isLatest?: boolean }) {
+  const [userExpanded, setUserExpanded] = useState<boolean | null>(null);
+  const collapsed = userExpanded !== null ? !userExpanded : !isLatest;
 
   return (
     <div className="my-12 rounded-10 border border-border-faint overflow-hidden">
       <button
         type="button"
         className="flex items-center gap-8 px-14 py-10 w-full text-left hover:bg-black-alpha-2 transition-colors"
-        onClick={() => setCollapsed(!collapsed)}
+        onClick={() => setUserExpanded(collapsed ? true : false)}
       >
         <EndpointBadge type="search" />
         <div className="flex-1 min-w-0">
@@ -211,7 +212,8 @@ function ScrapeResult({
   isInteract?: boolean;
   isLatest?: boolean;
 }) {
-  const [expanded, setExpanded] = useState(true);
+  const [userExpanded, setUserExpanded] = useState<boolean | null>(null);
+  const expanded = userExpanded !== null ? userExpanded : !!isLatest;
   const [showLiveView, setShowLiveView] = useState(false);
   const domain = getDomain(url);
   const hasContent = !!(content || answer || interactOutput);
@@ -222,7 +224,7 @@ function ScrapeResult({
       <button
         type="button"
         className="w-full flex items-center gap-8 px-14 py-10 hover:bg-black-alpha-2 transition-colors text-left cursor-pointer"
-        onClick={() => setExpanded(!expanded)}
+        onClick={() => setUserExpanded(!expanded)}
       >
         <EndpointBadge type={isInteract ? "interact" : "scrape"} />
         <div className="flex-1 min-w-0">
