@@ -1,6 +1,6 @@
 import "dotenv/config";
 import express from "express";
-import { createAgent, createAgentFromEnv } from "./agent-core/src";
+import { createAgent, createAgentFromEnv, uploadSkills, getDefaultSkillsDir } from "./agent-core/src";
 import type { ModelConfig } from "./agent-core/src";
 
 const app = express();
@@ -30,6 +30,22 @@ app.post("/v1/run", async (req, res) => {
     const message = err instanceof Error ? err.message : String(err);
     if (!res.headersSent) res.status(500).json({ error: message });
   }
+});
+
+// --- Skill upload ---
+
+app.post("/v1/skills/upload", async (req, res) => {
+  const { files, overwrite } = req.body;
+
+  if (!Array.isArray(files) || files.length === 0) {
+    return res.status(400).json({ error: "No files provided" });
+  }
+  if (files.length > 20) {
+    return res.status(400).json({ error: "Maximum 20 files per upload" });
+  }
+
+  const results = await uploadSkills(files, getDefaultSkillsDir(), overwrite ?? false);
+  res.json({ results });
 });
 
 // --- Start ---
