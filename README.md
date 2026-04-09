@@ -11,11 +11,10 @@ AI-powered web research agent built on [Firecrawl](https://firecrawl.dev). Give 
 | **What it is** | Vercel AI SDK tools for search, scrape, interact | Orchestrator + skills + sub-agents + structured output | Full apps with UI, streaming, config |
 | **Best for** | Drop Firecrawl into any existing AI app | Custom agents with parallel workers and reusable skills | Ship a complete agent product |
 | **Install** | `npm i firecrawl-aisdk` | `npm i @firecrawl/agent-core` | `firecrawl-agent init my-app` |
-| **Lines of code** | ~10 | ~15 | Full project scaffold |
-| **Skills** | - | Yes | Yes |
-| **Parallel sub-agents** | - | Yes | Yes |
-| **Structured output** | - | JSON, CSV, Markdown | JSON, CSV, Markdown |
-| **Chat UI** | - | - | Next.js template |
+| **Skills** | Manual | Built-in | Built-in |
+| **Sub-agents** | Manual | Built-in | Built-in |
+| **Structured output** | Manual | Built-in (JSON, CSV, Markdown) | Built-in (JSON, CSV, Markdown) |
+| **Chat UI** | BYO | BYO | Included (Next.js) |
 
 ---
 
