@@ -2,7 +2,7 @@
 
 <img src=".internal/agent.jpg" alt="Firecrawl Agent" />
 
-AI-powered web research agent built on [Firecrawl](https://firecrawl.dev). Give it a prompt - it searches, scrapes, and extracts structured data from any website.
+AI-powered web research agent built on [Firecrawl](https://firecrawl.dev). Give it a prompt - it searches, scrapes, and extracts data from any website.
 
 ## Hosted
 
