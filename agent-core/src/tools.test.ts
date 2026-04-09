@@ -1,10 +1,17 @@
 import { describe, it, expect } from "vitest";
 import { formatOutput } from "./tools";
 
+// formatOutput.execute always returns a plain object in practice,
+// but the AI SDK types it as possibly undefined or AsyncIterable.
+const exec = formatOutput.execute! as unknown as (
+  input: { format: string; data: unknown; columns?: string[] },
+  ctx: { toolCallId: string; messages: never[]; abortSignal: AbortSignal },
+) => Promise<{ format: string; content: string }>;
+
 describe("formatOutput", () => {
   describe("json format", () => {
     it("formats an object as JSON", async () => {
-      const result = await formatOutput.execute(
+      const result = await exec(
         { format: "json", data: { name: "test", price: 10 } },
         { toolCallId: "test", messages: [], abortSignal: AbortSignal.timeout(5000) },
       );
@@ -14,7 +21,7 @@ describe("formatOutput", () => {
     });
 
     it("formats an array as JSON", async () => {
-      const result = await formatOutput.execute(
+      const result = await exec(
         { format: "json", data: [1, 2, 3] },
         { toolCallId: "test", messages: [], abortSignal: AbortSignal.timeout(5000) },
       );
@@ -24,7 +31,7 @@ describe("formatOutput", () => {
 
     it("passes through valid JSON strings", async () => {
       const jsonStr = '{"already":"json"}';
-      const result = await formatOutput.execute(
+      const result = await exec(
         { format: "json", data: jsonStr },
         { toolCallId: "test", messages: [], abortSignal: AbortSignal.timeout(5000) },
       );
@@ -32,7 +39,7 @@ describe("formatOutput", () => {
     });
 
     it("wraps non-JSON strings", async () => {
-      const result = await formatOutput.execute(
+      const result = await exec(
         { format: "json", data: "plain text" },
         { toolCallId: "test", messages: [], abortSignal: AbortSignal.timeout(5000) },
       );
@@ -43,7 +50,7 @@ describe("formatOutput", () => {
 
   describe("csv format", () => {
     it("formats array of objects as CSV", async () => {
-      const result = await formatOutput.execute(
+      const result = await exec(
         {
           format: "csv",
           data: [
@@ -61,7 +68,7 @@ describe("formatOutput", () => {
     });
 
     it("respects column order", async () => {
-      const result = await formatOutput.execute(
+      const result = await exec(
         {
           format: "csv",
           data: [{ b: 2, a: 1 }],
@@ -74,7 +81,7 @@ describe("formatOutput", () => {
     });
 
     it("wraps single object in array", async () => {
-      const result = await formatOutput.execute(
+      const result = await exec(
         { format: "csv", data: { x: 1 } },
         { toolCallId: "test", messages: [], abortSignal: AbortSignal.timeout(5000) },
       );
@@ -84,7 +91,7 @@ describe("formatOutput", () => {
     });
 
     it("passes through CSV strings", async () => {
-      const result = await formatOutput.execute(
+      const result = await exec(
         { format: "csv", data: "a,b\n1,2" },
         { toolCallId: "test", messages: [], abortSignal: AbortSignal.timeout(5000) },
       );
@@ -92,7 +99,7 @@ describe("formatOutput", () => {
     });
 
     it("parses JSON string data as CSV rows", async () => {
-      const result = await formatOutput.execute(
+      const result = await exec(
         { format: "csv", data: '[{"col": "val"}]' },
         { toolCallId: "test", messages: [], abortSignal: AbortSignal.timeout(5000) },
       );
@@ -103,7 +110,7 @@ describe("formatOutput", () => {
 
   describe("text format", () => {
     it("passes through strings", async () => {
-      const result = await formatOutput.execute(
+      const result = await exec(
         { format: "text", data: "Hello world" },
         { toolCallId: "test", messages: [], abortSignal: AbortSignal.timeout(5000) },
       );
@@ -112,7 +119,7 @@ describe("formatOutput", () => {
     });
 
     it("JSON-stringifies non-string data", async () => {
-      const result = await formatOutput.execute(
+      const result = await exec(
         { format: "text", data: { key: "value" } },
         { toolCallId: "test", messages: [], abortSignal: AbortSignal.timeout(5000) },
       );

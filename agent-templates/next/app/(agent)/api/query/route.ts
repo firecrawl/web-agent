@@ -1,4 +1,4 @@
-import { ToolLoopAgent, stepCountIs } from "ai";
+import { ToolLoopAgent, stepCountIs, type ToolSet, type StepResult } from "ai";
 import { resolveModel, formatOutput, bashExec, createSkillTools, discoverSkills, buildFirecrawlToolkit } from "@/agent-core";
 import type { ModelConfig } from "@/agent-core";
 import { getTaskModel } from "@agent/_config";
@@ -105,16 +105,15 @@ export async function POST(req: Request) {
         stopWhen: stepCountIs(maxSteps),
       });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const mapStep = (s: any) => ({
+    const mapStep = (s: StepResult<ToolSet>) => ({
       text: s.text ?? "",
-      toolCalls: (s.toolCalls ?? []).filter(Boolean).map((tc: Record<string, unknown>) => ({
+      toolCalls: (s.toolCalls ?? []).filter(Boolean).map((tc) => ({
         name: tc.toolName ?? "",
-        input: tc.input ?? tc.args,
+        input: tc.input,
       })),
-      toolResults: (s.toolResults ?? []).filter(Boolean).map((tr: Record<string, unknown>) => ({
+      toolResults: (s.toolResults ?? []).filter(Boolean).map((tr) => ({
         name: tr.toolName ?? "",
-        output: tr.output ?? tr.result,
+        output: tr.output,
       })),
     });
 

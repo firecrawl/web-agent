@@ -1,4 +1,4 @@
-import { generateText } from "ai";
+import { generateText, type ToolSet, type StepResult } from "ai";
 import { createOrchestrator, type OrchestratorOptions } from "./orchestrator";
 import { resolveModel } from "./resolve-model";
 import { discoverSkills } from "./skills/discovery";
@@ -14,6 +14,8 @@ import type {
   AgentEvent,
   StepDetail,
 } from "./types";
+
+type Step = StepResult<ToolSet>;
 
 export class FirecrawlAgent {
   constructor(private options: CreateAgentOptions) {}
@@ -42,11 +44,10 @@ export class FirecrawlAgent {
             if (text) params.onStep!({ type: "text", text });
             for (const tc of toolCalls ?? []) {
               if (!tc) continue;
-              const c = tc as Record<string, unknown>;
               params.onStep!({
                 type: "tool-call",
                 toolName: tc.toolName,
-                input: c.args ?? c.input,
+                input: tc.input,
               });
             }
             if (usage) params.onStep!({ type: "usage", usage });
@@ -321,29 +322,26 @@ Do not use emojis.`,
     return "";
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private mapSteps(steps: any[]): StepDetail[] {
+  private mapSteps(steps: Step[]): StepDetail[] {
     return (steps ?? []).map((s) => ({
       text: s.text ?? "",
-      toolCalls: (s.toolCalls ?? []).filter(Boolean).map((tc: Record<string, unknown>) => ({
-        name: (tc.toolName as string) ?? "",
-        input: tc.input ?? tc.args,
+      toolCalls: (s.toolCalls ?? []).filter(Boolean).map((tc) => ({
+        name: tc.toolName ?? "",
+        input: tc.input,
       })),
-      toolResults: (s.toolResults ?? []).filter(Boolean).map((tr: Record<string, unknown>) => ({
-        name: (tr.toolName as string) ?? "",
-        output: tr.output ?? tr.result,
+      toolResults: (s.toolResults ?? []).filter(Boolean).map((tr) => ({
+        name: tr.toolName ?? "",
+        output: tr.output,
       })),
     }));
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private extractFormattedOutput(steps: any[], format?: string): { format: string; content: string } | null {
+  private extractFormattedOutput(steps: Step[], format?: string): { format: string; content: string } | null {
     if (!format) return null;
     for (const step of [...steps].reverse()) {
-      for (const result of step.toolResults ?? []) {
-        const r = result as Record<string, unknown>;
-        if (r.toolName === "formatOutput") {
-          const output = (r.output ?? r.result) as { format?: string; content?: string } | undefined;
+      for (const tr of step.toolResults ?? []) {
+        if (tr.toolName === "formatOutput") {
+          const output = tr.output as { format?: string; content?: string } | undefined;
           if (output?.content) {
             return { format: output.format ?? format, content: output.content };
           }
@@ -357,13 +355,11 @@ Do not use emojis.`,
    * Extract an exported skill from the agent's tool results.
    * The agent calls exportSkill as a tool during the run — we just find its output.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private extractExportedSkill(steps: any[]): ExportedSkill | null {
+  private extractExportedSkill(steps: Step[]): ExportedSkill | null {
     for (const step of [...steps].reverse()) {
-      for (const result of step.toolResults ?? []) {
-        const r = result as Record<string, unknown>;
-        if (r.toolName === "exportSkill") {
-          const output = (r.output ?? r.result) as { name?: string; skillMd?: string } | undefined;
+      for (const tr of step.toolResults ?? []) {
+        if (tr.toolName === "exportSkill") {
+          const output = tr.output as { name?: string; skillMd?: string } | undefined;
           if (output?.skillMd) {
             return {
               name: output.name ?? "exported-skill",
