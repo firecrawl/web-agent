@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseSkillFrontmatter, parseSkillBody } from "./parser";
+import { parseSkillFrontmatter, parseSkillBody, validateSkillContent } from "./parser";
 
 describe("parseSkillFrontmatter", () => {
   it("extracts name and description from frontmatter", () => {
@@ -121,5 +121,50 @@ description: nothing
 
     const body = parseSkillBody(content);
     expect(body).toBe("");
+  });
+});
+
+describe("validateSkillContent", () => {
+  it("validates a correct SKILL.md", () => {
+    const content = `---\nname: test-skill\ndescription: A test skill\n---\n\n# Test\n\nDo the thing.`;
+    const result = validateSkillContent(content);
+    expect(result.valid).toBe(true);
+    expect(result.slug).toBe("test-skill");
+    expect(result.errors).toEqual([]);
+  });
+
+  it("rejects missing name", () => {
+    const content = `---\ndescription: No name\n---\n\n# Body`;
+    const result = validateSkillContent(content);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain("Missing required field: name");
+  });
+
+  it("rejects missing description", () => {
+    const content = `---\nname: no-desc\n---\n\n# Body`;
+    const result = validateSkillContent(content);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain("Missing required field: description");
+  });
+
+  it("rejects empty body", () => {
+    const content = `---\nname: empty\ndescription: Has frontmatter\n---`;
+    const result = validateSkillContent(content);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain("Empty body (no content after frontmatter)");
+  });
+
+  it("slugifies names with spaces", () => {
+    const content = `---\nname: My Cool Skill\ndescription: Test\n---\n\n# Content`;
+    const result = validateSkillContent(content);
+    expect(result.valid).toBe(true);
+    expect(result.slug).toBe("my-cool-skill");
+  });
+
+  it("handles no frontmatter", () => {
+    const result = validateSkillContent("# Just markdown");
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain("Missing required field: name");
+    expect(result.errors).toContain("Missing required field: description");
   });
 });
