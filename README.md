@@ -90,17 +90,6 @@ The agent combines web tools with an AI model in a loop - it plans, acts, observ
 |-----------|--------------|
 | [`agent-core/`](./agent-core/) | Core agent logic, orchestrator, Skills, tools |
 | [`agent-templates/`](./agent-templates/) | Deployment templates - [Next.js](./agent-templates/next/), [Express](./agent-templates/express/), [Library](./agent-templates/library/) |
-| [`.internal/scripts/sync-agent-core.mjs`](./.internal/scripts/sync-agent-core.mjs) | Refresh vendored `agent-core/` inside each template from canonical `./agent-core` |
-
-### Vendored `agent-core` in templates
-
-Next, Express, and Library embed a **copy** of `agent-core/` (no symlinks) so standalone deploys and Vercel builds work. After you change the canonical [`agent-core/`](./agent-core/) package, refresh the copies:
-
-```bash
-node .internal/scripts/sync-agent-core.mjs
-# optional: write only to /tmp to inspect
-node .internal/scripts/sync-agent-core.mjs --tmp
-```
 
 ## License
 
