@@ -1,51 +1,35 @@
-import type { LanguageModel } from "ai";
+import { initChatModel } from "langchain/chat_models/universal";
+import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import type { ModelConfig } from "./types";
 
 /**
- * Resolve a ModelConfig to an AI SDK LanguageModel instance.
- * API keys can come from the config itself or the apiKeys map.
- * The consuming app is responsible for sourcing keys (env vars, user input, etc).
+ * Resolve a ModelConfig to a LangChain chat model via initChatModel — the
+ * universal provider factory. No switch case, no per-provider imports.
+ *
+ * Accepts either:
+ *   - a plain string like "anthropic:claude-sonnet-4-6" or "openai:gpt-5.4"
+ *   - a ModelConfig with { provider, model, apiKey?, baseURL? }
+ *
+ * To support providers natively, initChatModel recognizes: anthropic, openai,
+ * google-genai, azure-openai, cohere, bedrock, ollama, openrouter, fireworks,
+ * groq, mistralai, xai, together, and more. Provider packages must be installed.
  */
 export async function resolveModel(
-  config: ModelConfig,
+  config: ModelConfig | string,
   apiKeys?: Record<string, string>,
-): Promise<LanguageModel> {
-  const keyFor = (provider: string) =>
-    config.apiKey || apiKeys?.[provider] || undefined;
-
-  switch (config.provider) {
-    case "gateway": {
-      const { createOpenAI } = await import("@ai-sdk/openai");
-      const provider = createOpenAI({
-        apiKey: keyFor("gateway"),
-        baseURL: "https://ai-gateway.vercel.sh/v1",
-      });
-      return provider.chat(config.model);
-    }
-    case "anthropic": {
-      const { createAnthropic } = await import("@ai-sdk/anthropic");
-      return createAnthropic({ apiKey: keyFor("anthropic") })(config.model);
-    }
-    case "openai": {
-      const { createOpenAI } = await import("@ai-sdk/openai");
-      return createOpenAI({ apiKey: keyFor("openai") })(config.model);
-    }
-    case "custom-openai": {
-      const { createOpenAI } = await import("@ai-sdk/openai");
-      const baseURL = config.baseURL || apiKeys?.["custom-openai:baseURL"];
-      if (!baseURL) {
-        throw new Error("CUSTOM_OPENAI_BASE_URL is not configured for the custom-openai provider");
-      }
-      return createOpenAI({
-        apiKey: keyFor("custom-openai"),
-        baseURL,
-      })(config.model);
-    }
-    case "google": {
-      const { createGoogleGenerativeAI } = await import("@ai-sdk/google");
-      return createGoogleGenerativeAI({ apiKey: keyFor("google") })(config.model);
-    }
-    default:
-      throw new Error(`Unsupported provider: ${config.provider}`);
+): Promise<BaseChatModel> {
+  if (typeof config === "string") {
+    return (await initChatModel(config)) as BaseChatModel;
   }
+
+  const modelName = config.provider ? `${config.provider}:${config.model}` : config.model;
+  const opts: Record<string, unknown> = {};
+  if (config.apiKey || apiKeys?.[config.provider]) {
+    opts.apiKey = config.apiKey ?? apiKeys?.[config.provider];
+  }
+  if (config.baseURL) {
+    opts.configuration = { baseURL: config.baseURL };
+  }
+
+  return (await initChatModel(modelName, opts)) as BaseChatModel;
 }
