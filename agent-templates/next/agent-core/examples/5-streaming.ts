@@ -1,29 +1,23 @@
 /**
- * 5. Streaming - get results as they arrive
+ * 5. Streaming — events flow as they happen.
  *
- *   npx tsx examples/5-streaming.ts
+ *   npx tsx --env-file=.env examples/5-streaming.ts
  */
-import { createAgent } from "../src";
+import { createFirecrawlAgent, streamEvents } from "../src";
 
-if (!process.env.FIRECRAWL_API_KEY) { console.error("\n  FIRECRAWL_API_KEY not set. Get one at https://firecrawl.dev/app/api-keys\n"); process.exit(1); }
-
-const agent = createAgent({
-  firecrawlApiKey: process.env.FIRECRAWL_API_KEY,
-  model: { provider: "anthropic", model: "claude-sonnet-4-6" },
+const agent = await createFirecrawlAgent({
+  firecrawlApiKey: process.env.FIRECRAWL_API_KEY!,
+  model: "anthropic:claude-sonnet-4-6",
 });
 
-let stepCount = 0;
+const input = {
+  messages: [{ role: "user" as const, content: "Top 3 Hacker News stories right now." }],
+};
 
-for await (const event of agent.stream({
-  prompt: "Find the 5 most recent YC-backed AI startups and their founders",
-})) {
-  if (event.type === "text") {
-    process.stdout.write(event.content ?? "");
-  } else if (event.type === "tool-call") {
-    console.log(`\n  [${event.toolName}]`);
-  } else if (event.type === "done") {
-    stepCount = event.steps?.length ?? 0;
-  }
+for await (const ev of streamEvents(agent, input)) {
+  if (ev.type === "text") process.stdout.write(ev.content);
+  else if (ev.type === "tool-call") console.log(`\n→ ${ev.toolName}`);
+  else if (ev.type === "tool-result") console.log(`  ← ${ev.toolName}: ok`);
+  else if (ev.type === "done") console.log("\n\ndone.");
+  else if (ev.type === "error") console.error("\nerror:", ev.error);
 }
-
-console.log("\n\nDone. Steps:", stepCount);
