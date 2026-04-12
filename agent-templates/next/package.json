@@ -10,6 +10,9 @@
   },
   "dependencies": {
     "@agentclientprotocol/sdk": "^0.17.1",
+    "@ai-sdk/anthropic": "latest",
+    "@ai-sdk/google": "latest",
+    "@ai-sdk/openai": "latest",
     "@ai-sdk/react": "^3.0.156",
     "@hookform/resolvers": "^5.2.2",
     "@langchain/anthropic": "^1.3.26",

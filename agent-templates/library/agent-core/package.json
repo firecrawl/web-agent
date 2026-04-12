@@ -40,18 +40,18 @@
     "zod": "^3.25.0"
   },
   "peerDependencies": {
-    "@langchain/anthropic": ">=1.0.0",
-    "@langchain/google-genai": ">=2.0.0",
-    "@langchain/openai": ">=1.0.0"
+    "@ai-sdk/anthropic": ">=1.0.0",
+    "@ai-sdk/google": ">=1.0.0",
+    "@ai-sdk/openai": ">=1.0.0"
   },
   "peerDependenciesMeta": {
-    "@langchain/anthropic": {
+    "@ai-sdk/anthropic": {
       "optional": true
     },
-    "@langchain/google-genai": {
+    "@ai-sdk/google": {
       "optional": true
     },
-    "@langchain/openai": {
+    "@ai-sdk/openai": {
       "optional": true
     }
   },

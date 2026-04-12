@@ -1,25 +1,33 @@
 /**
- * 2. Structured output — ask for JSON, parse the result.
+ * 2. Structured output - enforce a JSON schema on the result
  *
- *   npx tsx --env-file=.env examples/2-structured-output.ts
+ *   npx tsx examples/2-structured-output.ts
  */
-import { createFirecrawlAgent } from "../src";
+import { createAgent } from "../src";
 
-const agent = await createFirecrawlAgent({
-  firecrawlApiKey: process.env.FIRECRAWL_API_KEY!,
-  model: "anthropic:claude-sonnet-4-6",
+if (!process.env.FIRECRAWL_API_KEY) { console.error("\n  FIRECRAWL_API_KEY not set. Get one at https://firecrawl.dev/app/api-keys\n"); process.exit(1); }
+
+const agent = createAgent({
+  firecrawlApiKey: process.env.FIRECRAWL_API_KEY,
+  model: { provider: "anthropic", model: "claude-sonnet-4-6" },
 });
 
-const result = await agent.invoke({
-  messages: [
-    {
-      role: "user",
-      content: `Get Vercel's pricing tiers. Return JSON matching:
-{ "tiers": [{ "name": string, "price": string, "features": string[] }] }
-Call formatOutput with format "json" when done.`,
+const result = await agent.run({
+  prompt: "Get the P/E ratio and stock price for NVIDIA, Google, and Microsoft",
+  format: "json",
+  schema: {
+    type: "array",
+    items: {
+      type: "object",
+      properties: {
+        company: { type: "string" },
+        ticker: { type: "string" },
+        price: { type: "number" },
+        peRatio: { type: "number" },
+        source: { type: "string" },
+      },
     },
-  ],
+  },
 });
 
-const last = result.messages[result.messages.length - 1];
-console.log(typeof last.content === "string" ? last.content : JSON.stringify(last.content, null, 2));
+console.log(result.data ?? result.text);
