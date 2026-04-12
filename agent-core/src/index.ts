@@ -1,33 +1,28 @@
-// Public API
-export { createAgent, createAgentFromEnv, FirecrawlAgent } from "./agent";
-export { createOrchestrator, type OrchestratorOptions } from "./orchestrator";
-export { createWorkerTool, workerProgress, type WorkerProgress, type WorkerResult } from "./worker";
-export { createSubAgentTools } from "./orchestrator/sub-agents";
+// Batteries-included factory
+export { createFirecrawlAgent, createFirecrawlAgentFromEnv, DEFAULT_SKILLS_DIR } from "./agent";
+
+// Composable primitives — use with createDeepAgent directly
+export { firecrawlTools, firecrawlSystemPrompt, utilityTools } from "./firecrawl-tools";
+export { aiToLc, aiToolkitToLc } from "./adapter";
 export { resolveModel } from "./resolve-model";
-export { discoverSkills, buildDomainIndex, getDefaultSkillsDir } from "./skills/discovery";
-export { createSkillTools } from "./skills/tools";
-export { parseSkillBody, validateSkillContent, type SkillValidationResult } from "./skills/parser";
-export { uploadSkills, type SkillUploadFile, type SkillUploadResult } from "./skills/upload";
-export { formatOutput, bashExec, initBashWithFiles, listBashFiles, readBashFile, createExportSkillTool } from "./tools";
-export { buildFirecrawlToolkit } from "./toolkit";
-export { loadOrchestratorPrompt } from "./orchestrator/loader";
-export { loadWorkerPrompt } from "./worker/loader";
+export {
+  formatOutput,
+  bashExec,
+  initBashWithFiles,
+  listBashFiles,
+  readBashFile,
+  createExportSkillTool,
+} from "./tools";
+
+// Stream helpers — work with any Deep Agent / LangGraph runnable
+export { streamEvents, toResponse, toSSE, type AgentEvent } from "./stream-helpers";
+
+// Re-export deepagents primitives so users don't need a second install
+export { createDeepAgent, type SubAgent } from "deepagents";
 
 // Types
 export type {
-  CreateAgentOptions,
-  RunParams,
-  RunResult,
-  ExportedSkill,
-  StepEvent,
-  AgentEvent,
-  StepDetail,
-  AgentConfig,
+  CreateFirecrawlAgentOptions,
   ModelConfig,
-  SubAgentConfig,
-  SkillMetadata,
-  SitePlaybook,
-  Toolkit,
-  UploadedFile,
   FirecrawlToolsConfig,
 } from "./types";
