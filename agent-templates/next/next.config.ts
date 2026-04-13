@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
     "gray-matter",
     "just-bash",
     "@mongodb-js/zstd",
+    "node-liblzma",
     "@agentclientprotocol/sdk",
     "deepagents",
     "langchain",
@@ -14,6 +15,10 @@ const nextConfig: NextConfig = {
     "@langchain/google-genai",
     "@langchain/langgraph",
   ],
+  // Empty turbopack config silences Next 16's warning when a custom
+  // `webpack:` function also exists. Turbopack ignores the webpack fn;
+  // serverExternalPackages above covers the same externalization needs.
+  turbopack: {},
   webpack: (config, { isServer }) => {
     if (isServer) {
       config.externals = config.externals ?? [];

@@ -60,16 +60,11 @@ function sanitizeToolCallHistory(messages: BaseMessage[]): BaseMessage[] {
 
 export const maxDuration = 300;
 
-// FirecrawlAgent caches toolkit internally; reuse the instance across requests
-// with the same model/provider config so that toolkit build + model resolution
-// aren't paid on every POST. Key is a stable hash of the fingerprint fields.
-const agentCache = new Map<string, ReturnType<typeof createAgent>>();
-function getCachedAgent(fingerprint: string, factory: () => ReturnType<typeof createAgent>) {
-  const existing = agentCache.get(fingerprint);
-  if (existing) return existing;
-  const fresh = factory();
-  agentCache.set(fingerprint, fresh);
-  return fresh;
+interface InteractSessionInfo {
+  scrapeId: string;
+  liveViewUrl: string | null;
+  interactiveLiveViewUrl: string | null;
+  url: string;
 }
 
 export async function POST(req: Request) {
@@ -111,10 +106,25 @@ export async function POST(req: Request) {
     const tAgentStart = performance.now();
     const modelConf = hydrateModelConfig(config.model);
     const subAgentConf = config.subAgentModel ? hydrateModelConfig(config.subAgentModel) : undefined;
-    const fingerprint = JSON.stringify({ m: modelConf, s: subAgentConf, a: appSections.length, k: config.maxSteps ?? 0 });
-    const agent = getCachedAgent(fingerprint, () => createAgent({
+
+    // Collect interact session info as the Firecrawl SDK reports it. Bound
+    // per-request; flushed to the client via `data-interact-liveview` parts
+    // inside the createUIMessageStream execute() below.
+    const interactSessions: Record<string, InteractSessionInfo> = {};
+    const onInteractSessionStart = (info: InteractSessionInfo) => {
+      interactSessions[info.scrapeId] = info;
+    };
+
+    // Fresh agent per request so its interact tool instance(s) carry the
+    // request-scoped onSessionStart callback. Previously we cached but the
+    // cached agent's callbacks point at stale writers.
+    const agent = createAgent({
       firecrawlApiKey,
-      firecrawlOptions: { bash: true },
+      firecrawlOptions: {
+        bash: true,
+        interactAutoStart: true,
+        onInteractSessionStart,
+      },
       model: modelConf,
       subAgentModel: subAgentConf,
       apiKeys: getProviderApiKeys(),
@@ -122,7 +132,7 @@ export async function POST(req: Request) {
       maxWorkers: globalConfig.maxWorkers,
       workerMaxSteps: globalConfig.workerMaxSteps,
       appSections,
-    }));
+    });
 
     // Deep Agent = LangGraph runnable with .stream(input, { streamMode }).
     const rawAgent = await agent.createRawAgent({
@@ -418,6 +428,26 @@ export async function POST(req: Request) {
           const reader = mainStream.getReader();
           let lastMapSize = 0;
           const lastTextLen: Record<string, number> = {};
+          const emittedSessions: Record<string, string> = {}; // scrapeId → last liveViewUrl emitted
+
+          const flushInteractSessions = () => {
+            for (const [scrapeId, info] of Object.entries(interactSessions)) {
+              if (!info.liveViewUrl) continue;
+              if (emittedSessions[scrapeId] === info.liveViewUrl) continue;
+              writer.write({
+                type: "data-interact-liveview",
+                id: `interact-liveview:${scrapeId}`,
+                data: {
+                  scrapeId: info.scrapeId,
+                  liveViewUrl: info.liveViewUrl,
+                  interactiveLiveViewUrl: info.interactiveLiveViewUrl,
+                  url: info.url,
+                },
+              } as never);
+              emittedSessions[scrapeId] = info.liveViewUrl;
+            }
+          };
+
           try {
             while (true) {
               const { done, value } = await reader.read();
@@ -443,6 +473,10 @@ export async function POST(req: Request) {
                   lastTextLen[parentId] = text.length;
                 }
               }
+              // Flush any new interact session live-view URLs captured via
+              // the onSessionStart callback. Each scrapeId gets its own
+              // stable `id` so the UIMessage reducer replaces-in-place.
+              flushInteractSessions();
             }
             // Final flush.
             if (Object.keys(toolCallParent).length > lastMapSize) {
@@ -457,7 +491,8 @@ export async function POST(req: Request) {
                 } as never);
               }
             }
-            console.log(`[agent] stream done. map=${Object.keys(toolCallParent).length} subagent-texts=${Object.keys(subagentText).length}`);
+            flushInteractSessions();
+            console.log(`[agent] stream done. map=${Object.keys(toolCallParent).length} subagent-texts=${Object.keys(subagentText).length} interact-sessions=${Object.keys(interactSessions).length}`);
           } finally {
             reader.releaseLock();
           }

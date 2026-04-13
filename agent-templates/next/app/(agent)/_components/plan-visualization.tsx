@@ -904,23 +904,29 @@ function BashResult({ command, stdout, stderr, exitCode, rawInput, rawOutput, to
               <div className="text-mono-x-small text-black-alpha-32 mb-3">command</div>
               <pre className="text-mono-small text-accent-black whitespace-pre-wrap break-all">{command}</pre>
             </div>
-            {hasOutput && (
-              <div className="border-t border-border-faint bg-black-alpha-2 px-14 py-8 max-h-[400px] overflow-auto no-scrollbar">
-                {stdout && (
-                  <>
-                    <div className="text-mono-x-small text-black-alpha-32 mb-3">stdout</div>
-                    <pre className="text-mono-small text-accent-black whitespace-pre-wrap">{stdout}</pre>
-                  </>
-                )}
-                {stderr && (
-                  <>
-                    <div className="text-mono-x-small text-accent-crimson/60 mt-8 mb-3">stderr</div>
-                    <pre className="text-mono-small text-accent-crimson whitespace-pre-wrap">{stderr}</pre>
-                  </>
-                )}
+
+            {/* stdout/stderr — always render with a placeholder when empty so
+                the user sees the response landed, just with nothing printed. */}
+            <div className="border-t border-border-faint bg-black-alpha-2 px-14 py-8 max-h-[400px] overflow-auto no-scrollbar">
+              <div className="text-mono-x-small text-black-alpha-32 mb-3">stdout</div>
+              <pre className="text-mono-small text-accent-black whitespace-pre-wrap">{stdout || <span className="text-black-alpha-24 italic">(empty)</span>}</pre>
+              {stderr && (
+                <>
+                  <div className="text-mono-x-small text-accent-crimson/60 mt-8 mb-3">stderr</div>
+                  <pre className="text-mono-small text-accent-crimson whitespace-pre-wrap">{stderr}</pre>
+                </>
+              )}
+            </div>
+
+            {/* Raw response — full tool output, always inline. Shows exitCode,
+                ms, context, etc. alongside the stdout echo. No input section
+                because the command block above already has it. */}
+            {rawOutput && (
+              <div className="border-t border-border-faint bg-black-alpha-1 px-14 py-8 max-h-[300px] overflow-auto no-scrollbar">
+                <div className="text-mono-x-small text-black-alpha-32 mb-3">raw response</div>
+                <pre className="text-mono-small text-accent-black whitespace-pre-wrap break-all">{rawOutput}</pre>
               </div>
             )}
-            <RawIOToggle input={rawInput} output={rawOutput} toolName={toolName} />
           </>
         )}
       </div>
@@ -1670,7 +1676,11 @@ interface SubagentStep {
   toolResults: { toolName: string; output: Record<string, unknown> }[];
 }
 
-function extractTimeline(messages: UIMessage[]): { items: TimelineItem[]; subagentText: Record<string, string> } {
+function extractTimeline(messages: UIMessage[]): {
+  items: TimelineItem[];
+  subagentText: Record<string, string>;
+  interactLiveView: Record<string, { liveViewUrl: string; interactiveLiveViewUrl: string | null; url: string }>;
+} {
   const items: TimelineItem[] = [];
   // `itemByToolCallId` and `toolCallParent` are populated as we walk the
   // messages: the server emits `data-subagent-map` parts that tell us which
@@ -1682,6 +1692,10 @@ function extractTimeline(messages: UIMessage[]): { items: TimelineItem[]; subage
   // parts emitted by the server. This is the authoritative sub-agent narration
   // — bridge-side text deltas for sub-agent messages are stripped server-side.
   const subagentText: Record<string, string> = {};
+  // scrapeId → latest live-view URL, emitted from the server via
+  // `data-interact-liveview` parts as soon as Firecrawl's `onSessionStart`
+  // callback fires. Used to pin iframes inside interact tiles early.
+  const interactLiveView: Record<string, { liveViewUrl: string; interactiveLiveViewUrl: string | null; url: string }> = {};
 
   for (const msg of messages) {
     if (msg.role !== "assistant") continue;
@@ -1700,6 +1714,18 @@ function extractTimeline(messages: UIMessage[]): { items: TimelineItem[]; subage
         const d = (part as { data?: { parentId?: string; text?: string } }).data;
         if (d?.parentId && typeof d.text === "string") {
           subagentText[d.parentId] = d.text;
+        }
+        continue;
+      }
+      // Server-side live-view URL for an interact session, keyed by scrapeId.
+      if ((part as { type?: string }).type === "data-interact-liveview") {
+        const d = (part as { data?: { scrapeId?: string; liveViewUrl?: string; interactiveLiveViewUrl?: string | null; url?: string } }).data;
+        if (d?.scrapeId && d.liveViewUrl) {
+          interactLiveView[d.scrapeId] = {
+            liveViewUrl: d.liveViewUrl,
+            interactiveLiveViewUrl: d.interactiveLiveViewUrl ?? null,
+            url: d.url ?? "",
+          };
         }
         continue;
       }
@@ -1738,9 +1764,15 @@ function extractTimeline(messages: UIMessage[]): { items: TimelineItem[]; subage
         const status = isComplete ? "complete" as const : "running" as const;
 
         // Serialize raw input/output once so each tile can expose "View raw".
+        // Always serialize whatever output is present — even `{}` or an
+        // `{error: "..."}` envelope — so users can inspect the response.
         const rawInputStr = Object.keys(input).length > 0 ? JSON.stringify(input, null, 2) : undefined;
-        const rawOutputStr = hasOutput
-          ? (typeof rawOutput === "string" ? rawOutput as string : JSON.stringify(rawOutput, null, 2))
+        const rawOutputStr = isComplete
+          ? (rawOutput === undefined || rawOutput === null
+              ? "(no output)"
+              : typeof rawOutput === "string"
+                ? rawOutput as string
+                : JSON.stringify(rawOutput, null, 2))
           : undefined;
 
         // Record the pre-branch length so we can retroactively stamp any items
@@ -1751,25 +1783,40 @@ function extractTimeline(messages: UIMessage[]): { items: TimelineItem[]; subage
           const results: SearchResult[] = [];
           if (output && typeof output === "object") {
             const o = output as Record<string, unknown>;
-            // Find the results array -- Firecrawl returns { web: [...] } or { data: [...] }
-            let data: unknown[] | undefined;
-            if (Array.isArray(o.web)) data = o.web as unknown[];
-            else if (Array.isArray(o.data)) data = o.data as unknown[];
-            else if (Array.isArray(o.results)) data = o.results as unknown[];
-            else if (Array.isArray(output)) data = output as unknown[];
-
-            if (data) {
-              for (const r of data) {
-                const item = r as Record<string, unknown>;
-                if (item && typeof item === "object" && (item.url || item.title)) {
-                  results.push({
-                    title: String(item.title ?? ""),
-                    url: String(item.url ?? ""),
-                    description: String(item.description ?? item.snippet ?? ""),
-                    markdown: typeof item.markdown === "string" ? item.markdown : undefined,
-                  });
-                }
+            // Firecrawl's shape is usually `{web, news, images}` at the top,
+            // but the raw API wraps it in `{data: {...}}` and the SDK
+            // sometimes passes that through verbatim. Check both levels.
+            const levels: Record<string, unknown>[] = [o];
+            if (o.data && typeof o.data === "object" && !Array.isArray(o.data)) {
+              levels.push(o.data as Record<string, unknown>);
+            }
+            const combined: unknown[] = [];
+            for (const lvl of levels) {
+              for (const key of ["web", "news", "images", "results"]) {
+                const arr = lvl[key];
+                if (Array.isArray(arr)) combined.push(...arr);
               }
+              const dataArr = lvl.data;
+              if (Array.isArray(dataArr)) combined.push(...(dataArr as unknown[]));
+            }
+            if (Array.isArray(output)) combined.push(...(output as unknown[]));
+
+            for (const r of combined) {
+              const item = r as Record<string, unknown>;
+              if (!item || typeof item !== "object") continue;
+              if (!item.url && !item.title && !item.imageUrl) continue;
+              // Query-format results carry the extracted answer either on an
+              // `answer` field or inside a nested `json`/`extract` object.
+              const answer = typeof item.answer === "string" ? item.answer as string : undefined;
+              const desc = String(item.description ?? item.snippet ?? answer ?? "");
+              results.push({
+                title: String(item.title ?? ""),
+                url: String(item.url ?? item.imageUrl ?? ""),
+                description: desc,
+                markdown: typeof item.markdown === "string"
+                  ? item.markdown as string
+                  : answer ?? undefined,
+              });
             }
           }
           const searchCredits = typeof (output as Record<string, unknown>).creditsUsed === "number"
@@ -2169,7 +2216,20 @@ function extractTimeline(messages: UIMessage[]): { items: TimelineItem[]; subage
     }
   }
 
-  return { items: grouped, subagentText };
+  // Early-bind live-view URLs onto interact tiles by scrapeId. The server
+  // emits these via the Firecrawl SDK's `onSessionStart` callback AS SOON AS
+  // the browser session attaches — well before the tool's execute() resolves.
+  // Walk BOTH top-level items and nested subagentChildren.
+  const bindLiveView = (item: TimelineItem) => {
+    if (item.type === "interact" && item.scrapeId && interactLiveView[item.scrapeId]) {
+      const v = interactLiveView[item.scrapeId];
+      if (!item.liveViewUrl) item.liveViewUrl = v.liveViewUrl;
+    }
+    if (item.subagentChildren) for (const c of item.subagentChildren) bindLiveView(c);
+  };
+  for (const g of grouped) bindLiveView(g);
+
+  return { items: grouped, subagentText, interactLiveView };
 }
 
 // --- Main ---

@@ -584,7 +584,12 @@ export default function ArtifactPanel({ messages, isRunning, onRequestFormat, on
   if (!formatted) return null;
 
   const fmt = formatted.format;
-  const isStreaming = formatted.streaming;
+  // Clamp streaming to whether the whole run is still going. The per-part
+  // flag can get stuck "true" if the bridge doesn't cleanly transition
+  // formatOutput's state, or if content only lives on input.data while the
+  // tool waits for output-available. Once `isRunning` goes false, the run
+  // is done — stop claiming we're still streaming.
+  const isStreaming = formatted.streaming && isRunning;
 
   const isJson = fmt === "json";
   const isCsv = fmt === "csv";

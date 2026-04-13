@@ -2,13 +2,9 @@
 
 import { useEffect, useRef } from "react";
 
-import dynamic from "next/dynamic";
-
-export default dynamic(() => Promise.resolve(Scrollbar), { ssr: false });
-
 const padding = 8;
 
-function Scrollbar() {
+export default function Scrollbar() {
   const ref = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
   const startY = useRef(0);

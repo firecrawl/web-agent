@@ -23,18 +23,18 @@ program
   .version(pkg.version)
   .addHelpText('after', `
 ${bold}Quick start:${reset}
-  ${dim}$${reset} firecrawl-agent init                          ${dim}# interactive wizard${reset}
-  ${dim}$${reset} firecrawl-agent init my-app -t express         ${dim}# one-liner, Express API${reset}
-  ${dim}$${reset} firecrawl-agent init my-app -t next            ${dim}# one-liner, full Next.js UI${reset}
-  ${dim}$${reset} firecrawl-agent init my-app -t library         ${dim}# one-liner, library only${reset}
+  ${dim}$${reset} firecrawl-agent create                          ${dim}# interactive wizard${reset}
+  ${dim}$${reset} firecrawl-agent create my-app -t express         ${dim}# one-liner, Express API${reset}
+  ${dim}$${reset} firecrawl-agent create my-app -t next            ${dim}# one-liner, full Next.js UI${reset}
+  ${dim}$${reset} firecrawl-agent create my-app -t library         ${dim}# one-liner, library only${reset}
 
 ${bold}With API keys:${reset}
-  ${dim}$${reset} firecrawl-agent init my-app -t express --api-key fc-... --key anthropic=sk-...
-  ${dim}$${reset} firecrawl-agent init my-app -t next --key openai=sk-... --key google=AIza...
+  ${dim}$${reset} firecrawl-agent create my-app -t express --api-key fc-... --key anthropic=sk-...
+  ${dim}$${reset} firecrawl-agent create my-app -t next --key openai=sk-... --key google=AIza...
 
 ${bold}From external repo:${reset}
-  ${dim}$${reset} firecrawl-agent init my-app --from user/repo   ${dim}# GitHub repo with agent-manifest.json${reset}
-  ${dim}$${reset} firecrawl-agent init my-app --from ./local-dir ${dim}# local directory${reset}
+  ${dim}$${reset} firecrawl-agent create my-app --from user/repo   ${dim}# GitHub repo with agent-manifest.json${reset}
+  ${dim}$${reset} firecrawl-agent create my-app --from ./local-dir ${dim}# local directory${reset}
 
 ${bold}After setup:${reset}
   ${dim}$${reset} firecrawl-agent dev my-app                     ${dim}# start dev server${reset}

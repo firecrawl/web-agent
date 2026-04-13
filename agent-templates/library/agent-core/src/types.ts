@@ -98,6 +98,26 @@ export interface FirecrawlToolsConfig {
    * "enrichment" failure mode where the model invents extra scrapes.
    */
   bash?: boolean;
+  /**
+   * Fires when an interact session attaches and a `liveViewUrl` is known.
+   * Used by the route handler to push the iframe URL out through the UI
+   * stream so the browser tile can render live as actions happen. Each
+   * sub-agent spawn gets its own interact instance, so multiple parallel
+   * sessions coexist without session-state collisions.
+   */
+  onInteractSessionStart?: (info: {
+    scrapeId: string;
+    liveViewUrl: string | null;
+    interactiveLiveViewUrl: string | null;
+    url: string;
+  }) => void | Promise<void>;
+  /**
+   * When true, interact's `bootstrap()` fires a no-op warmup so `liveViewUrl`
+   * is populated before the first real action resolves. Adds ~1-2s to the
+   * first `execute` call in exchange for the iframe showing up immediately.
+   * Default: `false`.
+   */
+  interactAutoStart?: boolean;
 }
 
 export interface CreateAgentOptions {

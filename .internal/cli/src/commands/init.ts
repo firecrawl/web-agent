@@ -31,7 +31,8 @@ interface InitOptions {
 }
 
 export function createInitCommand(): Command {
-  return new Command('init')
+  return new Command('create')
+    .aliases(['init'])
     .description('Create a new Firecrawl Agent project')
     .argument('[project-name]', 'Project directory name')
     .option('-t, --template <id>', 'Template (next, express, library)')
@@ -43,15 +44,15 @@ export function createInitCommand(): Command {
     .option('--skip-install', 'Skip npm install')
     .addHelpText('after', `
 Examples:
-  $ firecrawl-agent init                                    # interactive
-  $ firecrawl-agent init my-app -t next                     # Next.js with full UI
-  $ firecrawl-agent init my-app -t next --provider openai   # choose the default provider
-  $ firecrawl-agent init my-app -t express                  # Express API server
-  $ firecrawl-agent init my-app -t library                   # library only
-  $ firecrawl-agent init my-app -t express --api-key fc-... # with Firecrawl key
-  $ firecrawl-agent init my-app -t next --key anthropic=sk-... --key openai=sk-...
-  $ firecrawl-agent init my-app --from user/repo            # from external repo
-  $ firecrawl-agent init my-app --from ./local-templates    # from local path
+  $ firecrawl-agent create                                    # interactive
+  $ firecrawl-agent create my-app -t next                     # Next.js with full UI
+  $ firecrawl-agent create my-app -t next --provider openai   # choose the default provider
+  $ firecrawl-agent create my-app -t express                  # Express API server
+  $ firecrawl-agent create my-app -t library                   # library only
+  $ firecrawl-agent create my-app -t express --api-key fc-... # with Firecrawl key
+  $ firecrawl-agent create my-app -t next --key anthropic=sk-... --key openai=sk-...
+  $ firecrawl-agent create my-app --from user/repo            # from external repo
+  $ firecrawl-agent create my-app --from ./local-templates    # from local path
 `)
     .action(async (projectName: string | undefined, options: InitOptions) => {
       await handleInit(projectName, options);
