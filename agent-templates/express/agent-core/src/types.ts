@@ -118,6 +118,13 @@ export interface FirecrawlToolsConfig {
    * Default: `false`.
    */
   interactAutoStart?: boolean;
+  /**
+   * Hard cap for a single `interact` call. When a session exceeds this, the
+   * tool resolves with `{ error, timedOut: true, url, prompt }` instead of
+   * hanging. Default: `60_000` (60s). Set to `0` or a negative value to
+   * disable.
+   */
+  interactTimeoutMs?: number;
 }
 
 export interface CreateAgentOptions {

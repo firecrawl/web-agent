@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import type { UIMessage } from "ai";
 import StreamdownBlock from "@/components/shared/streamdown-block";
 import { cn } from "@/utils/cn";
+import LoadingDots from "@/components/ui/LoadingDots/LoadingDots";
 import { JsonViewer } from "./output-panel";
 import {
   parseToolResult,
@@ -137,7 +138,7 @@ function SearchResultItem({ result }: { result: SearchResult }) {
   const hasMarkdown = result.markdown && result.markdown.length > 0;
 
   return (
-    <div className="rounded-8 border border-border-faint overflow-hidden transition-all hover:border-black-alpha-16">
+    <div className="my-12 border border-border-faint overflow-hidden -mb-[1px] transition-all hover:border-black-alpha-16">
       <div
         role="button"
         tabIndex={0}
@@ -215,7 +216,7 @@ function SearchResults({ query, results, creditsUsed, sources, isLatest }: { que
   const collapsed = userExpanded !== null ? !userExpanded : !isLatest;
 
   return (
-    <div className="my-12 border border-border-faint overflow-hidden">
+    <div className="my-12 border border-border-faint overflow-hidden -mb-[1px]">
       <button
         type="button"
         className="flex items-center gap-10 px-14 py-10 w-full text-left hover:bg-black-alpha-2 transition-colors"
@@ -423,6 +424,7 @@ function ScrapeResult({
 
 function InteractCard({ item }: { item: TimelineItem }) {
   const isRunning = item.status !== "complete";
+  const hasError = !isRunning && !!item.scrapeError;
   const [userCollapsed, setUserCollapsed] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
@@ -466,7 +468,11 @@ function InteractCard({ item }: { item: TimelineItem }) {
           )}
           {domain && <Favicon domain={domain} />}
           {isRunning ? (
-            <div className="w-5 h-5 rounded-full bg-heat-100 animate-pulse flex-shrink-0" />
+            <LoadingDots />
+          ) : hasError ? (
+            <svg className="w-14 h-14 text-accent-crimson flex-shrink-0" fill="none" viewBox="0 0 16 16">
+              <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           ) : (
             <svg className="w-14 h-14 text-accent-forest flex-shrink-0" fill="none" viewBox="0 0 16 16">
               <path d="M13.3 4.3L6 11.6 2.7 8.3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -513,8 +519,21 @@ function InteractCard({ item }: { item: TimelineItem }) {
             </div>
           )}
 
+          {/* Error banner — shown when the tool failed (e.g. timed out). */}
+          {hasError && (
+            <div className="mx-14 my-10 border border-accent-crimson/20 bg-accent-crimson/6 px-12 py-10">
+              <div className="flex items-center gap-8">
+                <span className="text-mono-x-small text-accent-crimson bg-accent-crimson/10 px-6 py-2 rounded-6 flex-shrink-0">failed</span>
+                <div className="min-w-0 flex-1">
+                  <div className="text-label-medium text-accent-black">Interact failed</div>
+                  <div className="text-body-small text-black-alpha-56 break-words">{item.scrapeError}</div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Expand toggle */}
-          {!isRunning && (item.interactOutput || item.content) && (
+          {!isRunning && !hasError && (item.interactOutput || item.content) && (
             <div className="mx-14 mb-6 flex justify-end">
               <button
                 type="button"
@@ -533,7 +552,7 @@ function InteractCard({ item }: { item: TimelineItem }) {
           )}
 
           {/* Output + content -- shown when complete */}
-          {!isRunning && (item.interactOutput || item.content) && (
+          {!isRunning && !hasError && (item.interactOutput || item.content) && (
             <div className={cn("mx-14 mb-10", expanded ? "flex flex-col gap-8" : "flex flex-col gap-8")}>
               {item.interactOutput && (
                 <div className="bg-black-alpha-2 rounded-8 border border-border-faint p-12 max-h-200 overflow-auto no-scrollbar">
@@ -560,7 +579,7 @@ function InteractCard({ item }: { item: TimelineItem }) {
   );
 }
 
-// --- Sub-agent card ---
+// --- Subagent card ---
 
 function SubAgentCard({ item }: { item: TimelineItem }) {
   const isRunning = item.status !== "complete";
@@ -573,7 +592,7 @@ function SubAgentCard({ item }: { item: TimelineItem }) {
   const onToggle = () => setExpanded((v) => !v);
   const steps = item.subagentSteps ?? [];
 
-  // Parse sub-agent steps into mini timeline items
+  // Parse subagent steps into mini timeline items
   const subItems = useMemo(() => {
     const result: { type: string; label: string; detail?: string; credits?: number }[] = [];
     for (const step of steps) {
@@ -634,9 +653,9 @@ function SubAgentCard({ item }: { item: TimelineItem }) {
     return result;
   }, [steps]);
 
-  // URLs touched by this sub-agent's children (searches, scrapes, bash loads).
+  // URLs touched by this subagent's children (searches, scrapes, bash loads).
   // Rendered as an overlapping favicon stack in the header so the user can see
-  // *what* the sub-agent touched without expanding the card.
+  // *what* the subagent touched without expanding the card.
   const childDomains = useMemo(() => {
     const urls: string[] = [];
     for (const c of item.subagentChildren ?? []) {
@@ -648,7 +667,7 @@ function SubAgentCard({ item }: { item: TimelineItem }) {
   }, [item.subagentChildren]);
 
   return (
-    <div className="my-12 border border-border-faint overflow-hidden transition-all">
+    <div className="my-12 border border-border-faint overflow-hidden -mb-[1px] transition-all">
       {/* Header - clickable to expand */}
       <button
         type="button"
@@ -659,10 +678,10 @@ function SubAgentCard({ item }: { item: TimelineItem }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-6">
             <span className="text-label-medium text-accent-black">
-              {item.skillName ?? "Sub-agent"}
+              {item.skillName ? `${item.skillName} subagent` : "Subagent"}
             </span>
             {isRunning && (
-              <div className="w-5 h-5 rounded-full bg-heat-100 animate-pulse flex-shrink-0" />
+              <LoadingDots />
             )}
           </div>
           {item.subagentTask && (
@@ -693,7 +712,7 @@ function SubAgentCard({ item }: { item: TimelineItem }) {
         </div>
       </button>
 
-      {/* Expanded: sub-agent's train of thought (live streaming) + tool calls */}
+      {/* Expanded: subagent's train of thought (live streaming) + tool calls */}
       {expanded && (item.subagentStreamText || (item.subagentChildren?.length ?? 0) > 0) && (
         <div className="border-t border-border-faint bg-black-alpha-2 px-14 py-8">
           {item.subagentStreamText && (
@@ -707,7 +726,7 @@ function SubAgentCard({ item }: { item: TimelineItem }) {
           )}
           {(item.subagentChildren?.length ?? 0) > 0 && (
             <>
-              <div className="text-label-x-small text-black-alpha-24 mb-2">Sub-agent activity</div>
+              <div className="text-label-x-small text-black-alpha-24 mb-2">Subagent activity</div>
               <div className="flex flex-col timeline-dense">
                 {item.subagentChildren!.map((child, j) => (
                   <ChildTile key={j} item={child} />
@@ -845,7 +864,7 @@ function BashResult({ command, stdout, stderr, exitCode, durationMs, bashContext
   const domains = useMemo(() => extractDomainsFromCommand(command), [command]);
 
   return (
-      <div className="my-12 border border-border-faint overflow-hidden">
+      <div className="my-12 border border-border-faint overflow-hidden -mb-[1px]">
         <button
           type="button"
           className="w-full flex items-start gap-10 px-14 py-10 hover:bg-black-alpha-2 transition-colors text-left cursor-pointer"
@@ -906,7 +925,7 @@ function BashResult({ command, stdout, stderr, exitCode, durationMs, bashContext
     );
 }
 
-// Thin dispatcher used to render a nested TimelineItem (a sub-agent's tool
+// Thin dispatcher used to render a nested TimelineItem (a subagent's tool
 // call) inside a SubAgentCard. Delegates to the same tile components used at
 // the top level so nothing looks different — just nested.
 function ChildTile({ item, isLatest = false }: { item: TimelineItem; isLatest?: boolean }) {
@@ -922,7 +941,7 @@ function ChildTile({ item, isLatest = false }: { item: TimelineItem; isLatest?: 
           sources={item.searchSources}
           results={item.status === "complete" && item.searchResults?.length ? item.searchResults : []}
           creditsUsed={item.creditsUsed}
-          // Only the currently-running (or latest in-progress) sub-agent
+          // Only the currently-running (or latest in-progress) subagent
           // search stays expanded; earlier ones fold so the column stays
           // compact as the agent walks through multiple searches.
           isLatest={isLatest}
@@ -1067,7 +1086,7 @@ function ScrapeBashLoadCard({ item }: { item: TimelineItem }) {
     : (error ?? "no pages");
 
   return (
-    <div className="my-12 border border-border-faint overflow-hidden">
+    <div className="my-12 border border-border-faint overflow-hidden -mb-[1px]">
       <button
         type="button"
         className="w-full flex items-center gap-10 px-14 py-10 hover:bg-black-alpha-2 transition-colors text-left cursor-pointer"
@@ -1106,7 +1125,7 @@ function ScrapeBashLoadCard({ item }: { item: TimelineItem }) {
         </div>
 
         {isRunning ? (
-          <div className="w-5 h-5 rounded-full bg-heat-100 animate-pulse flex-shrink-0" />
+          <LoadingDots />
         ) : error ? (
           <span className="text-mono-x-small text-accent-crimson flex-shrink-0">failed</span>
         ) : (
@@ -1151,10 +1170,11 @@ function ScrapeBashLoadCard({ item }: { item: TimelineItem }) {
 
 function GenericToolTile({ item }: { item: TimelineItem }) {
   const [expanded, setExpanded] = useState(false);
-  const toolName = item.toolName ?? item.text ?? "tool";
+  const rawToolName = item.toolName ?? item.text ?? "tool";
+  const toolName = rawToolName === "scrapeBash" || rawToolName === "scrape_bash" ? "bash" : rawToolName;
   const hasRaw = !!(item.rawInput || item.rawOutput);
   return (
-    <div className="my-12 border border-border-faint overflow-hidden">
+    <div className="my-12 border border-border-faint overflow-hidden -mb-[1px]">
       <button
         type="button"
         className="w-full flex items-center gap-8 px-14 py-8 hover:bg-black-alpha-2 transition-colors text-left cursor-pointer"
@@ -1165,7 +1185,7 @@ function GenericToolTile({ item }: { item: TimelineItem }) {
           {toolName}
         </div>
         {item.status === "running" ? (
-          <div className="w-5 h-5 rounded-full bg-heat-100 animate-pulse flex-shrink-0" />
+          <LoadingDots />
         ) : (
           <svg className="w-12 h-12 text-accent-forest flex-shrink-0" fill="none" viewBox="0 0 16 16">
             <path d="M13.3 4.3L6 11.6 2.7 8.3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -1427,7 +1447,7 @@ function WorkerCard({ id, prompt, result, workerStatus, liveProgress, stepDetail
           </svg>
         )}
         {workerStatus === "running" && (
-          <div className="w-5 h-5 rounded-full bg-heat-100 animate-pulse flex-shrink-0" />
+          <LoadingDots />
         )}
         <div className="flex items-center gap-6 flex-1 min-w-0">
           {subtitleDomain && <Favicon domain={subtitleDomain} />}
@@ -1533,7 +1553,7 @@ function WorkersPanel({ item, apiBase = "" }: { item: TimelineItem; apiBase?: st
   }, [isRunning]);
 
   return (
-    <div className="my-12 border border-border-faint overflow-hidden">
+    <div className="my-12 border border-border-faint overflow-hidden -mb-[1px]">
       {/* Card header */}
       <button
         type="button"
@@ -1553,7 +1573,7 @@ function WorkersPanel({ item, apiBase = "" }: { item: TimelineItem; apiBase?: st
           </div>
         </div>
         {isRunning ? (
-          <div className="w-5 h-5 rounded-full bg-heat-100 animate-pulse flex-shrink-0" />
+          <LoadingDots />
         ) : (
           <svg className="w-14 h-14 text-accent-forest flex-shrink-0" fill="none" viewBox="0 0 16 16">
             <path d="M13.3 4.3L6 11.6 2.7 8.3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -1593,7 +1613,7 @@ function SkillLoad({ name, description, instructions, status }: { name: string; 
   const clickable = status === "complete" && !!instructions;
 
   return (
-    <div className="my-12 border border-border-faint overflow-hidden">
+    <div className="my-12 border border-border-faint overflow-hidden -mb-[1px]">
       <button
         type="button"
         className={cn(
@@ -1611,7 +1631,7 @@ function SkillLoad({ name, description, instructions, status }: { name: string; 
           )}
         </div>
         {status === "running" && (
-          <div className="w-5 h-5 rounded-full bg-heat-100 animate-pulse flex-shrink-0" />
+          <LoadingDots />
         )}
         {status === "complete" && (
           <svg className="w-14 h-14 text-accent-forest flex-shrink-0" fill="none" viewBox="0 0 16 16">
@@ -1648,7 +1668,7 @@ interface ScrapeBashPage {
 
 interface TimelineItem {
   type: "text" | "search" | "scrape" | "interact" | "bash" | "scrapeBashLoad" | "skill" | "subagent" | "format" | "workers" | "other";
-  // Sub-agent nested children (populated by post-process when this item is a
+  // Subagent nested children (populated by post-process when this item is a
   // task-tool invocation and subsequent tool calls should be grouped under it).
   subagentChildren?: TimelineItem[];
   // scrapeBash load-mode
@@ -1704,7 +1724,7 @@ interface TimelineItem {
   rawOutput?: string;
   toolName?: string;
   toolCallId?: string;
-  // Server-provided authoritative sub-agent narration stream (accumulated)
+  // Server-provided authoritative subagent narration stream (accumulated)
   subagentStreamText?: string;
   // status
   status: "running" | "complete";
@@ -1724,13 +1744,13 @@ function extractTimeline(messages: UIMessage[]): {
   const items: TimelineItem[] = [];
   // `itemByToolCallId` and `toolCallParent` are populated as we walk the
   // messages: the server emits `data-subagent-map` parts that tell us which
-  // sub-agent tool_call_id belongs to which parent task_call_id. We hold the
+  // subagent tool_call_id belongs to which parent task_call_id. We hold the
   // final grouping until all items are built so ordering doesn't matter.
   const itemByToolCallId = new Map<string, TimelineItem>();
   const toolCallParent: Record<string, string> = {};
   // Per-parent-task accumulated text buffer, filled from `data-subagent-text`
-  // parts emitted by the server. This is the authoritative sub-agent narration
-  // — bridge-side text deltas for sub-agent messages are stripped server-side.
+  // parts emitted by the server. This is the authoritative subagent narration
+  // — bridge-side text deltas for subagent messages are stripped server-side.
   const subagentText: Record<string, string> = {};
   // scrapeId → latest live-view URL, emitted from the server via
   // `data-interact-liveview` parts as soon as Firecrawl's `onSessionStart`
@@ -1739,7 +1759,7 @@ function extractTimeline(messages: UIMessage[]): {
 
   // Pre-scan for `data-tool-output` parts so we can backfill outputs onto
   // tool parts whose `output` field the @ai-sdk/langchain bridge didn't
-  // populate (common for sub-agent tool calls emitted inside a LangGraph
+  // populate (common for subagent tool calls emitted inside a LangGraph
   // subgraph). Server emits these keyed by tool_call_id.
   const toolOutputByCallId: Record<string, unknown> = {};
   for (const msg of messages) {
@@ -1763,7 +1783,7 @@ function extractTimeline(messages: UIMessage[]): {
         }
         continue;
       }
-      // Server-side sub-agent narration — one data part per parent task, each
+      // Server-side subagent narration — one data part per parent task, each
       // carrying the latest accumulated text.
       if ((part as { type?: string }).type === "data-subagent-text") {
         const d = (part as { data?: { parentId?: string; text?: string } }).data;
@@ -1787,7 +1807,7 @@ function extractTimeline(messages: UIMessage[]): {
       if (part.type === "text" && part.text.trim()) {
         // Each text part in AI SDK v6 carries an `id` tied to the AIMessage
         // that produced it. The server emits `msg:<id> → parentTaskId` in the
-        // subagent map when that message came from a sub-agent graph. If it
+        // subagent map when that message came from a subagent graph. If it
         // matches, nest this text under that parent; otherwise render at the
         // orchestrator level as usual.
         const partId = (part as { id?: string }).id;
@@ -1806,10 +1826,10 @@ function extractTimeline(messages: UIMessage[]): {
         const input = (p.input ?? p.args ?? {}) as Record<string, unknown>;
         // Prefer the bridge's output, but fall back to the server's
         // data-tool-output backfill for tool calls the bridge skipped
-        // (sub-agent tool calls inside a LangGraph subgraph).
+        // (subagent tool calls inside a LangGraph subgraph).
         //
         // The bridge sometimes emits `tool-output-available` with a literal
-        // empty string when LangGraph hasn't snapshotted the sub-agent
+        // empty string when LangGraph hasn't snapshotted the subagent
         // ToolMessage yet — `??` would treat that as "present", letting
         // the empty value win over the real backfill. Treat empty strings
         // and `{}` as missing so the backfill always wins when the bridge
@@ -1856,7 +1876,7 @@ function extractTimeline(messages: UIMessage[]): {
           toolName,
           input,
           // Use the already-resolved rawOutput (bridge-or-backfill) so the
-          // normalizer sees sub-agent tool outputs even when the bridge
+          // normalizer sees subagent tool outputs even when the bridge
           // didn't surface them.
           output: rawOutput,
         });
@@ -1905,6 +1925,7 @@ function extractTimeline(messages: UIMessage[]): {
             liveViewUrl: scrape.liveViewUrl,
             interactOutput: scrape.interactOutput,
             interactPrompt: scrape.interactPrompt,
+            scrapeError: scrape.error,
             toolName,
             status,
           });
@@ -1996,7 +2017,7 @@ function extractTimeline(messages: UIMessage[]): {
           items.push({
             type: "subagent",
             text: resultText,
-            skillName: subagentType ?? "sub-agent",
+            skillName: (subagentType ?? "subagent").replace(/sub-agent/g, "subagent"),
             subagentDescription: firstLine,
             subagentTask: description,
             rawInput: rawInputStr,
@@ -2106,7 +2127,7 @@ function extractTimeline(messages: UIMessage[]): {
     }
   }
 
-  // Group sub-agent tool calls under their parent task tile using the
+  // Group subagent tool calls under their parent task tile using the
   // server-emitted mapping. If the map is empty (e.g. first render before a
   // data-subagent-map part has arrived) we fall back to an order heuristic:
   // everything between a task call and the next task/format goes under it.
@@ -2150,7 +2171,7 @@ function extractTimeline(messages: UIMessage[]): {
     }
   }
 
-  // Attach the sub-agent text stream to each matching task tile so the card
+  // Attach the subagent text stream to each matching task tile so the card
   // can render it inside its own "train of thought" section.
   for (const g of grouped) {
     if (g.type === "subagent" && g.toolCallId && subagentText[g.toolCallId]) {
@@ -2270,10 +2291,10 @@ export default function PlanVisualization({
               (() => {
                 const domain = item.url ? getDomain(item.url) : null;
                 return (
-                  <div key={i} className="my-12 border border-border-faint px-14 py-10 flex items-center gap-8 text-black-alpha-40 animate-pulse">
+                  <div key={i} className="border border-border-faint px-14 py-10 flex items-center gap-8 text-black-alpha-40 animate-pulse">
                     {domain ? <Favicon domain={domain} /> : <GlobeIcon />}
                     <span className="text-label-medium flex-1">Scraping {item.url}</span>
-                    <div className="w-5 h-5 rounded-full bg-heat-100 animate-pulse flex-shrink-0" />
+                    <LoadingDots />
                   </div>
                 );
               })()
@@ -2286,33 +2307,23 @@ export default function PlanVisualization({
             ) : (() => {
               const bashInfo = describeBashAction(item.command ?? "");
               return bashInfo.isFileOp ? (
-                <div key={i} className="my-12 border border-border-faint overflow-hidden">
+                <div key={i} className="my-12 border border-border-faint overflow-hidden -mb-[1px]">
                   <div className="flex items-center gap-8 px-14 py-10">
-                    <div className="w-24 h-24 rounded-6 bg-black-alpha-4 flex-center flex-shrink-0">
-                      <svg fill="none" height="12" viewBox="0 0 24 24" width="12" className="text-black-alpha-40" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" /><path d="M14 2v6h6" />
-                      </svg>
-                    </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-label-small text-accent-black">{bashInfo.label}</div>
                       {bashInfo.detail && <div className="text-mono-x-small text-black-alpha-24 truncate">{bashInfo.detail}</div>}
                     </div>
-                    <div className="w-5 h-5 rounded-full bg-heat-100 animate-pulse flex-shrink-0" />
+                    <LoadingDots />
                   </div>
                 </div>
               ) : (
-                <div key={i} className="my-12 border border-border-faint overflow-hidden">
+                <div key={i} className="my-12 border border-border-faint overflow-hidden -mb-[1px]">
                   <div className="flex items-center gap-8 px-14 py-10">
-                    <div className="w-24 h-24 rounded-6 bg-black-alpha-4 flex-center flex-shrink-0">
-                      <svg fill="none" height="12" viewBox="0 0 24 24" width="12" className="text-black-alpha-40" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" />
-                      </svg>
-                    </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-label-small text-accent-black">{bashInfo.label}</div>
                       {bashInfo.detail && <div className="text-mono-x-small text-black-alpha-24 truncate">{bashInfo.detail}</div>}
                     </div>
-                    <div className="w-5 h-5 rounded-full bg-heat-100 animate-pulse flex-shrink-0" />
+                    <LoadingDots />
                   </div>
                 </div>
               );
@@ -2363,7 +2374,7 @@ export default function PlanVisualization({
             return (
               <div
                 key={i}
-                className="my-12 border border-border-faint overflow-hidden"
+                className="my-12 border border-border-faint overflow-hidden -mb-[1px]"
               >
                 <button
                   type="button"
@@ -2380,7 +2391,7 @@ export default function PlanVisualization({
                     )}
                   </div>
                   {isRunning ? (
-                    <div className="w-5 h-5 rounded-full bg-heat-100 animate-pulse flex-shrink-0" />
+                    <LoadingDots />
                   ) : (
                     <svg className="w-14 h-14 text-accent-forest flex-shrink-0" fill="none" viewBox="0 0 16 16">
                       <path d="M13.3 4.3L6 11.6 2.7 8.3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -2417,10 +2428,10 @@ export default function PlanVisualization({
         else if (lastRunning?.type === "scrape") { title = "Scraping"; subtitle = lastRunning.url ? (getDomain(lastRunning.url) ?? "") : ""; }
         else if (lastRunning?.type === "bash") { const b = describeBashAction(lastRunning.command ?? ""); title = b.label; subtitle = b.detail ?? ""; }
         else if (lastRunning?.type === "skill") { title = "Loading skill"; subtitle = lastRunning.skillName ?? ""; }
-        else if (lastRunning?.type === "subagent") { title = "Running sub-agent"; subtitle = lastRunning.skillName ?? ""; }
+        else if (lastRunning?.type === "subagent") { title = "Running subagent"; subtitle = lastRunning.skillName ?? ""; }
 
         return (
-          <div className="my-12 border border-border-faint overflow-hidden animate-pulse">
+          <div className="my-12 border border-border-faint overflow-hidden -mb-[1px] animate-pulse">
             <div className="flex items-center gap-8 px-14 py-10">
               <div className="flex-1 min-w-0">
                 <div className="text-label-medium text-accent-black">{title}</div>

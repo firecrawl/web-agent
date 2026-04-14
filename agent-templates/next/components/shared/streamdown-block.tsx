@@ -7,7 +7,7 @@ import { mermaid } from "@streamdown/mermaid";
 const plugins = { code, mermaid };
 const controls = {
   table: true as const,
-  code: true as const,
+  code: false,
   mermaid: false,
 };
 

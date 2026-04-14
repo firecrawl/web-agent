@@ -46,22 +46,47 @@
   }
 }
 
-/* Force light theme on all Streamdown code blocks */
+/* Force Streamdown code blocks to match JsonViewer aesthetic */
 [data-streamdown="code-block"],
 [data-streamdown="code-block"] pre {
-  --sdm-bg: hsl(var(--muted)) !important;
-  background: hsl(var(--muted)) !important;
+  --sdm-bg: transparent !important;
+  background: transparent !important;
   color: hsl(var(--foreground)) !important;
-  border-color: hsl(var(--border)) !important;
+  border: none !important;
 }
 
+[data-streamdown="code-block"] pre {
+  font-size: 13px !important;
+  line-height: 1.7 !important;
+  padding: 14px !important;
+}
+
+/* Monochrome syntax — keys grey, values dark, strings dark */
 [data-streamdown="code-block"] pre code span {
-  --sdm-c: inherit;
+  --sdm-c: inherit !important;
+  color: inherit !important;
 }
 
+/* Hide the "json" header bar */
 [data-streamdown="code-block-header"] {
-  background: hsl(var(--muted)) !important;
-  color: hsl(var(--muted-foreground)) !important;
+  display: none !important;
+}
+
+/* Hide code block action buttons (download/copy) */
+[data-streamdown="code-block-actions"] {
+  display: none !important;
+}
+
+/* Hide line numbers */
+[data-streamdown="code-block"] pre code .line::before,
+[data-streamdown="code-block"] [data-line-numbers] {
+  display: none !important;
+}
+[data-streamdown="code-block"] pre code {
+  counter-reset: none !important;
+}
+[data-streamdown="code-block"] pre code .line {
+  padding-left: 0 !important;
 }
 
 /* Hide scrollbar utility */
@@ -71,11 +96,11 @@
 
 /* Streamdown container styles */
 [data-streamdown] {
-  --sd-bg: hsl(var(--background));
+  --sd-bg: transparent;
   --sd-fg: hsl(var(--foreground));
   --sd-border: hsl(var(--border));
-  --sd-muted: hsl(var(--muted));
-  --sd-muted-fg: hsl(var(--muted-foreground));
+  --sd-muted: transparent;
+  --sd-muted-fg: hsl(var(--foreground));
 }
 
 /*
@@ -103,10 +128,16 @@
 /* Code blocks */
 [data-streamdown="code-block"] pre {
   overflow-x: auto;
+  background: transparent !important;
 }
 [data-streamdown="code-block"] pre code {
   display: block;
   min-width: max-content;
+  background: transparent !important;
+}
+[data-streamdown="code-block"] .shiki,
+[data-streamdown="code-block"] .shiki pre {
+  background: transparent !important;
 }
 [data-streamdown="code-block-header"] {
   padding: 0.25rem 0.75rem !important;
@@ -233,7 +264,6 @@
 }
 
 /* Tighter vertical rhythm — tiles and their chrome. */
-.timeline-compact .my-12 { margin-top: 4px !important; margin-bottom: 4px !important; }
 .timeline-compact .my-6  { margin-top: 3px !important; margin-bottom: 3px !important; }
 .timeline-compact .py-10 { padding-top: 6px !important; padding-bottom: 6px !important; }
 .timeline-compact .py-8  { padding-top: 5px !important; padding-bottom: 5px !important; }
@@ -248,8 +278,9 @@
    per-tile vertical margins so actions read as a tight list, not a stack
    of equally-weighted cards. Covers both direct .my-12 children and
    wrapped ones. */
-.timeline-compact .timeline-dense > .my-12,
-.timeline-compact .timeline-dense > * > .my-12 {
-  margin-top: 2px !important;
-  margin-bottom: 2px !important;
+.timeline-dense > div,
+.timeline-dense > * > div {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
 }
+

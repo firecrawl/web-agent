@@ -1,22 +1,37 @@
 .root {
-  @apply inline-flex text-center items-center leading-7;
+  display: inline-grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 2px;
 }
 
 .root span {
-  @apply bg-zinc-400 rounded-full h-2 w-2;
+  @apply bg-zinc-400 rounded-full;
+  width: 3px;
+  height: 3px;
   animation-name: blink;
   animation-duration: 1.4s;
   animation-iteration-count: infinite;
   animation-fill-mode: both;
-  margin: 0 2px;
 }
 
 .root span:nth-of-type(2) {
-  animation-delay: 0.2s;
+  animation-delay: 0.1s;
 }
 
 .root span:nth-of-type(3) {
+  animation-delay: 0.2s;
+}
+
+.root span:nth-of-type(4) {
+  animation-delay: 0.3s;
+}
+
+.root span:nth-of-type(5) {
   animation-delay: 0.4s;
+}
+
+.root span:nth-of-type(6) {
+  animation-delay: 0.5s;
 }
 
 @keyframes blink {
