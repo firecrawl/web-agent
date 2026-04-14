@@ -1,6 +1,6 @@
 # Agent Core
 
-The core agent logic. Built on [firecrawl-aisdk](https://www.npmjs.com/package/firecrawl-aisdk) and the [Vercel AI SDK](https://sdk.vercel.ai/).
+The core agent logic. Built on [firecrawl-aisdk](https://www.npmjs.com/package/firecrawl-aisdk) for web tools and [LangChain's Deep Agents](https://github.com/langchain-ai/deepagentsjs) for the agent loop.
 
 This is what all [templates](../agent-templates/) share. You can also use it directly as a library.
 
@@ -14,30 +14,34 @@ graph LR
         interact
     end
 
-    subgraph "Vercel AI SDK"
-        ToolLoopAgent
+    subgraph "LangChain"
+        DeepAgent["Deep Agent (planning + subagents + filesystem)"]
+        ChatModel["initChatModel"]
     end
 
     subgraph agent-core
         Orchestrator
         Skills
-        Agents["Sub-Agents"]
+        Agents["Subagents"]
         Output["Output (JSON, CSV, Markdown)"]
     end
 
     firecrawl-aisdk -- "web tools" --> Orchestrator
-    ToolLoopAgent -- "agent loop" --> Orchestrator
+    DeepAgent -- "agent loop" --> Orchestrator
+    ChatModel -- "any provider" --> Orchestrator
     Orchestrator --> Skills
     Orchestrator --> Agents
     Orchestrator --> Output
 ```
 
-Agent-core combines [firecrawl-aisdk](https://www.npmjs.com/package/firecrawl-aisdk) (web tools) with the [Vercel AI SDK](https://sdk.vercel.ai/) (agent loop) and adds:
+Agent-core combines [firecrawl-aisdk](https://www.npmjs.com/package/firecrawl-aisdk) (web tools) with LangChain's [`deepagents`](https://github.com/langchain-ai/deepagentsjs) (agent loop, planning, subagent dispatch, virtual filesystem) and `initChatModel` (universal provider adapter), and adds:
 
 - **Skills** - SKILL.md files that teach the agent how to navigate specific sites, what to extract, and how to paginate. Auto-matched by URL via site playbooks. See `src/skills/definitions/` for built-in examples.
-- **Sub-agents** - parallel agents spawned dynamically (`spawnAgents`) or pre-configured with their own model, instructions, and scoped tools/skills.
+- **Subagents** - parallel agents spawned dynamically (`spawnAgents`) or pre-configured with their own model, instructions, and scoped tools/skills. Built on Deep Agents' `subagents` primitive.
 - **Output** - `formatOutput` for structured JSON/CSV/markdown, `bashExec` for data processing with jq/awk/sed.
 - **Context compaction** - automatic summarization when approaching token limits.
+
+> Tools are defined once in the [Vercel AI SDK](https://sdk.vercel.ai/) `ToolSet` shape (so the same toolkit drops into either runtime) and wrapped with LangChain's `tool()` for Deep Agents.
 
 ## Quick start
 
@@ -90,15 +94,15 @@ const result = await agent.run({
   columns?: string[],                // column names for CSV
   skills?: string[],                 // skills to pre-load
   skillInstructions?: Record<string, string>,  // per-skill custom instructions
-  subAgents?: SubAgentConfig[],      // custom sub-agents for this run
+  subAgents?: SubAgentConfig[],      // custom subagents for this run
   maxSteps?: number,                 // override per-run
   exportSkill?: boolean,             // generate reusable skill from the run
 })
 ```
 
-#### Sub-agents
+#### Subagents
 
-Define specialized sub-agents with their own instructions, tools, skills, and step limits:
+Define specialized subagents with their own instructions, tools, skills, and step limits:
 
 ```typescript
 const result = await agent.run({
@@ -315,7 +319,7 @@ Set API keys via `apiKeys` option or environment variables (`GOOGLE_GENERATIVE_A
 
 All features available in the library are also available via the HTTP API:
 
-**Sub-agents via API:**
+**Subagents via API:**
 
 ```bash
 curl -X POST http://localhost:3000/v1/run \
