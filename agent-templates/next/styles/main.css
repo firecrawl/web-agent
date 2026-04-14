@@ -53,6 +53,7 @@
   background: transparent !important;
   color: hsl(var(--foreground)) !important;
   border: none !important;
+  border-radius: 0 !important;
 }
 
 [data-streamdown="code-block"] pre {
@@ -120,9 +121,13 @@
 [data-streamdown="table-cell"] {
   padding: 0.5rem 1rem !important;
 }
+/* Strip wrapper border/bg/padding — avoid double border with inner table */
 [data-streamdown="table-wrapper"] {
-  padding: 0.5rem !important;
-  gap: 0.5rem !important;
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  border-radius: 0 !important;
 }
 
 /* Code blocks */
@@ -146,10 +151,13 @@
   min-height: 0 !important;
 }
 
-/* Mermaid */
+/* Mermaid — strip wrapper border/bg */
 [data-streamdown="mermaid-block"] {
-  padding: 0.5rem !important;
-  gap: 0.5rem !important;
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  border-radius: 0 !important;
 }
 /* Hide mermaid header + actions toolbar — show only the diagram */
 [data-streamdown="mermaid-block"] > div:first-child {
