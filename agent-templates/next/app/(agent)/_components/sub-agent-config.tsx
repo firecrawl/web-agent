@@ -57,7 +57,7 @@ export default function SubAgentConfigurator({
         >
           <div className="flex items-center justify-between">
             <span className="text-label-small text-black-alpha-56">
-              Sub-agent {i + 1}
+              Subagent {i + 1}
             </span>
             <button
               type="button"
@@ -142,7 +142,7 @@ export default function SubAgentConfigurator({
         className="w-full py-8 rounded-8 border border-dashed border-black-alpha-12 text-label-small text-black-alpha-48 hover:bg-black-alpha-2 hover:border-black-alpha-20 transition-all"
         onClick={addAgent}
       >
-        + Add sub-agent
+        + Add subagent
       </button>
     </div>
   );

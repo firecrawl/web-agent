@@ -148,7 +148,7 @@ export default function AgentInput({
           />
         </Section>
 
-        <Section title="Sub-agents">
+        <Section title="Subagents">
           <SubAgentConfigurator
             agents={config.subAgents}
             onChange={(subAgents) => onConfigChange({ ...config, subAgents })}

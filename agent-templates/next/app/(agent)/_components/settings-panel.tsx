@@ -269,7 +269,7 @@ function SkillView({
       <div>
         <div className="text-label-medium text-accent-black mb-6">Custom Instructions</div>
         <p className="text-body-small text-black-alpha-32 mb-10">
-          Additional instructions injected when this skill is loaded by the orchestrator or any sub-agent.
+          Additional instructions injected when this skill is loaded by the orchestrator or any subagent.
         </p>
         <textarea
           className="w-full bg-background-base border border-black-alpha-8 rounded-12 px-16 py-12 text-body-medium placeholder:text-black-alpha-20 focus:border-heat-100 focus:outline-none resize-none min-h-[160px]"
@@ -316,7 +316,7 @@ function GeneralView({
     <div className="flex flex-col gap-28">
       <div>
         <h2 className="text-title-h5 text-accent-black mb-4">General</h2>
-        <p className="text-body-medium text-black-alpha-48">Orchestrator and sub-agent model configuration.</p>
+        <p className="text-body-medium text-black-alpha-48">Orchestrator and subagent model configuration.</p>
       </div>
 
       <div>
@@ -349,7 +349,7 @@ function GeneralView({
 
       <div>
         <div className="flex items-center gap-8 mb-10">
-          <span className="text-label-medium text-accent-black">Sub-agent Model</span>
+          <span className="text-label-medium text-accent-black">Subagent Model</span>
           {!config.subAgentModel && <span className="text-mono-x-small text-black-alpha-20">(same as orchestrator)</span>}
         </div>
         <div className="flex gap-8">
@@ -403,9 +403,9 @@ function GeneralView({
           <svg fill="none" height="12" viewBox="0 0 24 24" width="12" className={cn("transition-transform", showAdvanced && "rotate-90")} stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <path d="M9 18l6-6-6-6" />
           </svg>
-          Per-operation sub-agent model overrides
+          Per-operation subagent model overrides
         </button>
-        <p className="text-body-small text-black-alpha-24 mt-4 ml-20">Override which model sub-agents use for specific operations.</p>
+        <p className="text-body-small text-black-alpha-24 mt-4 ml-20">Override which model subagents use for specific operations.</p>
 
         {showAdvanced && (
           <div className="mt-14 flex flex-col gap-12 pl-20 border-l-2 border-border-faint">

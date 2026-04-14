@@ -278,9 +278,16 @@
    per-tile vertical margins so actions read as a tight list, not a stack
    of equally-weighted cards. Covers both direct .my-12 children and
    wrapped ones. */
-.timeline-dense > div,
-.timeline-dense > * > div {
-  margin-top: 0 !important;
-  margin-bottom: 0 !important;
+/* Subagent nested tiles: flush stacking with merged borders */
+.timeline-dense * {
+  --tw-my: 0px;
+}
+.timeline-dense .my-12 {
+  margin-top: 0px !important;
+  margin-bottom: -1px !important;
+}
+.timeline-dense .my-6 {
+  margin-top: 0px !important;
+  margin-bottom: 0px !important;
 }
 

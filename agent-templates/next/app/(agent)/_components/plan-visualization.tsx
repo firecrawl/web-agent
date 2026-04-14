@@ -667,7 +667,7 @@ function SubAgentCard({ item }: { item: TimelineItem }) {
   }, [item.subagentChildren]);
 
   return (
-    <div className="my-12 border border-border-faint overflow-hidden -mb-[1px] transition-all">
+    <div className="subagent-card my-12 border border-border-faint overflow-hidden -mb-[1px] transition-all">
       {/* Header - clickable to expand */}
       <button
         type="button"
@@ -714,7 +714,7 @@ function SubAgentCard({ item }: { item: TimelineItem }) {
 
       {/* Expanded: subagent's train of thought (live streaming) + tool calls */}
       {expanded && (item.subagentStreamText || (item.subagentChildren?.length ?? 0) > 0) && (
-        <div className="border-t border-border-faint bg-black-alpha-2 px-14 py-8">
+        <div className="subagent-expanded border-t border-border-faint bg-black-alpha-2 px-14 py-8">
           {item.subagentStreamText && (
             <>
               <div className="text-label-x-small text-black-alpha-24 mb-2">Train of thought</div>
@@ -727,7 +727,7 @@ function SubAgentCard({ item }: { item: TimelineItem }) {
           {(item.subagentChildren?.length ?? 0) > 0 && (
             <>
               <div className="text-label-x-small text-black-alpha-24 mb-2">Subagent activity</div>
-              <div className="flex flex-col timeline-dense">
+              <div className="flex flex-col timeline-dense [&_.my-12]:!my-0 [&_.my-12]:!-mb-[1px]">
                 {item.subagentChildren!.map((child, j) => (
                   <ChildTile key={j} item={child} />
                 ))}
