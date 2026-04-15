@@ -6,8 +6,14 @@
 
 Firecrawl runs a research-grade autonomous agent at [firecrawl.dev/app/agent](https://firecrawl.dev/app/agent), powered by [Spark 1](https://docs.firecrawl.dev/features/models) models optimized for structured web research. This repo gives you the open-source foundation to build your own — fork it, swap models, add skills, and deploy however you want.
 
+## Get started
+
 ```bash
+# 1. Install the Firecrawl CLI and authenticate
 npx -y firecrawl-cli@latest init -y --browser
+
+# 2. Scaffold an agent project
+firecrawl create agent -t next
 ```
 
 ## Hosted
@@ -20,10 +26,10 @@ Each layer builds on the one below it. Start at the top for a ready-to-use app, 
 
 | Layer | Description | Get started |
 |:---:|---|---|
-| [**Next.js Template**](./agent-templates/next/) | Chat UI, streaming, Skills, Subagents, structured output | `firecrawl-agent create -t next` |
-| [**Express Template**](./agent-templates/express/) | API server with Skills, Subagents, structured output | `firecrawl-agent create -t express` |
+| [**Next.js Template**](./agent-templates/next/) | Chat UI, streaming, Skills, Subagents, structured output | `firecrawl create agent -t next` |
+| [**Express Template**](./agent-templates/express/) | API server with Skills, Subagents, structured output | `firecrawl create agent -t express` |
 | ↑ | | |
-| [**Agent Core**](./agent-core/) | Orchestrator built on [Deep Agents](https://docs.langchain.com/oss/javascript/deepagents/overview) (LangChain). Skills, Subagents, structured output | `firecrawl-agent create -t library` |
+| [**Agent Core**](./agent-core/) | Orchestrator built on [Deep Agents](https://docs.langchain.com/oss/javascript/deepagents/overview) (LangChain). Skills, Subagents, structured output | `firecrawl create agent -t library` |
 | ↑ | | |
 | [**Firecrawl AI SDK**](https://npmjs.com/package/firecrawl-aisdk) | Search, Scrape, Interact as Vercel AI SDK tools | `npm i firecrawl-aisdk` |
 | ↑ | | |
