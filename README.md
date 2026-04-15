@@ -4,7 +4,7 @@
 
 <img src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExcWhub2Jmd3NvejdhaTFsb3RvZWtpb2Q3cDVpN2pzYjVqeTgxdDEwbiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/CVyWVobjHwYGJiRz6r/giphy.gif" alt="Firecrawl Agent Demo" width="100%" />
 
-Firecrawl runs a research-grade autonomous agent at [firecrawl.dev/app/agent](https://firecrawl.dev/app/agent), powered by [Spark 1](https://docs.firecrawl.dev/features/models) models optimized for structured web research. This repo is **not** that hosted agent — it's the open-source starting point for building your own. Fork it, swap models, add skills, and deploy however you want.
+Firecrawl runs a research-grade autonomous agent at [firecrawl.dev/app/agent](https://firecrawl.dev/app/agent), powered by [Spark 1](https://docs.firecrawl.dev/features/models) models optimized for structured web research. This repo gives you the open-source foundation to build your own — fork it, swap models, add skills, and deploy however you want.
 
 ```bash
 npx -y firecrawl-cli@latest init -y --browser
