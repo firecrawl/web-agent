@@ -10,6 +10,14 @@ So we're open-sourcing the entire stack. One command scaffolds an agent at whate
 
 Firecrawl's hosted [/agent](https://firecrawl.dev/app/agent) and [Spark 1](https://docs.firecrawl.dev/features/models) models are optimized for structured web research out of the box. This repo gives you full control over every layer.
 
+```bash
+npx -y firecrawl-cli@latest init -y --browser
+```
+
+```bash
+npx -y firecrawl-cli@latest init -y --browser -t next
+```
+
 ## Hosted
 
 > **[firecrawl.dev/app/agent](https://firecrawl.dev/app/agent)** - Powered by Firecrawl [Spark 1](https://docs.firecrawl.dev/features/models) models. No setup, no config, no API keys to manage. [Docs](https://docs.firecrawl.dev/features/agent)
@@ -84,7 +92,7 @@ category: E-commerce
 - Keep going until you have all the data
 ```
 
-The agent loads Skills on demand via the `load_skill` tool. You can also pass `skills: ["e-commerce"]` in the run params to pre-load specific Skills.
+The agent loads Skills on demand via the `load_skill` tool.
 
 ## How it works
 
