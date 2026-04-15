@@ -4,10 +4,45 @@ import type { FirecrawlToolsConfig, Toolkit } from "./types";
 const DEFAULT_INTERACT_TIMEOUT_MS = 60_000;
 
 /**
- * Wrap a tool's `execute` so it races against a hard timeout. On timeout we
- * abort the upstream call via an `AbortController` and resolve with a
- * structured error envelope the UI / orchestrator can surface — instead of
- * letting a stuck browser session hang the whole agent loop.
+ * Strip top-level null/undefined/empty-string fields from an interact tool
+ * result so the LLM doesn't echo them.
+ *
+ * Firecrawl's /interact endpoint always returns the full response shape
+ * — `{ output, result, stdout, stderr, exitCode, killed, … }` — populating
+ * only the fields that apply to the mode used. In `prompt` mode, `output`
+ * carries the natural-language answer and `result`/`stdout`/`stderr`/
+ * `exitCode` all come back null or "". The LLM, when it composes its
+ * reply, often echoes those null fields verbatim ("```\nnull\n```"), which
+ * the Streamdown renderer then shows to the user as a bare "null" block.
+ *
+ * Cleaning the response at the tool layer stops the problem at its source
+ * and keeps the model's context focused on the fields that carry data.
+ * Empty arrays/objects are preserved — those can be meaningful signals
+ * (e.g., `links: []` = "no links found").
+ *
+ * Exported for testing.
+ */
+export function stripInteractNulls(result: unknown): unknown {
+  if (!result || typeof result !== "object" || Array.isArray(result)) return result;
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(result as Record<string, unknown>)) {
+    if (v === null || v === undefined) continue;
+    if (typeof v === "string" && v === "") continue;
+    out[k] = v;
+  }
+  return out;
+}
+
+/**
+ * Wrap a tool's `execute` so it races against a hard timeout AND strips
+ * empty fields from the happy-path result. On timeout we abort the upstream
+ * call via an `AbortController` and resolve with a structured error envelope
+ * the UI / orchestrator can surface — instead of letting a stuck browser
+ * session hang the whole agent loop. The envelope is returned as-is (not
+ * stripped) so its signal fields (`timedOut`, `error`) survive.
+ *
+ * When `timeoutMs <= 0` the timeout is disabled but we still strip nulls,
+ * so integrators who opt out of the deadline don't regress the UI fix.
  *
  * Exported for unit testing; `buildFirecrawlToolkit` is the only production
  * caller.
@@ -17,8 +52,17 @@ export function wrapInteractWithTimeout<T extends { execute?: (...args: any[]) =
   interactTool: T | undefined,
   timeoutMs: number,
 ): T | undefined {
-  if (!interactTool?.execute || timeoutMs <= 0) return interactTool;
+  if (!interactTool?.execute) return interactTool;
   const original = (interactTool.execute as (input: unknown, opts?: unknown) => unknown).bind(interactTool);
+
+  // No timeout requested — still wrap to strip nulls, otherwise the model
+  // keeps echoing "null" code fences in prompt-mode replies.
+  if (timeoutMs <= 0) {
+    const stripOnly = async (input: unknown, opts?: unknown) =>
+      stripInteractNulls(await original(input, opts));
+    return { ...interactTool, execute: stripOnly } as T;
+  }
+
   const wrapped = (input: unknown, opts?: unknown) => {
     const controller = new AbortController();
     const optsObj = (opts ?? {}) as { abortSignal?: AbortSignal };
@@ -47,10 +91,10 @@ export function wrapInteractWithTimeout<T extends { execute?: (...args: any[]) =
     });
 
     const forwarded = { ...optsObj, abortSignal: controller.signal };
-    return Promise.race([
-      Promise.resolve(original(input, forwarded)),
-      timeoutPromise,
-    ]).finally(() => {
+    // Strip nulls on the happy path only — the timeout envelope is a
+    // structured error we want to preserve verbatim.
+    const happyPath = Promise.resolve(original(input, forwarded)).then(stripInteractNulls);
+    return Promise.race([happyPath, timeoutPromise]).finally(() => {
       if (timer) clearTimeout(timer);
     });
   };
