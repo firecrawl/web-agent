@@ -4,11 +4,7 @@
 
 <img src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExcWhub2Jmd3NvejdhaTFsb3RvZWtpb2Q3cDVpN2pzYjVqeTgxdDEwbiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/CVyWVobjHwYGJiRz6r/giphy.gif" alt="Firecrawl Agent Demo" width="100%" />
 
-When we built [Firecrawl's /agent endpoint](https://docs.firecrawl.dev/features/agent), the most common request was more control. People wanted to customize the agent, swap models, add their own skills, and build on top of the core primitives.
-
-So we're open-sourcing the entire stack. One command scaffolds an agent at whatever level of abstraction you want to work with. Everything in this repo is yours to fork, extend, and deploy however you want.
-
-Firecrawl's hosted [/agent](https://firecrawl.dev/app/agent) and [Spark 1](https://docs.firecrawl.dev/features/models) models are optimized for structured web research out of the box. This repo gives you full control over every layer.
+Firecrawl runs a research-grade autonomous agent at [firecrawl.dev/app/agent](https://firecrawl.dev/app/agent), powered by [Spark 1](https://docs.firecrawl.dev/features/models) models optimized for structured web research. This repo is **not** that hosted agent — it's the open-source starting point for building your own. Fork it, swap models, add skills, and deploy however you want.
 
 ```bash
 npx -y firecrawl-cli@latest init -y --browser
