@@ -59,12 +59,14 @@ describe("discoverSkills", () => {
 });
 
 describe("buildDomainIndex", () => {
-  it("returns empty map when no skills have playbooks", async () => {
+  it("indexes site playbooks from built-in skills", async () => {
     const skills = await discoverSkills();
     const index = buildDomainIndex(skills);
 
-    // no built-in skills currently have site playbooks
-    expect(index.size).toBe(0);
+    // financial-research ships with sec.gov and finance.yahoo.com playbooks
+    expect(index.size).toBeGreaterThan(0);
+    expect(index.has("sec.gov")).toBe(true);
+    expect(index.has("finance.yahoo.com")).toBe(true);
   });
 
   it("returns empty map for skills without playbooks", () => {

@@ -46,8 +46,17 @@ Skills are reusable SKILL.md files that teach the agent domain-specific procedur
 
 ```
 agent-core/src/skills/definitions/
+  competitor-analysis/
+    SKILL.md          # procedure: compare 2+ products on pricing, features, positioning
+  pricing-tracker/
+    SKILL.md          # procedure: extract and normalize pricing tiers
+  financial-research/
+    SKILL.md          # procedure: 10-K/10-Q + analyst consensus for public companies
+    sites/            # site playbooks auto-match URLs to the skill
+      sec-gov.md
+      yahoo-finance.md
   e-commerce/
-    SKILL.md          # procedure: how to Extract products, handle pagination
+    SKILL.md          # procedure: extract products, handle pagination
   deep-research/
     SKILL.md          # procedure: multi-source research with fact-checking
   structured-extraction/
