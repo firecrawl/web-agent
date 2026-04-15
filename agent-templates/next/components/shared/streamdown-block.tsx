@@ -3,6 +3,7 @@
 import { Streamdown } from "streamdown";
 import { code } from "@streamdown/code";
 import { mermaid } from "@streamdown/mermaid";
+import LoadingDots from "@/components/ui/LoadingDots/LoadingDots";
 
 const plugins = { code, mermaid };
 const controls = {
@@ -15,7 +16,7 @@ const controls = {
 function MermaidLoading() {
   return (
     <div className="flex items-center gap-8 px-16 py-12 text-body-small text-black-alpha-32">
-      <div className="w-10 h-10 rounded-full border-2 border-black-alpha-16 border-t-transparent animate-spin" />
+      <LoadingDots />
       Rendering diagram...
     </div>
   );
