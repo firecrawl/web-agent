@@ -115,7 +115,7 @@ const result = await agent.run({
       instructions: 'Focus exclusively on pricing data. Extract every tier, its price, and included limits. Ignore marketing copy.',
       model: { provider: 'anthropic', model: 'claude-sonnet-4-20250514' },
       tools: ['scrape'],
-      skills: ['price-tracker'],
+      skills: ['pricing-tracker'],
       maxSteps: 20,
     },
     {
@@ -174,7 +174,7 @@ const result = await agent.run({
       instructions: 'Go to SEC EDGAR directly. Extract revenue, net income, EPS, and guidance from the most recent quarterly filing.',
       model: { provider: 'anthropic', model: 'claude-sonnet-4-20250514' },
       tools: ['search', 'scrape'],
-      skills: ['financial-data'],
+      skills: ['financial-research'],
       maxSteps: 12,
     },
     {
@@ -184,7 +184,7 @@ const result = await agent.run({
       instructions: 'Check Yahoo Finance and TipRanks. Get the consensus rating, average price target, and range.',
       model: { provider: 'google', model: 'gemini-3-flash-preview' },
       tools: ['search', 'scrape'],
-      skills: ['finance'],
+      skills: ['financial-research'],
       maxSteps: 10,
     },
   ],
@@ -333,7 +333,7 @@ curl -X POST http://localhost:3000/v1/run \
         "description": "Extract Vercel pricing tiers",
         "instructions": "Go directly to vercel.com/pricing. Extract every tier with price and limits.",
         "tools": ["scrape"],
-        "skills": ["price-tracker"],
+        "skills": ["pricing-tracker"],
         "maxSteps": 12
       },
       {
@@ -342,7 +342,7 @@ curl -X POST http://localhost:3000/v1/run \
         "description": "Extract Netlify pricing tiers",
         "instructions": "Go directly to netlify.com/pricing. Extract every tier with price and limits.",
         "tools": ["scrape"],
-        "skills": ["price-tracker"],
+        "skills": ["pricing-tracker"],
         "maxSteps": 12
       }
     ],

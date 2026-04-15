@@ -14,13 +14,18 @@ export function createSkillTools(
   const domainIndex = buildDomainIndex(skills);
 
   const catalogDescription = skills.length
-    ? `Load a skill's full instructions. Available: ${skills.map((s) => `${s.name} (${s.description.slice(0, 60)})`).join("; ")}`
+    ? [
+        "Load a skill's full instructions by name. Pick the skill whose description matches the user's request — the description includes trigger phrases.",
+        "",
+        "Available skills:",
+        ...skills.map((s) => `- ${s.name}: ${s.description.trim()}`),
+      ].join("\n")
     : "Load a skill's instructions by name. No skills currently available.";
 
   // Build domain hint for the tool description
   const domainSkills = skills.filter((s) => s.sitePlaybooks?.length);
   const domainHint = domainSkills.length
-    ? ` Site-specific playbooks auto-load via lookup_site_playbook for: ${domainSkills.flatMap((s) => s.sitePlaybooks!.map((p) => p.platform)).join(", ")}.`
+    ? `\n\nSite-specific playbooks auto-load via lookup_site_playbook for: ${domainSkills.flatMap((s) => s.sitePlaybooks!.map((p) => p.platform)).join(", ")}.`
     : "";
 
   return {
