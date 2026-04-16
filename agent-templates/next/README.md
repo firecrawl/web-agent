@@ -7,7 +7,7 @@ Full-featured web app with chat UI, real-time agent visualization, and structure
 ## Install
 
 ```bash
-firecrawl-agent init my-agent -t next
+firecrawl create agent -t next
 ```
 
 Or manually:
@@ -59,7 +59,7 @@ Swap providers by uncommenting a different block (Google, OpenAI, or custom Open
 - **Chat interface** — streaming responses with real-time tool call visualization
 - **Plan visualization** — mermaid flowcharts showing the agent's research plan
 - **Parallel agent tracking** — live progress for each worker with browser view when using interact
-- **Structured output** — JSON viewer, CSV table, markdown renderer with download
+- **Structured output** — JSON viewer, markdown renderer with download
 - **Save as Skill** — generate a reusable SKILL.md from any successful conversation
 - **Model selector** — switch between providers and models from the UI (BYOK - Bring Your Own Key)
 - **Settings panel** — configure API keys, default provider, custom OpenAI-compatible endpoints
@@ -85,12 +85,14 @@ The template exposes the same API as the Express template, plus UI-specific rout
 ## Environment variables
 
 ```
-FIRECRAWL_API_KEY=fc-...            # required
-ANTHROPIC_API_KEY=...               # at least one model provider
-OPENAI_API_KEY=...
-GOOGLE_GENERATIVE_AI_API_KEY=...
-AI_GATEWAY_API_KEY=...
+FIRECRAWL_API_KEY=fc-...                # required
+GOOGLE_GENERATIVE_AI_API_KEY=AIza...     # or ANTHROPIC_API_KEY / OPENAI_API_KEY
+# AI_GATEWAY_API_KEY=...                  # optional
+# CUSTOM_OPENAI_API_KEY=...               # optional
+# CUSTOM_OPENAI_BASE_URL=...              # optional
 ```
+
+See `.env.local.example` for all options. Users can also configure keys via the Settings panel at runtime (BYOK).
 
 ## Project structure
 
@@ -117,11 +119,17 @@ app/(agent)/
 
 ## Deploy
 
+Deploy like any Next.js app:
+
 ```bash
-firecrawl-agent deploy -p vercel    # generates vercel.json
-firecrawl-agent deploy -p railway   # generates railway.toml
-firecrawl-agent deploy -p docker    # generates Dockerfile
+# Vercel
+vercel deploy
+
+# Railway, Fly, Render, self-hosted
+npm run build && npm start
 ```
+
+> **Vercel note**: `/api/v1/run` and related routes set `maxDuration = 300` (5 minutes). This requires the Pro plan — free tier caps at 10s, Hobby at 60s. For shorter deploys, reduce `maxDuration` in the route files or use a non-Vercel host.
 
 ### Vercel / `agent-core`
 
