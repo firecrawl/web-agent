@@ -1,0 +1,107 @@
+{
+  "version": 1,
+  "templates": [
+    {
+      "id": "next",
+      "name": "Next.js (Full UI)",
+      "description": "Web app with chat UI, settings, and extensible agent-core",
+      "path": "agent-templates/next",
+      "requiredEnvVars": ["FIRECRAWL_API_KEY"],
+      "optionalEnvVars": [
+        "ANTHROPIC_API_KEY",
+        "OPENAI_API_KEY",
+        "GOOGLE_GENERATIVE_AI_API_KEY",
+        "AI_GATEWAY_API_KEY"
+      ],
+      "envFile": ".env.local",
+      "devCommand": "npm run dev",
+      "deploy": ["vercel", "railway", "docker"]
+    },
+    {
+      "id": "express",
+      "name": "Express",
+      "description": "REST API server with extensible agent-core and library examples",
+      "path": "agent-templates/express",
+      "requiredEnvVars": ["FIRECRAWL_API_KEY"],
+      "optionalEnvVars": [
+        "ANTHROPIC_API_KEY",
+        "OPENAI_API_KEY",
+        "GOOGLE_GENERATIVE_AI_API_KEY",
+        "AI_GATEWAY_API_KEY"
+      ],
+      "devCommand": "npm run dev",
+      "deploy": ["railway", "docker"]
+    },
+    {
+      "id": "library",
+      "name": "Library",
+      "description": "Extensible agent-core for scripts, services, or your own app",
+      "path": "agent-templates/library",
+      "requiredEnvVars": ["FIRECRAWL_API_KEY"],
+      "optionalEnvVars": [
+        "ANTHROPIC_API_KEY",
+        "OPENAI_API_KEY",
+        "GOOGLE_GENERATIVE_AI_API_KEY",
+        "AI_GATEWAY_API_KEY"
+      ],
+      "devCommand": "npm start",
+      "deploy": []
+    }
+  ],
+  "providers": [
+    {
+      "id": "anthropic",
+      "name": "Anthropic (Claude)",
+      "envVar": "ANTHROPIC_API_KEY",
+      "hint": "https://console.anthropic.com/settings/keys",
+      "models": [
+        { "id": "claude-sonnet-4-6", "name": "Claude Sonnet 4.6" },
+        { "id": "claude-opus-4-6", "name": "Claude Opus 4.6" },
+        { "id": "claude-haiku-4-5-20251001", "name": "Claude Haiku 4.5" }
+      ]
+    },
+    {
+      "id": "openai",
+      "name": "OpenAI (GPT)",
+      "envVar": "OPENAI_API_KEY",
+      "hint": "https://platform.openai.com/api-keys",
+      "models": [
+        { "id": "gpt-5.4", "name": "GPT-5.4" },
+        { "id": "gpt-5.4-mini", "name": "GPT-5.4 mini" },
+        { "id": "gpt-5.4-nano", "name": "GPT-5.4 nano" }
+      ]
+    },
+    {
+      "id": "google",
+      "name": "Google Gemini",
+      "envVar": "GOOGLE_GENERATIVE_AI_API_KEY",
+      "hint": "https://aistudio.google.com/apikey",
+      "models": [
+        { "id": "gemini-3-flash-preview", "name": "Gemini 3 Flash" },
+        { "id": "gemini-2.5-pro-preview-05-06", "name": "Gemini 2.5 Pro" },
+        { "id": "gemini-2.5-flash-preview-05-20", "name": "Gemini 2.5 Flash" }
+      ]
+    },
+    {
+      "id": "gateway",
+      "name": "AI Gateway",
+      "envVar": "AI_GATEWAY_API_KEY",
+      "hint": "https://vercel.com/dashboard/ai-gateway",
+      "models": [
+        { "id": "openai/gpt-5.4", "name": "GPT-5.4" },
+        { "id": "anthropic/claude-sonnet-4-6", "name": "Claude Sonnet 4.6" },
+        { "id": "google/gemini-2.5-pro", "name": "Gemini 2.5 Pro" }
+      ]
+    },
+    {
+      "id": "custom-openai",
+      "name": "Custom (OpenAI-compatible)",
+      "envVar": "OPENAI_API_KEY",
+      "hint": "Your provider's API key",
+      "endpointEnvVar": "OPENAI_BASE_URL",
+      "models": [
+        { "id": "custom", "name": "Custom model" }
+      ]
+    }
+  ]
+}
