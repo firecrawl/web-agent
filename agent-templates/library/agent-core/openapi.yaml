@@ -101,7 +101,7 @@ components:
           description: If true, response is an SSE stream of AgentEvent objects.
         format:
           type: string
-          enum: [json, csv, markdown]
+          enum: [json, markdown]
           description: Desired output format. If set, agent will format data accordingly.
         schema:
           type: object
@@ -129,8 +129,8 @@ components:
         maxSteps:
           type: integer
           minimum: 1
-          maximum: 50
-          default: 15
+          maximum: 200
+          default: 50
           description: Maximum agent steps before stopping.
         skills:
           type: array
@@ -169,8 +169,11 @@ components:
           description: Formatted output (present when format was specified).
         format:
           type: string
-          enum: [json, csv, markdown, text]
+          enum: [json, markdown, text]
           description: The format of the data field.
+        durationMs:
+          type: integer
+          description: Wall-clock duration of the run in milliseconds.
         steps:
           type: array
           items:

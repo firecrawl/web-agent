@@ -23,7 +23,7 @@ graph LR
         Orchestrator
         Skills
         Agents["Subagents"]
-        Output["Output (JSON, CSV, Markdown)"]
+        Output["Output (JSON, Markdown)"]
     end
 
     firecrawl-aisdk -- "web tools" --> Orchestrator
@@ -38,7 +38,7 @@ Agent-core combines [firecrawl-aisdk](https://www.npmjs.com/package/firecrawl-ai
 
 - **Skills** - SKILL.md files that teach the agent how to navigate specific sites, what to extract, and how to paginate. Auto-matched by URL via site playbooks. See `src/skills/definitions/` for built-in examples.
 - **Subagents** - parallel agents spawned dynamically (`spawnAgents`) or pre-configured with their own model, instructions, and scoped tools/skills. Built on Deep Agents' `subagents` primitive.
-- **Output** - `formatOutput` for structured JSON/CSV/markdown, `bashExec` for data processing with jq/awk/sed.
+- **Output** - `formatOutput` for structured JSON/markdown, `bashExec` for data processing with jq/awk/sed.
 - **Context compaction** - automatic summarization when approaching token limits.
 
 > Tools are defined once in the [Vercel AI SDK](https://sdk.vercel.ai/) `ToolSet` shape (so the same toolkit drops into either runtime) and wrapped with LangChain's `tool()` for Deep Agents.
@@ -48,7 +48,7 @@ Agent-core combines [firecrawl-aisdk](https://www.npmjs.com/package/firecrawl-ai
 **Via CLI** - scaffold a project that includes agent-core:
 
 ```bash
-firecrawl-agent init my-agent -t express
+firecrawl create agent -t express
 ```
 
 **As a library** - import directly:
@@ -75,7 +75,7 @@ createAgent({
   subAgentModel?: ModelConfig,       // for parallel workers (defaults to model)
   apiKeys?: Record<string, string>,  // { google: '...', anthropic: '...', openai: '...' }
   skillsDir?: string,                // path to custom skills
-  maxSteps?: number,                 // max agent steps (default: 20)
+  maxSteps?: number,                 // max agent steps (default: 50)
   maxWorkers?: number,               // max parallel workers (default: 6)
   workerMaxSteps?: number,           // max steps per worker (default: 10)
 })
@@ -90,8 +90,7 @@ const result = await agent.run({
   prompt: string,                    // the research task (required)
   urls?: string[],                   // seed URLs
   schema?: object,                   // JSON schema for structured output
-  format?: 'json' | 'csv' | 'markdown',
-  columns?: string[],                // column names for CSV
+  format?: 'json' | 'markdown',
   skills?: string[],                 // skills to pre-load
   skillInstructions?: Record<string, string>,  // per-skill custom instructions
   subAgents?: SubAgentConfig[],      // custom subagents for this run
