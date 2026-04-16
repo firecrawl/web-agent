@@ -229,8 +229,9 @@ export class FirecrawlAgent {
             controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
           }
         } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
           controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify({ type: "error", error: String(err) })}\n\n`),
+            encoder.encode(`data: ${JSON.stringify({ type: "error", error: message })}\n\n`),
           );
         } finally {
           controller.close();
@@ -257,7 +258,8 @@ export class FirecrawlAgent {
         res.write(`data: ${JSON.stringify(event)}\n\n`);
       }
     } catch (err) {
-      res.write(`data: ${JSON.stringify({ type: "error", error: String(err) })}\n\n`);
+      const message = err instanceof Error ? err.message : String(err);
+      res.write(`data: ${JSON.stringify({ type: "error", error: message })}\n\n`);
     } finally {
       res.end();
     }
