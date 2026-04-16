@@ -18,6 +18,7 @@
 
 // --- Public types --------------------------------------------------------
 
+/** A single row in a search tool response — one matched page/image/news item. */
 export interface SearchResultRow {
   title: string;
   url: string;
@@ -38,6 +39,7 @@ export interface SearchResultRow {
   position?: number;
 }
 
+/** Parsed result from the `search` tool — the query plus matched rows. */
 export interface SearchResultPayload {
   kind: "search";
   query: string;
@@ -48,6 +50,10 @@ export interface SearchResultPayload {
   error?: string;
 }
 
+/**
+ * Parsed result from `scrape`, `interact`, or `map` — URL-shaped tools that
+ * return page content. Shared shape since they share so many fields.
+ */
 export interface ScrapeResultPayload {
   kind: "scrape" | "interact" | "map";
   url: string;
@@ -86,6 +92,7 @@ export interface ScrapeBashLoadedPage {
   sandboxPath?: string;
 }
 
+/** Parsed result from `scrapeBash` loading pages into the WASM sandbox. */
 export interface ScrapeBashLoadPayload {
   kind: "scrapeBashLoad";
   pages: ScrapeBashLoadedPage[];
@@ -94,6 +101,7 @@ export interface ScrapeBashLoadPayload {
   error?: string;
 }
 
+/** Parsed result from `bashExec` — stdout, stderr, exit code, timing. */
 export interface BashResultPayload {
   kind: "bash";
   command: string;
@@ -106,6 +114,7 @@ export interface BashResultPayload {
   error?: string;
 }
 
+/** Fallback payload for tool names this parser doesn't recognize. */
 export interface UnknownToolPayload {
   kind: "unknown";
   toolName: string;
