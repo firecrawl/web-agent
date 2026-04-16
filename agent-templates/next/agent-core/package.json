@@ -50,7 +50,13 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "example:basic": "tsx examples/1-basic.ts",
+    "example:structured": "tsx examples/2-structured-output.ts",
+    "example:parallel": "tsx examples/3-parallel-subagents.ts",
+    "example:skills": "tsx examples/4-with-skills.ts",
+    "example:stream": "tsx examples/5-streaming.ts"
   },
   "dependencies": {
     "ai": "^6.0.0",
@@ -100,6 +106,7 @@
     "@langchain/google-genai": "^2.1.26",
     "@langchain/openai": "^1.4.4",
     "tsup": "^8.0.0",
+    "tsx": "^4.19.0",
     "typescript": "^5.3.3",
     "vitest": "^4.1.3"
   },
