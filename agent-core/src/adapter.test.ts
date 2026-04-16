@@ -43,6 +43,14 @@ describe("coerceStringifiedJson", () => {
     expect(coerceStringifiedJson(arr)).toBe(arr);
   });
 
+  it("does not parse JSON primitives like numbers or booleans as strings", () => {
+    // Only [...] and {...} shapes are coerced — not "123", "true", or "null"
+    const input = { count: "123", active: "true" };
+    const result = coerceStringifiedJson(input) as Record<string, unknown>;
+    expect(result.count).toBe("123");
+    expect(result.active).toBe("true");
+  });
+
   it("handles mixed fields — only coerces stringified JSON ones", () => {
     const input = {
       url: "https://example.com",
