@@ -261,6 +261,9 @@ export class FirecrawlAgent {
   }
 
   async plan(prompt: string): Promise<string> {
+    if (!prompt?.trim()) {
+      throw new Error("prompt is required and must be a non-empty string");
+    }
     const model = await resolveModel(this.options.model, this.options.apiKeys);
     const skills = await discoverSkills(this.options.skillsDir);
     const skillList = skills.length

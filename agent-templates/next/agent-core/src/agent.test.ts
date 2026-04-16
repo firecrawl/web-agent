@@ -158,6 +158,15 @@ describe("FirecrawlAgent.plan", () => {
     });
     expect(typeof agent.plan).toBe("function");
   });
+
+  it("rejects empty prompt", async () => {
+    const agent = createAgent({
+      firecrawlApiKey: "fc-test",
+      model: { provider: "google", model: "gemini-flash" },
+    });
+    await expect(agent.plan("")).rejects.toThrow("prompt is required");
+    await expect(agent.plan("   ")).rejects.toThrow("prompt is required");
+  });
 });
 
 describe("FirecrawlAgent streaming methods", () => {
