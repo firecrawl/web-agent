@@ -6,8 +6,10 @@
     "node": ">=20"
   },
   "scripts": {
+    "predev": "node scripts/verify-agent-core.mjs",
     "dev": "next dev",
-    "build": "node scripts/verify-agent-core.mjs && next build",
+    "prebuild": "node scripts/verify-agent-core.mjs",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
