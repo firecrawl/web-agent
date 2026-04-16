@@ -10,6 +10,7 @@ export { parseSkillBody, validateSkillContent, type SkillValidationResult } from
 export { uploadSkills, type SkillUploadFile, type SkillUploadResult } from "./skills/upload";
 export { formatOutput, bashExec, initBashWithFiles, listBashFiles, readBashFile, createExportSkillTool } from "./tools";
 export { buildFirecrawlToolkit } from "./toolkit";
+export { aiToLc, aiToolkitToLc, coerceStringifiedJson, type AISDKTool } from "./adapter";
 export { loadOrchestratorPrompt } from "./orchestrator/loader";
 export { loadWorkerPrompt } from "./worker/loader";
 export { parseToolResult, normalizeToolOutput } from "./tool-results";

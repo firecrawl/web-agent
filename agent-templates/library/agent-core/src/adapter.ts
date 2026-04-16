@@ -6,7 +6,7 @@ import { z } from "zod";
  * helper that returns the object unchanged, so we only need these three
  * fields to convert to a LangChain tool.
  */
-type AISDKTool = {
+export type AISDKTool = {
   description?: string;
   inputSchema: unknown;
   execute?: (input: any, context?: unknown) => unknown | Promise<unknown>;

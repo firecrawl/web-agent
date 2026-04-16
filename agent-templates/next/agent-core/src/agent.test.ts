@@ -111,6 +111,24 @@ describe("createAgentFromEnv", () => {
   });
 });
 
+describe("FirecrawlAgent.run validation", () => {
+  it("rejects empty prompt", async () => {
+    const agent = createAgent({
+      firecrawlApiKey: "fc-test",
+      model: { provider: "google", model: "gemini-flash" },
+    });
+    await expect(agent.run({ prompt: "" })).rejects.toThrow("prompt is required");
+  });
+
+  it("rejects whitespace-only prompt", async () => {
+    const agent = createAgent({
+      firecrawlApiKey: "fc-test",
+      model: { provider: "google", model: "gemini-flash" },
+    });
+    await expect(agent.run({ prompt: "   " })).rejects.toThrow("prompt is required");
+  });
+});
+
 describe("FirecrawlAgent.plan", () => {
   it("has a plan method", () => {
     const agent = createAgent({

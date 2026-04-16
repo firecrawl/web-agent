@@ -20,7 +20,9 @@ if (!firecrawlApiKey) {
   process.exit(1);
 }
 
-const modelSpec = process.env.MODEL ?? "anthropic:claude-sonnet-4-6";
+const providerName = process.env.MODEL_PROVIDER ?? "google";
+const modelId = process.env.MODEL_ID ?? "gemini-3-flash-preview";
+const modelSpec = process.env.MODEL ?? `${providerName}:${modelId}`;
 const [provider, ...rest] = modelSpec.split(":");
 const model: ModelConfig = { provider: provider as ModelConfig["provider"], model: rest.join(":") };
 

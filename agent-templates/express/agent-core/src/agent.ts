@@ -116,18 +116,16 @@ export class FirecrawlAgent {
   }
 
   async run(params: RunParams): Promise<RunResult> {
+    if (!params.prompt?.trim()) {
+      throw new Error("prompt is required and must be a non-empty string");
+    }
     workerProgress.clear();
     const agent = await this.buildAgent(params);
     const allMsgs: any[] = [];
-
-    try {
-      const result = await agent.invoke({
-        messages: [{ role: "user", content: this.buildPrompt(params) }],
-      });
-      for (const m of result.messages ?? []) allMsgs.push(m);
-    } catch (err) {
-      throw err;
-    }
+    const result = await agent.invoke({
+      messages: [{ role: "user", content: this.buildPrompt(params) }],
+    });
+    for (const m of result.messages ?? []) allMsgs.push(m);
 
     const steps = this.mapSteps(allMsgs);
     const extracted = this.extractFormattedOutput(steps, params.format);
@@ -162,6 +160,9 @@ export class FirecrawlAgent {
   }
 
   async *stream(params: RunParams): AsyncGenerator<AgentEvent> {
+    if (!params.prompt?.trim()) {
+      throw new Error("prompt is required and must be a non-empty string");
+    }
     workerProgress.clear();
     const agent = await this.buildAgent(params);
     const allMsgs: any[] = [];
