@@ -1,4 +1,5 @@
 import { tool as lcTool } from "langchain";
+import { z } from "zod";
 
 /**
  * Minimal AI SDK tool shape. Runtime, `tool()` from "ai" is an identity
@@ -12,6 +13,41 @@ type AISDKTool = {
 };
 
 /**
+ * Auto-parse stringified JSON values in tool input.
+ *
+ * LLMs sometimes serialize complex arguments (arrays, objects) as JSON
+ * strings instead of passing them as structured values. For example,
+ * `{ formats: "[{...}]" }` instead of `{ formats: [{...}] }`.
+ * This causes Zod validation to reject the input before the handler runs.
+ *
+ * This function walks top-level fields and parses any string that looks
+ * like a JSON array or object back into the real value.
+ */
+export function coerceStringifiedJson(input: unknown): unknown {
+  if (!input || typeof input !== "object" || Array.isArray(input)) return input;
+  const record = input as Record<string, unknown>;
+  let changed = false;
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(record)) {
+    if (typeof v === "string" && v.length > 1) {
+      const trimmed = v.trim();
+      if ((trimmed[0] === "[" && trimmed[trimmed.length - 1] === "]") ||
+          (trimmed[0] === "{" && trimmed[trimmed.length - 1] === "}")) {
+        try {
+          out[k] = JSON.parse(trimmed);
+          changed = true;
+          continue;
+        } catch {
+          // Not valid JSON — keep as string
+        }
+      }
+    }
+    out[k] = v;
+  }
+  return changed ? out : input;
+}
+
+/**
  * Wrap a single AI SDK tool so it can be used by Deep Agents / LangChain.
  *
  * LangChain tool handlers return strings; structured values get JSON-stringified
@@ -22,6 +58,10 @@ export function aiToLc(name: string, t: AISDKTool) {
   if (!t.execute) {
     throw new Error(`Tool "${name}" has no execute function`);
   }
+  // Wrap the schema with z.preprocess so stringified JSON is coerced
+  // BEFORE Zod validates the input — not after.
+  const schema = z.preprocess(coerceStringifiedJson, t.inputSchema as z.ZodTypeAny);
+
   return lcTool(
     async (input: unknown) => {
       const result = await t.execute!(input as never);
@@ -30,8 +70,7 @@ export function aiToLc(name: string, t: AISDKTool) {
     {
       name,
       description: t.description ?? "",
-      // LangChain accepts any Zod schema here; inputSchema is always Zod in our toolkit
-      schema: t.inputSchema as never,
+      schema: schema as never,
     },
   );
 }

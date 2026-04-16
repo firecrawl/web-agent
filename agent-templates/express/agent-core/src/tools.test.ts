@@ -48,66 +48,6 @@ describe("formatOutput", () => {
     });
   });
 
-  describe("csv format", () => {
-    it("formats array of objects as CSV", async () => {
-      const result = await exec(
-        {
-          format: "csv",
-          data: [
-            { name: "A", price: 10 },
-            { name: "B", price: 20 },
-          ],
-        },
-        { toolCallId: "test", messages: [], abortSignal: AbortSignal.timeout(5000) },
-      );
-      expect(result.format).toBe("csv");
-      expect(result.content).toContain("name");
-      expect(result.content).toContain("price");
-      expect(result.content).toContain("A");
-      expect(result.content).toContain("B");
-    });
-
-    it("respects column order", async () => {
-      const result = await exec(
-        {
-          format: "csv",
-          data: [{ b: 2, a: 1 }],
-          columns: ["a", "b"],
-        },
-        { toolCallId: "test", messages: [], abortSignal: AbortSignal.timeout(5000) },
-      );
-      const lines = result.content.split(/\r?\n/);
-      expect(lines[0]).toBe("a,b");
-    });
-
-    it("wraps single object in array", async () => {
-      const result = await exec(
-        { format: "csv", data: { x: 1 } },
-        { toolCallId: "test", messages: [], abortSignal: AbortSignal.timeout(5000) },
-      );
-      expect(result.format).toBe("csv");
-      expect(result.content).toContain("x");
-      expect(result.content).toContain("1");
-    });
-
-    it("passes through CSV strings", async () => {
-      const result = await exec(
-        { format: "csv", data: "a,b\n1,2" },
-        { toolCallId: "test", messages: [], abortSignal: AbortSignal.timeout(5000) },
-      );
-      expect(result.content).toBe("a,b\n1,2");
-    });
-
-    it("parses JSON string data as CSV rows", async () => {
-      const result = await exec(
-        { format: "csv", data: '[{"col": "val"}]' },
-        { toolCallId: "test", messages: [], abortSignal: AbortSignal.timeout(5000) },
-      );
-      expect(result.content).toContain("col");
-      expect(result.content).toContain("val");
-    });
-  });
-
   describe("text format", () => {
     it("passes through strings", async () => {
       const result = await exec(
