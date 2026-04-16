@@ -66,6 +66,21 @@ app.get("/v1/workers/progress", (_req, res) => {
   res.json(progress);
 });
 
+app.post("/v1/plan", async (req, res) => {
+  const { prompt, model } = req.body;
+  if (!prompt) return res.status(400).json({ error: "prompt is required" });
+
+  try {
+    const modelConfig = parseModel(model);
+    const agent = await createAgentFromEnv(modelConfig ? { model: modelConfig } : undefined);
+    const plan = await agent.plan(prompt);
+    res.json({ plan });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: message });
+  }
+});
+
 app.post("/v1/run", async (req, res) => {
   const { prompt, stream, model, ...rest } = req.body;
   if (!prompt) return res.status(400).json({ error: "prompt is required" });

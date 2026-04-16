@@ -5,6 +5,7 @@ export default defineConfig({
   entry: ["src/**/*.ts", "!src/**/*.test.ts"],
   format: ["esm"],
   dts: true,
+  sourcemap: true,
   splitting: false,
   clean: true,
   bundle: false,
