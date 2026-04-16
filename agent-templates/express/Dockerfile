@@ -19,4 +19,10 @@ RUN addgroup -g 1001 -S app && adduser -S app -u 1001 && chown -R app:app /app
 USER app
 
 EXPOSE 3000
+
+# Healthcheck hits GET / (returns status/model/keys/routes as JSON).
+# k8s / Docker uses this to know when the container is ready and alive.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD node -e "fetch('http://localhost:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+
 CMD ["node", "--import", "tsx/esm", "server.ts"]
