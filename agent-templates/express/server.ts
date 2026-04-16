@@ -58,6 +58,9 @@ function defaultModel(): string {
   return `${provider}:${modelId}`;
 }
 
+// Silence favicon requests — browsers hit /favicon.ico on every visit
+app.get("/favicon.ico", (_req, res) => res.sendStatus(204));
+
 app.get("/", (_req, res) => {
   res.json({
     status: "ok",
@@ -129,6 +132,16 @@ app.use((req, res) => {
 });
 
 const port = Number(process.env.PORT) || 3000;
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`\n  firecrawl-agent  http://localhost:${port}  ${defaultModel()}  keys: ${configuredKeys().join(", ")}\n`);
 });
+
+// Graceful shutdown — stop accepting new requests, let in-flight ones finish.
+// Required for clean deploys on Docker, k8s, Railway, Fly, etc.
+for (const sig of ["SIGTERM", "SIGINT"] as const) {
+  process.on(sig, () => {
+    console.log(`\n  ${sig} received, shutting down...`);
+    server.close(() => process.exit(0));
+    setTimeout(() => process.exit(1), 10_000).unref();
+  });
+}
