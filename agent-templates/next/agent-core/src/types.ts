@@ -205,5 +205,7 @@ export interface RunResult {
   format?: string;
   steps: StepDetail[];
   usage: { inputTokens: number; outputTokens: number; totalTokens: number };
+  /** Wall-clock duration of the run in milliseconds */
+  durationMs?: number;
   exportedSkill?: ExportedSkill;
 }

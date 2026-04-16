@@ -120,6 +120,7 @@ export class FirecrawlAgent {
       throw new Error("prompt is required and must be a non-empty string");
     }
     workerProgress.clear();
+    const startTime = Date.now();
     const agent = await this.buildAgent(params);
     const allMsgs: any[] = [];
     const result = await agent.invoke({
@@ -142,6 +143,7 @@ export class FirecrawlAgent {
         outputTokens: modelUsage.outputTokens + workerUsage.outputTokens,
         totalTokens: modelUsage.totalTokens + workerUsage.totalTokens,
       },
+      durationMs: Date.now() - startTime,
     };
 
     if (params.onStep) {

@@ -13,12 +13,9 @@ interface StreamableAgent {
   ): Promise<AsyncIterable<any>>;
 }
 
-export type AgentEvent =
-  | { type: "text"; content: string }
-  | { type: "tool-call"; toolName: string; input: unknown }
-  | { type: "tool-result"; toolName: string; output: unknown }
-  | { type: "done" }
-  | { type: "error"; error: string };
+import type { AgentEvent } from "./types";
+// Re-export the canonical AgentEvent from types.ts for backwards compat
+export type { AgentEvent };
 
 /**
  * Stream a Deep Agent run as a normalized event async-generator.
