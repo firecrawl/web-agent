@@ -11,7 +11,9 @@
         "ANTHROPIC_API_KEY",
         "OPENAI_API_KEY",
         "GOOGLE_GENERATIVE_AI_API_KEY",
-        "AI_GATEWAY_API_KEY"
+        "AI_GATEWAY_API_KEY",
+        "CUSTOM_OPENAI_API_KEY",
+        "CUSTOM_OPENAI_BASE_URL"
       ],
       "envFile": ".env.local",
       "devCommand": "npm run dev",
@@ -27,8 +29,11 @@
         "ANTHROPIC_API_KEY",
         "OPENAI_API_KEY",
         "GOOGLE_GENERATIVE_AI_API_KEY",
-        "AI_GATEWAY_API_KEY"
+        "AI_GATEWAY_API_KEY",
+        "CUSTOM_OPENAI_API_KEY",
+        "CUSTOM_OPENAI_BASE_URL"
       ],
+      "envFile": ".env",
       "devCommand": "npm run dev",
       "deploy": ["railway", "docker"]
     },
@@ -42,8 +47,11 @@
         "ANTHROPIC_API_KEY",
         "OPENAI_API_KEY",
         "GOOGLE_GENERATIVE_AI_API_KEY",
-        "AI_GATEWAY_API_KEY"
+        "AI_GATEWAY_API_KEY",
+        "CUSTOM_OPENAI_API_KEY",
+        "CUSTOM_OPENAI_BASE_URL"
       ],
+      "envFile": ".env",
       "devCommand": "npm start",
       "deploy": []
     }
