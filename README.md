@@ -1,6 +1,5 @@
 # Firecrawl Agent
 
-[![CI](https://github.com/firecrawl/firecrawl-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/firecrawl/firecrawl-agent/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
 <img src=".internal/agent.jpg" alt="Firecrawl Agent" />
