@@ -40,6 +40,19 @@ const keys = Object.entries(keyLabels)
 
 console.log(`\n  firecrawl-agent  ${modelSpec}  keys: ${keys.join(", ")}\n`);
 
+// Warn if the selected provider's API key is missing
+const providerKeyEnv: Record<string, string> = {
+  anthropic: "ANTHROPIC_API_KEY",
+  openai: "OPENAI_API_KEY",
+  google: "GOOGLE_GENERATIVE_AI_API_KEY",
+  gateway: "AI_GATEWAY_API_KEY",
+  "custom-openai": "CUSTOM_OPENAI_API_KEY",
+};
+const requiredKey = providerKeyEnv[model.provider];
+if (requiredKey && !process.env[requiredKey]) {
+  console.warn(`  ⚠  ${requiredKey} is not set (required for provider "${model.provider}"). Run \`npm run doctor\` for details.\n`);
+}
+
 const agent = createAgent({ firecrawlApiKey, model });
 
 // Prompt from CLI arg, piped stdin, or the default

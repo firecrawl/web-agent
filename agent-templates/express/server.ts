@@ -168,9 +168,29 @@ app.use((err: unknown, _req: express.Request, res: express.Response, _next: expr
   res.status(status).json({ error: message });
 });
 
+function startupWarnings(): void {
+  if (!process.env.FIRECRAWL_API_KEY) {
+    console.warn("  ⚠  FIRECRAWL_API_KEY is not set — requests will fail.\n");
+    return;
+  }
+  const providerKeyEnv: Record<string, string> = {
+    anthropic: "ANTHROPIC_API_KEY",
+    openai: "OPENAI_API_KEY",
+    google: "GOOGLE_GENERATIVE_AI_API_KEY",
+    gateway: "AI_GATEWAY_API_KEY",
+    "custom-openai": "CUSTOM_OPENAI_API_KEY",
+  };
+  const provider = defaultModel().split(":")[0];
+  const required = providerKeyEnv[provider];
+  if (required && !process.env[required]) {
+    console.warn(`  ⚠  ${required} is not set (required for provider "${provider}"). Run \`npm run doctor\` for details.\n`);
+  }
+}
+
 const port = Number(process.env.PORT) || 3000;
 const server = app.listen(port, () => {
   console.log(`\n  firecrawl-agent  http://localhost:${port}  ${defaultModel()}  keys: ${configuredKeys().join(", ")}\n`);
+  startupWarnings();
 });
 
 // Graceful shutdown — stop accepting new requests, let in-flight ones finish.
