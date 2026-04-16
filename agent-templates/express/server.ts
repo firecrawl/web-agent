@@ -1,6 +1,6 @@
 import "dotenv/config";
 import express from "express";
-import { createAgentFromEnv } from "./agent-core/src";
+import { createAgentFromEnv, discoverSkills, workerProgress } from "./agent-core/src";
 import type { ModelConfig } from "./agent-core/src";
 
 const app = express();
@@ -51,6 +51,19 @@ app.get("/", (_req, res) => {
     model: defaultModel(),
     keys: configuredKeys(),
   });
+});
+
+app.get("/v1/skills", async (_req, res) => {
+  const skills = await discoverSkills();
+  res.json(skills.map((s) => ({ name: s.name, description: s.description, category: s.category })));
+});
+
+app.get("/v1/workers/progress", (_req, res) => {
+  const progress: Record<string, unknown> = {};
+  for (const [id, wp] of workerProgress.entries()) {
+    progress[id] = wp;
+  }
+  res.json(progress);
 });
 
 app.post("/v1/run", async (req, res) => {

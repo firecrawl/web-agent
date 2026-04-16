@@ -45,3 +45,6 @@ console.log(`→ ${prompt}\n`);
 
 const result = await agent.run({ prompt });
 console.log(result.text);
+if (result.durationMs) {
+  console.log(`\n  ${(result.durationMs / 1000).toFixed(1)}s · ${result.usage.totalTokens.toLocaleString()} tokens`);
+}
