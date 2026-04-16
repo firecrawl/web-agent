@@ -25,23 +25,31 @@ function parseModel(m: unknown): ModelConfig | undefined {
   return undefined;
 }
 
-app.get("/", (_req, res) => {
-  const provider = process.env.MODEL_PROVIDER ?? "google";
-  const modelId = process.env.MODEL_ID ?? "gemini-3-flash-preview";
-  const keyLabels: Record<string, string> = {
-    FIRECRAWL_API_KEY: "firecrawl",
-    ANTHROPIC_API_KEY: "anthropic",
-    OPENAI_API_KEY: "openai",
-    GOOGLE_GENERATIVE_AI_API_KEY: "google",
-  };
-  const configuredKeys = Object.entries(keyLabels)
+const KEY_LABELS: Record<string, string> = {
+  FIRECRAWL_API_KEY: "firecrawl",
+  ANTHROPIC_API_KEY: "anthropic",
+  OPENAI_API_KEY: "openai",
+  GOOGLE_GENERATIVE_AI_API_KEY: "google",
+};
+
+function configuredKeys(): string[] {
+  return Object.entries(KEY_LABELS)
     .filter(([k]) => process.env[k])
     .map(([, label]) => label);
+}
+
+function defaultModel(): string {
+  const provider = process.env.MODEL_PROVIDER ?? "google";
+  const modelId = process.env.MODEL_ID ?? "gemini-3-flash-preview";
+  return `${provider}:${modelId}`;
+}
+
+app.get("/", (_req, res) => {
   res.json({
     status: "ok",
     version: "0.1.0",
-    model: `${provider}:${modelId}`,
-    keys: configuredKeys,
+    model: defaultModel(),
+    keys: configuredKeys(),
   });
 });
 
@@ -58,13 +66,7 @@ app.post("/v1/run", async (req, res) => {
       await agent.sse(params, res);
     } else {
       const result = await agent.run(params);
-      res.json({
-        text: result.text,
-        data: result.data,
-        format: result.format,
-        steps: result.steps,
-        usage: result.usage,
-      });
+      res.json(result);
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -74,17 +76,5 @@ app.post("/v1/run", async (req, res) => {
 
 const port = Number(process.env.PORT) || 3000;
 app.listen(port, () => {
-  const provider = process.env.MODEL_PROVIDER ?? "google";
-  const modelId = process.env.MODEL_ID ?? "gemini-3-flash-preview";
-  const model = `${provider}:${modelId}`;
-  const keyLabels: Record<string, string> = {
-    FIRECRAWL_API_KEY: "firecrawl",
-    ANTHROPIC_API_KEY: "anthropic",
-    OPENAI_API_KEY: "openai",
-    GOOGLE_GENERATIVE_AI_API_KEY: "google",
-  };
-  const keys = Object.entries(keyLabels)
-    .filter(([k]) => process.env[k])
-    .map(([, label]) => label);
-  console.log(`\n  firecrawl-agent  http://localhost:${port}  ${model}  keys: ${keys.join(", ")}\n`);
+  console.log(`\n  firecrawl-agent  http://localhost:${port}  ${defaultModel()}  keys: ${configuredKeys().join(", ")}\n`);
 });
