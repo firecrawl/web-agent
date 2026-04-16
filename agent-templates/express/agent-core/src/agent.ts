@@ -530,7 +530,16 @@ export function createAgentFromEnv(overrides?: Partial<CreateAgentOptions>): Fir
     apiKeys["custom-openai:baseURL"] = process.env.CUSTOM_OPENAI_BASE_URL;
   }
 
-  const provider = (overrides?.model?.provider ?? process.env.MODEL_PROVIDER ?? "google") as ModelConfig["provider"];
+  // Support both MODEL="provider:id" shorthand and the split
+  // MODEL_PROVIDER + MODEL_ID env vars. Overrides always win.
+  let envProvider: string | undefined;
+  let envModelId: string | undefined;
+  if (process.env.MODEL) {
+    const [p, ...rest] = process.env.MODEL.split(":");
+    envProvider = p;
+    envModelId = rest.join(":");
+  }
+  const provider = (overrides?.model?.provider ?? process.env.MODEL_PROVIDER ?? envProvider ?? "google") as ModelConfig["provider"];
 
   // Early check: warn if the selected provider has no API key configured
   const providerKeyMap: Record<string, string> = {
@@ -552,7 +561,7 @@ export function createAgentFromEnv(overrides?: Partial<CreateAgentOptions>): Fir
     firecrawlApiKey,
     model: {
       provider,
-      model: overrides?.model?.model ?? process.env.MODEL_ID ?? "gemini-3-flash-preview",
+      model: overrides?.model?.model ?? process.env.MODEL_ID ?? envModelId ?? "gemini-3-flash-preview",
     },
     apiKeys,
     ...overrides,

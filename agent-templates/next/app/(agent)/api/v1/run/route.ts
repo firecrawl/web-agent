@@ -4,6 +4,8 @@ import { config as globalConfig, getTaskModel } from "@agent/_config";
 import type { RunParams, ModelConfig } from "@/agent-core";
 import { loadAppSections } from "@/prompts/loader";
 
+// Vercel: requires Pro plan. Free tier caps at 10s, Hobby at 60s.
+// Other platforms (Railway, Fly, self-hosted) ignore this export.
 export const maxDuration = 300;
 
 const DEFAULT_MAX_STEPS = 50;

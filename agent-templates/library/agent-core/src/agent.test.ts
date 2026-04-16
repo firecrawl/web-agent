@@ -90,6 +90,17 @@ describe("createAgentFromEnv", () => {
     expect(agent).toBeInstanceOf(FirecrawlAgent);
   });
 
+  it("supports MODEL=provider:id shorthand", () => {
+    vi.stubEnv("FIRECRAWL_API_KEY", "fc-test");
+    vi.stubEnv("MODEL", "anthropic:claude-sonnet-4-6");
+    vi.stubEnv("ANTHROPIC_API_KEY", "sk-ant");
+    delete process.env.MODEL_PROVIDER;
+    delete process.env.MODEL_ID;
+
+    const agent = createAgentFromEnv();
+    expect(agent).toBeInstanceOf(FirecrawlAgent);
+  });
+
   it("throws when provider API key is missing", () => {
     vi.stubEnv("FIRECRAWL_API_KEY", "fc-test");
     vi.stubEnv("MODEL_PROVIDER", "anthropic");

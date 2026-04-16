@@ -39,6 +39,9 @@ function configuredKeys(): string[] {
 }
 
 function defaultModel(): string {
+  // MODEL="provider:id" shorthand takes precedence, falling back to the
+  // split MODEL_PROVIDER + MODEL_ID pair, then to google:gemini-3-flash-preview
+  if (process.env.MODEL) return process.env.MODEL;
   const provider = process.env.MODEL_PROVIDER ?? "google";
   const modelId = process.env.MODEL_ID ?? "gemini-3-flash-preview";
   return `${provider}:${modelId}`;
