@@ -48,7 +48,7 @@ Each layer builds on the one below it. Start at the top for a ready-to-use app, 
 
 ## How it works
 
-The agent combines web tools with an AI model in a loop — it plans, acts, observes, and repeats until the task is done. The harness is [Deep Agents](https://docs.langchain.com/oss/javascript/deepagents/overview) (from LangChain), which gives us the plan-act loop, parallel `task` sub-agent spawning, and on-demand SKILL.md loading out of the box. Our `agent-core` wires Firecrawl's tools into that runtime and layers on structured output, scrapeBash sandboxing, and a thin streaming shim for UIs.
+The agent combines web tools with an AI model in a loop — it plans, acts, observes, and repeats until the task is done. The harness is [Deep Agents](https://docs.langchain.com/oss/javascript/deepagents/overview) (from LangChain), which gives us the plan-act loop, parallel `task` sub-agent spawning, and on-demand SKILL.md loading out of the box. Our `agent-core` wires Firecrawl's tools into that runtime and layers on structured output and a streaming UIs.
 
 - **Harness** — [Deep Agents](https://docs.langchain.com/oss/javascript/deepagents/overview). Provides the agent loop, sub-agent spawning, skills loading, and context management.
 - **Tools** — Search, Scrape, Interact (browser automation), bash. Powered by [firecrawl-aisdk](https://www.npmjs.com/package/firecrawl-aisdk).
