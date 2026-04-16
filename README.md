@@ -18,10 +18,6 @@ npx -y firecrawl-cli@latest init -y --browser
 firecrawl create agent -t next
 ```
 
-## Hosted
-
-> **[firecrawl.dev/app/agent](https://firecrawl.dev/app/agent)** - Powered by Firecrawl [Spark 1](https://docs.firecrawl.dev/features/models) models. No setup, no config, no API keys to manage. [Docs](https://docs.firecrawl.dev/features/agent)
-
 ## Open Source
 
 Each layer builds on the one below it. Start at the top for a ready-to-use app, or go lower in the stack for finer control over the primitives.
@@ -56,7 +52,7 @@ The agent combines web tools with an AI model in a loop — it plans, acts, obse
 - **Tools** — Search, Scrape, Interact (browser automation), bash. Powered by [firecrawl-aisdk](https://www.npmjs.com/package/firecrawl-aisdk).
 - **Skills** — reusable SKILL.md playbooks. Auto-discovered from `agent-core/src/skills/definitions/`, loaded on demand via Deep Agents' skills middleware.
 - **Subagents** — parallel workers for independent tasks, spawned via Deep Agents' `task` tool. Each has its own tool set and session state (e.g. an isolated interact browser session).
-- **Output** — structured results via `formatOutput` (JSON) and data processing via `bashExec`.
+- **Output** — structured results via `formatOutput` (JSON) and data processing via `bashExec`, a set of bash tools powered by [just-bash](https://github.com/vercel-labs/just-bash).
 
 ## Project structure
 
