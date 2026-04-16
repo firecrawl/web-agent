@@ -1,8 +1,15 @@
 import type { ToolSet } from "ai";
 
+/**
+ * A user-uploaded file made available to the agent via the bash sandbox.
+ * Written to /data/<name> before the run starts.
+ */
 export interface UploadedFile {
+  /** Filename including extension (e.g. "products.csv") */
   name: string;
+  /** MIME type — informational, not used for content handling */
   type: string;
+  /** File contents as a string (binary files should be base64-encoded) */
   content: string;
 }
 
@@ -280,22 +287,36 @@ export interface StepDetail {
   toolResults: { name: string; output: unknown }[];
 }
 
+/**
+ * A reusable skill package generated from a successful run.
+ * Present on RunResult when the run was called with exportSkill=true.
+ */
 export interface ExportedSkill {
+  /** Slug identifier (kebab-case) */
   name: string;
+  /** Full SKILL.md source with frontmatter */
   skillMd: string;
+  /** Deterministic workflow.mjs script that replays the run's steps */
   workflow: string;
+  /** JSON schema for the expected output shape */
   schema: string;
 }
 
 export interface RunResult {
+  /** The agent's final text response (or formatted data for json/markdown format) */
   text: string;
+  /** Formatted output when format was set — same value as text for convenience */
   data?: string;
+  /** Which format was used for the output ("json" | "markdown" | "text") */
   format?: string;
+  /** Step-by-step record of what the agent did */
   steps: StepDetail[];
+  /** Total token usage across the orchestrator + all sub-agents */
   usage: { inputTokens: number; outputTokens: number; totalTokens: number };
   /** Wall-clock duration of the run in milliseconds */
   durationMs?: number;
   /** Model that produced this response, as "provider:id" */
   model?: string;
+  /** Reusable skill package (present when exportSkill=true) */
   exportedSkill?: ExportedSkill;
 }
