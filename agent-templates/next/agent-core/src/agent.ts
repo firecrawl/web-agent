@@ -144,6 +144,7 @@ export class FirecrawlAgent {
         totalTokens: modelUsage.totalTokens + workerUsage.totalTokens,
       },
       durationMs: Date.now() - startTime,
+      model: `${this.options.model.provider}:${this.options.model.model}`,
     };
 
     if (params.onStep) {

@@ -207,5 +207,7 @@ export interface RunResult {
   usage: { inputTokens: number; outputTokens: number; totalTokens: number };
   /** Wall-clock duration of the run in milliseconds */
   durationMs?: number;
+  /** Model that produced this response, as "provider:id" */
+  model?: string;
   exportedSkill?: ExportedSkill;
 }

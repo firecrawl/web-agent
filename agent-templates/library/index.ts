@@ -6,8 +6,10 @@ import "dotenv/config";
  * This is your entry point. agent-core/ is a folder in your project —
  * read it, modify it, extend it.
  *
- *   npm start               run this file
- *   npm run example:basic   run any example from examples/
+ *   npm start                          run with the default prompt
+ *   npm start "your prompt here"        run with a CLI arg prompt
+ *   echo "your prompt" | npm start      run with a stdin prompt
+ *   npm run example:basic               run any example from examples/
  */
 import { createAgent } from "./agent-core/src";
 import type { ModelConfig } from "./agent-core/src";
@@ -40,7 +42,14 @@ console.log(`\n  firecrawl-agent  ${modelSpec}  keys: ${keys.join(", ")}\n`);
 
 const agent = createAgent({ firecrawlApiKey, model });
 
-const prompt = process.argv[2] ?? "What are the top 3 stories on Hacker News right now?";
+// Prompt from CLI arg, piped stdin, or the default
+let prompt = process.argv[2];
+if (!prompt && !process.stdin.isTTY) {
+  const chunks: Buffer[] = [];
+  for await (const chunk of process.stdin) chunks.push(chunk as Buffer);
+  prompt = Buffer.concat(chunks).toString("utf-8").trim();
+}
+prompt = prompt || "What are the top 3 stories on Hacker News right now?";
 console.log(`→ ${prompt}\n`);
 
 const result = await agent.run({ prompt });
