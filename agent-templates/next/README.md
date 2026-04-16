@@ -71,16 +71,16 @@ The template exposes the same API as the Express template, plus UI-specific rout
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/agent` | POST | Main agent endpoint (AI SDK streaming) |
-| `/api/v1/run` | POST | REST API - same as Express template |
-| `/api/query` | POST | Simple text query, returns text |
-| `/api/extract` | POST | Extract structured data with a schema |
+| `/api/agent` | POST | Main agent endpoint (AI SDK streaming, used by chat UI) |
+| `/api/v1/run` | POST | REST API — same shape as Express template |
 | `/api/plan` | POST | Generate an execution plan without running |
 | `/api/skills` | GET | List available skills |
 | `/api/skills/generate` | POST | Generate SKILL.md from conversation (streamed) |
 | `/api/config` | GET | Current model and provider config |
 | `/api/files` | GET | List files in the bash sandbox |
 | `/api/workers/progress` | GET | Live progress for parallel workers |
+| `/api/query` | POST | _(deprecated — use `/api/v1/run`)_ |
+| `/api/extract` | POST | _(deprecated — use `/api/v1/run` with format/schema)_ |
 
 ## Environment variables
 

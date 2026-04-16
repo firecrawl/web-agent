@@ -12,6 +12,10 @@ const MAX_STEPS_LIMIT = 200;
 /**
  * POST /api/query
  *
+ * @deprecated Use POST /api/v1/run instead — it accepts the same body
+ * plus schema/format/subAgents/skills, and is documented in openapi.yaml.
+ * This route is kept for backwards compatibility with early clients.
+ *
  * Simple API endpoint for programmatic use.
  *
  * Request body:

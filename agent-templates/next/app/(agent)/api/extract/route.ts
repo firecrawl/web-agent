@@ -12,6 +12,10 @@ const MAX_STEPS_LIMIT = 200;
 /**
  * POST /api/extract
  *
+ * @deprecated Use POST /api/v1/run with format/schema instead.
+ * The v1/run endpoint accepts the same fields and is documented in
+ * openapi.yaml. This route is kept for backwards compatibility.
+ *
  * Extract data from the web and return it in a specific format.
  *
  * Request:
