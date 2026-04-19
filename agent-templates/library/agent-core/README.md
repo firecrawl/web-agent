@@ -38,7 +38,7 @@ Agent-core combines [firecrawl-aisdk](https://www.npmjs.com/package/firecrawl-ai
 
 - **Skills** - SKILL.md files that teach the agent how to navigate specific sites, what to extract, and how to paginate. Auto-matched by URL via site playbooks. See `src/skills/definitions/` for built-in examples.
 - **Subagents** - parallel agents spawned dynamically (`spawnAgents`) or pre-configured with their own model, instructions, and scoped tools/skills. Built on Deep Agents' `subagents` primitive.
-- **Output** - `formatOutput` for structured JSON/markdown, `bashExec` for data processing with jq/awk/sed.
+- **Output** - `formatOutput` for structured JSON/markdown, `bashExec` — a set of bash tools powered by [just-bash](https://github.com/vercel-labs/just-bash) (jq, awk, sed, grep, and friends).
 - **Context compaction** - automatic summarization when approaching token limits.
 
 > Tools are defined once in the [Vercel AI SDK](https://sdk.vercel.ai/) `ToolSet` shape (so the same toolkit drops into either runtime) and wrapped with LangChain's `tool()` for Deep Agents.

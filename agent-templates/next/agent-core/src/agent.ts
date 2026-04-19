@@ -6,6 +6,12 @@ import { resolveModel } from "./resolve-model";
 import { discoverSkills, getDefaultSkillsDir } from "./skills/discovery";
 import { buildFirecrawlToolkit } from "./toolkit";
 import { formatOutput, bashExec, createExportSkillTool, initBashWithFiles } from "./tools";
+import {
+  coerceToJson,
+  extractFieldPaths,
+  validateAgainstSchema,
+  type SchemaMismatch,
+} from "./schema-validate";
 import { workerProgress } from "./worker";
 import type {
   CreateAgentOptions,
@@ -59,9 +65,19 @@ function resultHasData(result: unknown): boolean {
   return true;
 }
 
+type RunState = {
+  dataCollected?: boolean;
+  /** JSON schema the final output must match; set when RunParams.schema is provided */
+  schema?: Record<string, unknown>;
+  /** Monotonic counter used to bound repair loops for a misaligned formatOutput call */
+  schemaRepairAttempts?: number;
+};
+
+const MAX_SCHEMA_REPAIRS = 3;
+
 function aiToolToLc(name: string, t: any) {
   return lcTool(
-    async (input: unknown, config?: { configurable?: { runState?: { dataCollected?: boolean } } }) => {
+    async (input: unknown, config?: { configurable?: { runState?: RunState } }) => {
       const runState = config?.configurable?.runState;
 
       if (name === "formatOutput" && runState && !runState.dataCollected) {
@@ -72,6 +88,33 @@ function aiToolToLc(name: string, t: any) {
             "and receive a non-empty result before calling formatOutput. " +
             "Gather the data first, then call formatOutput with the results.",
         });
+      }
+
+      // Schema-adherence gate. When the caller pinned a schema and asked for
+      // JSON, every formatOutput call must pass validation before the tool
+      // is allowed to complete. Bounded by MAX_SCHEMA_REPAIRS so a degenerate
+      // source can't trap the loop.
+      if (
+        name === "formatOutput" &&
+        runState?.schema &&
+        (input as { format?: string })?.format === "json"
+      ) {
+        const attempts = runState.schemaRepairAttempts ?? 0;
+        if (attempts < MAX_SCHEMA_REPAIRS) {
+          const parsed = coerceToJson((input as { data?: unknown }).data);
+          const result = validateAgainstSchema(runState.schema, parsed);
+          if (!result.ok) {
+            runState.schemaRepairAttempts = attempts + 1;
+            return JSON.stringify({
+              error: "schema_mismatch",
+              missing: result.missing,
+              extra: result.extra,
+              message:
+                "Output does not match the required schema. Fill in the missing fields by gathering more data, and remove any extra keys that aren't in the schema. Then call formatOutput again.",
+              attemptsRemaining: MAX_SCHEMA_REPAIRS - (attempts + 1),
+            });
+          }
+        }
       }
 
       const result = await t.execute!(input as never);
@@ -134,14 +177,18 @@ export class FirecrawlAgent {
     workerProgress.clear();
     const startTime = Date.now();
     const agent = await this.buildAgent(params);
+    const runState: RunState = { dataCollected: false };
+    if (params.schema) runState.schema = params.schema;
     const allMsgs: any[] = [];
-    const result = await agent.invoke({
-      messages: [{ role: "user", content: this.buildPrompt(params) }],
-    });
+    const result = await agent.invoke(
+      { messages: [{ role: "user", content: this.buildPrompt(params) }] },
+      { configurable: { runState } },
+    );
     for (const m of result.messages ?? []) allMsgs.push(m);
 
     const steps = this.mapSteps(allMsgs);
     const extracted = this.extractFormattedOutput(steps, params.format);
+    const schemaMismatch = this.validateSchemaMismatch(extracted, params.schema);
     const workerUsage = this.sumWorkerUsage();
     const modelUsage = this.sumModelUsage(allMsgs);
 
@@ -170,6 +217,7 @@ export class FirecrawlAgent {
 
     const exported = this.extractExportedSkill(steps);
     if (exported) runResult.exportedSkill = exported;
+    if (schemaMismatch) runResult.schemaMismatch = schemaMismatch;
 
     return runResult;
   }
@@ -181,12 +229,14 @@ export class FirecrawlAgent {
     workerProgress.clear();
     const startTime = Date.now();
     const agent = await this.buildAgent(params);
+    const runState: RunState = { dataCollected: false };
+    if (params.schema) runState.schema = params.schema;
     const allMsgs: any[] = [];
 
     try {
       for await (const [mode, chunk] of await agent.stream(
         { messages: [{ role: "user", content: this.buildPrompt(params) }] },
-        { streamMode: ["messages", "updates"] },
+        { streamMode: ["messages", "updates"], configurable: { runState } },
       )) {
         if (mode === "messages") {
           const [msg] = chunk as unknown as [any, unknown];
@@ -214,6 +264,7 @@ export class FirecrawlAgent {
 
     const steps = this.mapSteps(allMsgs);
     const extracted = this.extractFormattedOutput(steps, params.format);
+    const schemaMismatch = this.validateSchemaMismatch(extracted, params.schema);
     const workerUsage = this.sumWorkerUsage();
     const modelUsage = this.sumModelUsage(allMsgs);
 
@@ -228,6 +279,7 @@ export class FirecrawlAgent {
       },
       durationMs: Date.now() - startTime,
       model: `${this.options.model.provider}:${this.options.model.model}`,
+      schemaMismatch,
     };
   }
 
@@ -277,7 +329,10 @@ export class FirecrawlAgent {
     }
   }
 
-  async plan(prompt: string): Promise<string> {
+  async plan(
+    prompt: string,
+    schema?: Record<string, unknown>,
+  ): Promise<string> {
     if (!prompt?.trim()) {
       throw new Error("prompt is required and must be a non-empty string");
     }
@@ -285,6 +340,16 @@ export class FirecrawlAgent {
     const skills = await discoverSkills(this.options.skillsDir);
     const skillList = skills.length
       ? `\nAvailable skills: ${skills.map((s) => `${s.name} (${s.description.slice(0, 60)})`).join(", ")}`
+      : "";
+
+    const schemaContext = schema
+      ? `\n\nThe final output MUST match this JSON schema exactly — every field below must be sourced by the plan, and no extra fields may be added:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\n\`\`\`\n\nRequired field paths (your plan must state which step sources each):\n${extractFieldPaths(schema)
+          .map((f) => `- ${f}`)
+          .join("\n")}`
+      : "";
+
+    const schemaSystemLine = schema
+      ? "\n\nWhen a schema is provided, the final step MUST be formatOutput(format=\"json\", data=<object matching the schema exactly>). Before that step, include a verification step that cross-references every required field path against what earlier steps collected. No field may be omitted, none may be invented."
       : "";
 
     const { text } = await generateText({
@@ -307,8 +372,8 @@ For each step, specify:
 
 Be specific about URLs, search queries, and extraction targets. Keep it concise -- one line per step.
 End with the expected final output format and structure.
-Do not use emojis.`,
-      prompt: `Create an execution plan for this request:\n\n${prompt}`,
+Do not use emojis.${schemaSystemLine}`,
+      prompt: `Create an execution plan for this request:\n\n${prompt}${schemaContext}`,
       maxOutputTokens: 1024,
     });
 
@@ -497,6 +562,26 @@ Do not use emojis.`,
       }
     }
     return null;
+  }
+
+  /**
+   * Final assessment pass. Runs the same validator the formatOutput gate
+   * uses, but on the extracted payload the run is about to return. If the
+   * model hit its repair budget and slipped through with partial data, the
+   * caller still sees the mismatch on RunResult.schemaMismatch.
+   */
+  private validateSchemaMismatch(
+    extracted: { format: string; content: string } | null,
+    schema?: Record<string, unknown>,
+  ): SchemaMismatch | undefined {
+    if (!schema) return undefined;
+    if (!extracted || extracted.format !== "json") {
+      const fields = extractFieldPaths(schema);
+      return { missing: fields, extra: [] };
+    }
+    const parsed = coerceToJson(extracted.content);
+    const result = validateAgainstSchema(schema, parsed);
+    return result.ok ? undefined : { missing: result.missing, extra: result.extra };
   }
 
   private extractExportedSkill(steps: StepDetail[]): ExportedSkill | null {

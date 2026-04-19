@@ -8,33 +8,9 @@ import { formatOutput, bashExec, initBashWithFiles, createExportSkillTool } from
 import { discoverSkills } from "../skills/discovery";
 import { loadOrchestratorPrompt, loadPromptFile } from "./loader";
 import { createPrepareStepWithCompaction } from "./compaction";
+import { extractFieldPaths } from "../schema-validate";
 
 // --- Helpers ---
-
-function extractFieldPaths(obj: unknown, prefix = "", depth = 0): string[] {
-  if (depth > 4) return [prefix || "(nested)"];
-  if (Array.isArray(obj)) {
-    if (obj.length === 0) return [`${prefix}[]`];
-    const item = obj[0];
-    if (typeof item === "object" && item !== null) {
-      return extractFieldPaths(item, `${prefix}[]`, depth + 1);
-    }
-    return [`${prefix}[] (get ALL items)`];
-  }
-  if (typeof obj === "object" && obj !== null) {
-    const paths: string[] = [];
-    for (const [key, value] of Object.entries(obj)) {
-      const fieldPath = prefix ? `${prefix}.${key}` : key;
-      if (typeof value === "object" && value !== null) {
-        paths.push(...extractFieldPaths(value, fieldPath, depth + 1));
-      } else {
-        paths.push(fieldPath);
-      }
-    }
-    return paths;
-  }
-  return prefix ? [prefix] : [];
-}
 
 function buildSchemaBlock(schema?: Record<string, unknown>): string {
   if (!schema) return "";

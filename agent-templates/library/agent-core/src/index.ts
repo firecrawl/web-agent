@@ -42,6 +42,10 @@ export { uploadSkills, type SkillUploadFile, type SkillUploadResult } from "./sk
 // ─── Built-in tools (formatOutput, bashExec, exportSkill) ───
 export { formatOutput, bashExec, initBashWithFiles, listBashFiles, readBashFile, createExportSkillTool } from "./tools";
 
+// ─── Schema validation (shared between orchestrator prompt, formatOutput gate, and post-run assessment) ───
+export { validateAgainstSchema, extractFieldPaths, coerceToJson } from "./schema-validate";
+export type { SchemaValidationResult } from "./schema-validate";
+
 // ─── Firecrawl toolkit integration ───
 export { buildFirecrawlToolkit } from "./toolkit";
 export { firecrawlTools, firecrawlSystemPrompt, utilityTools } from "./firecrawl-tools";
@@ -84,4 +88,5 @@ export type {
   Toolkit,
   UploadedFile,
   FirecrawlToolsConfig,
+  SchemaMismatch,
 } from "./types";

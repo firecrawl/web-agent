@@ -272,6 +272,8 @@ export interface AgentEvent {
   durationMs?: number;
   /** On "done": model that produced this response, as "provider:id" */
   model?: string;
+  /** On "done": schema divergence when `schema` was requested but not fully met */
+  schemaMismatch?: SchemaMismatch;
 }
 
 /**
@@ -302,6 +304,9 @@ export interface ExportedSkill {
   schema: string;
 }
 
+export type { SchemaMismatch } from "./schema-validate";
+import type { SchemaMismatch } from "./schema-validate";
+
 export interface RunResult {
   /** The agent's final text response (or formatted data for json/markdown format) */
   text: string;
@@ -319,4 +324,9 @@ export interface RunResult {
   model?: string;
   /** Reusable skill package (present when exportSkill=true) */
   exportedSkill?: ExportedSkill;
+  /**
+   * Set when `schema` was provided and the final output didn't fully match.
+   * Undefined means either no schema was requested, or the output passed.
+   */
+  schemaMismatch?: SchemaMismatch;
 }
