@@ -12,6 +12,24 @@ type ValueStatus = { configured: boolean; value: string; source: string };
 type ConfigResponse = { keys: Record<string, KeyStatus>; values: Record<string, ValueStatus>; hosted: boolean; writable: boolean };
 type SkillInfo = { name: string; description: string; category: string; resources: string[] };
 
+// Admin token stored client-side for hosted deployments. Matches the server's
+// CONFIG_ADMIN_TOKEN. Kept in localStorage so it survives reloads but stays
+// off the network until attached as a Bearer header on /api/config calls.
+const CONFIG_TOKEN_KEY = "firecrawl-agent-config-token";
+
+function getConfigToken(): string {
+  if (typeof window === "undefined") return "";
+  return window.localStorage.getItem(CONFIG_TOKEN_KEY) ?? "";
+}
+
+function configHeaders(contentType = true): Record<string, string> {
+  const headers: Record<string, string> = {};
+  if (contentType) headers["Content-Type"] = "application/json";
+  const token = getConfigToken();
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  return headers;
+}
+
 const EXPERIMENTAL = getExperimentalFeatures();
 
 function GearIcon() {
@@ -399,21 +417,77 @@ export default function SettingsPanel({ config, onChange }: { config: AgentConfi
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
   const [skills, setSkills] = useState<SkillInfo[]>([]);
+  const [authRequired, setAuthRequired] = useState(false);
+  const [tokenDraft, setTokenDraft] = useState("");
+  const [tokenSet, setTokenSet] = useState(false);
 
-  const fetchKeys = useCallback(async () => {
+  useEffect(() => {
+    setTokenSet(getConfigToken() !== "");
+  }, [open]);
+
+  // Distinguishes the three outcomes so callers can show an accurate
+  // message — a network blip should not look like "token rejected".
+  type FetchKeysResult = "ok" | "rejected" | "error";
+  const fetchKeys = useCallback(async (): Promise<FetchKeysResult> => {
+    let res: Response;
     try {
-      const res = await fetch("/api/config");
-      if (res.ok) {
+      // On hosted deployments the GET is guarded too — attach token if we have one.
+      res = await fetch("/api/config", { headers: configHeaders(false) });
+    } catch {
+      return "error";
+    }
+    if (res.status === 401 || res.status === 403) {
+      // The token (if any) is rejected. Drop it so the user doesn't
+      // stay locked out on the next render with stale creds in storage.
+      window.localStorage.removeItem(CONFIG_TOKEN_KEY);
+      setTokenSet(false);
+      setAuthRequired(true);
+      setHosted(true);
+      return "rejected";
+    }
+    if (res.ok) {
+      try {
         const data: ConfigResponse = await res.json();
         setKeyStatuses(data.keys);
         setValueStatuses(data.values ?? {});
         setHosted(data.hosted);
+        setAuthRequired(false);
+        return "ok";
+      } catch {
+        return "error";
       }
-    } catch { /* noop */ }
+    }
+    return "error";
   }, []);
+
+  const saveAdminToken = async () => {
+    const t = tokenDraft.trim();
+    if (!t) return;
+    window.localStorage.setItem(CONFIG_TOKEN_KEY, t);
+    setTokenSet(true);
+    setTokenDraft("");
+    const result = await fetchKeys();
+    const msg =
+      result === "ok" ? "Admin token saved"
+      : result === "rejected" ? "Token rejected by server"
+      : "Network error — token saved locally, retry when reachable";
+    setSaveMsg(msg);
+    setTimeout(() => setSaveMsg(""), 3000);
+  };
+
+  const clearAdminToken = () => {
+    window.localStorage.removeItem(CONFIG_TOKEN_KEY);
+    setTokenSet(false);
+    setSaveMsg("Admin token cleared");
+    setTimeout(() => setSaveMsg(""), 3000);
+    void fetchKeys();
+  };
 
   const fetchSkills = useCallback(async () => {
     try {
+      // /api/skills is unauthenticated; keep the admin token out of its
+      // request surface (server logs, future proxies) until the endpoint
+      // actually requires it.
       const res = await fetch("/api/skills");
       if (res.ok) {
         const data: SkillInfo[] = await res.json();
@@ -423,15 +497,29 @@ export default function SettingsPanel({ config, onChange }: { config: AgentConfi
   }, []);
 
   useEffect(() => {
-    if (open) { fetchKeys(); fetchSkills(); }
+    if (open) { void fetchKeys(); void fetchSkills(); }
   }, [open, fetchKeys, fetchSkills]);
+
+  // Mirror fetchKeys's 401/403 recovery on every config write: a
+  // rejected token must be dropped from localStorage and the UI must
+  // flip to the auth-required state, otherwise the user is stuck with a
+  // stale token and a generic "Failed to save" message.
+  const handleAuthFailure = () => {
+    window.localStorage.removeItem(CONFIG_TOKEN_KEY);
+    setTokenSet(false);
+    setAuthRequired(true);
+    setHosted(true);
+    setSaveMsg("Token rejected — re-enter admin token");
+    setTimeout(() => setSaveMsg(""), 3000);
+  };
 
   const saveKey = async (id: string) => {
     const value = keyDrafts[id]?.trim();
     if (!value) return;
     setSaving(true); setSaveMsg("");
     try {
-      const res = await fetch("/api/config", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ keys: { [id]: value } }) });
+      const res = await fetch("/api/config", { method: "POST", headers: configHeaders(), body: JSON.stringify({ keys: { [id]: value } }) });
+      if (res.status === 401 || res.status === 403) { handleAuthFailure(); return; }
       const data = await res.json();
       if (res.ok) { setKeyStatuses(data.keys); setKeyDrafts((prev) => ({ ...prev, [id]: "" })); setSaveMsg(hosted ? "Saved for this session" : "Saved to .env.local"); setTimeout(() => setSaveMsg(""), 3000); }
       else setSaveMsg(data.error || "Failed to save");
@@ -442,7 +530,8 @@ export default function SettingsPanel({ config, onChange }: { config: AgentConfi
   const removeKey = async (id: string) => {
     setSaving(true);
     try {
-      const res = await fetch("/api/config", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ keys: { [id]: "" } }) });
+      const res = await fetch("/api/config", { method: "POST", headers: configHeaders(), body: JSON.stringify({ keys: { [id]: "" } }) });
+      if (res.status === 401 || res.status === 403) { handleAuthFailure(); return; }
       const data = await res.json();
       if (res.ok) { setKeyStatuses(data.keys); setSaveMsg("Key removed"); setTimeout(() => setSaveMsg(""), 3000); }
     } catch { /* noop */ }
@@ -454,7 +543,8 @@ export default function SettingsPanel({ config, onChange }: { config: AgentConfi
     if (!value) return;
     setSaving(true); setSaveMsg("");
     try {
-      const res = await fetch("/api/config", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ values: { [id]: value } }) });
+      const res = await fetch("/api/config", { method: "POST", headers: configHeaders(), body: JSON.stringify({ values: { [id]: value } }) });
+      if (res.status === 401 || res.status === 403) { handleAuthFailure(); return; }
       const data = await res.json();
       if (res.ok) {
         setValueStatuses(data.values ?? {});
@@ -469,7 +559,8 @@ export default function SettingsPanel({ config, onChange }: { config: AgentConfi
   const removeValue = async (id: string) => {
     setSaving(true);
     try {
-      const res = await fetch("/api/config", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ values: { [id]: "" } }) });
+      const res = await fetch("/api/config", { method: "POST", headers: configHeaders(), body: JSON.stringify({ values: { [id]: "" } }) });
+      if (res.status === 401 || res.status === 403) { handleAuthFailure(); return; }
       const data = await res.json();
       if (res.ok) {
         setValueStatuses(data.values ?? {});
@@ -548,6 +639,49 @@ export default function SettingsPanel({ config, onChange }: { config: AgentConfi
               </button>
 
               <div className="flex-1 overflow-y-auto p-32">
+                {(hosted || authRequired) && (
+                  <div className={cn(
+                    "mb-24 rounded-12 border p-16",
+                    authRequired
+                      ? "border-heat-100 bg-heat-8"
+                      : "border-border-faint bg-background-base"
+                  )}>
+                    <div className="text-label-medium text-accent-black mb-4">Admin token</div>
+                    <div className="text-body-small text-black-alpha-64 mb-10">
+                      {authRequired
+                        ? "This deployment requires CONFIG_ADMIN_TOKEN to read or change config. Paste it below."
+                        : "Sent as Authorization: Bearer with every config update. Must match CONFIG_ADMIN_TOKEN on the server."}
+                    </div>
+                    <div className="flex gap-8">
+                      <input
+                        type="password"
+                        autoComplete="off"
+                        placeholder={tokenSet ? "••••••••  (stored locally)" : "Paste token"}
+                        className="flex-1 bg-accent-white border border-black-alpha-8 rounded-12 px-16 py-10 text-body-medium focus:border-heat-100 focus:outline-none"
+                        value={tokenDraft}
+                        onChange={(e) => setTokenDraft(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") saveAdminToken(); }}
+                      />
+                      <button
+                        type="button"
+                        disabled={!tokenDraft.trim()}
+                        className="px-16 py-10 rounded-12 bg-accent-black text-accent-white text-label-medium disabled:opacity-40"
+                        onClick={saveAdminToken}
+                      >
+                        Save
+                      </button>
+                      {tokenSet && (
+                        <button
+                          type="button"
+                          className="px-16 py-10 rounded-12 border border-black-alpha-8 text-label-medium text-accent-black hover:bg-black-alpha-4"
+                          onClick={clearAdminToken}
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
                 {activeProvider && (
                   <ProviderView
                     provider={activeProvider}

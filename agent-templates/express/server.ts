@@ -20,13 +20,20 @@ const app = express();
 // bigger = probably a mistake or abuse. Override with BODY_LIMIT env var.
 app.use(express.json({ limit: process.env.BODY_LIMIT ?? "1mb" }));
 
-// CORS — allows frontend apps on other ports/domains to call this API
+// CORS — opt-in. Only emits Access-Control-* headers when CORS_ORIGIN is
+// explicitly set (e.g. CORS_ORIGIN=https://app.example.com, or "*" for
+// fully open). Without it, the API is same-origin only, which is the
+// safe default for an endpoint that runs prompts and holds API keys.
 app.use((_req, res, next) => {
-  res.header("Access-Control-Allow-Origin", process.env.CORS_ORIGIN ?? "*");
-  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Request-ID");
-  res.header("Access-Control-Expose-Headers", "X-Request-ID");
-  if (_req.method === "OPTIONS") return res.sendStatus(204);
+  const corsOrigin = process.env.CORS_ORIGIN;
+  if (corsOrigin) {
+    res.header("Access-Control-Allow-Origin", corsOrigin);
+    res.header("Vary", "Origin");
+    res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Request-ID");
+    res.header("Access-Control-Expose-Headers", "X-Request-ID");
+    if (_req.method === "OPTIONS") return res.sendStatus(204);
+  }
   next();
 });
 
@@ -113,7 +120,7 @@ app.get("/v1/config", (_req, res) => {
     keys: configuredKeys(),
     bodyLimit: process.env.BODY_LIMIT ?? "1mb",
     port: Number(process.env.PORT) || 3000,
-    corsOrigin: process.env.CORS_ORIGIN ?? "*",
+    corsOrigin: process.env.CORS_ORIGIN ?? null,
   });
 });
 

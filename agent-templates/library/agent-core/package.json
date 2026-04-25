@@ -110,6 +110,7 @@
     "@langchain/google": "^0.1.10",
     "@langchain/google-genai": "^2.1.26",
     "@langchain/openai": "^1.4.4",
+    "@types/node": "^20.10.4",
     "tsup": "^8.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.3.3",

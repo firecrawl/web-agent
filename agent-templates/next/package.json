@@ -11,7 +11,8 @@
     "prebuild": "node scripts/verify-agent-core.mjs",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@agentclientprotocol/sdk": "^0.17.1",
@@ -81,12 +82,13 @@
     "zod": "^3.25.0"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.2.0",
     "@types/node": "^20.10.4",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.4.16",
-    "eslint": "^8.0.0",
-    "eslint-config-next": "^15.2.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^16.2.1",
     "postcss": "^8.4.32",
     "postcss-import": "^16.1.1",
     "postcss-nesting": "^13.0.2",

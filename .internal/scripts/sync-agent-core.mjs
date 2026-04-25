@@ -34,6 +34,10 @@ const RSYNC_EXCLUDES = [
   ".turbo",
   "*.tsbuildinfo",
   ".DS_Store",
+  // Templates vendor agent-core as source; they don't install from the
+  // vendored package.json and its lockfile would just be dead weight
+  // polluting diffs. Keep agent-core's own pnpm-lock.yaml out of the sync.
+  "pnpm-lock.yaml",
 ];
 
 function parseArgs() {
