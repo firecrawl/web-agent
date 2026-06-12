@@ -309,8 +309,9 @@ const plan = await agent.plan('compare pricing across 5 CDN providers')
 | Anthropic Claude | `{ provider: 'anthropic', model: 'claude-sonnet-4-6' }` |
 | OpenAI | `{ provider: 'openai', model: 'gpt-5.4' }` |
 | Custom (OpenAI-compat) | `{ provider: 'custom-openai', model: 'your-model', baseURL: '...' }` |
+| Atomic Chat (local) | `{ provider: 'atomic-chat', model: 'your-model-id' }` — defaults to `http://127.0.0.1:1337/v1`, keyless |
 
-Set API keys via `apiKeys` option or environment variables (`GOOGLE_GENERATIVE_AI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`).
+Set API keys via `apiKeys` option or environment variables (`GOOGLE_GENERATIVE_AI_API_KEY`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`). Atomic Chat is keyless by default; override with `ATOMIC_CHAT_BASE_URL` / `ATOMIC_CHAT_API_KEY` if needed.
 
 ## OpenAPI spec
 

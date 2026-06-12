@@ -31,8 +31,8 @@ export interface Toolkit {
 }
 
 export interface ModelConfig {
-  /** LLM provider. "gateway" = Vercel AI Gateway, "custom-openai" = any OpenAI-compatible endpoint */
-  provider: "gateway" | "anthropic" | "openai" | "google" | "custom-openai";
+  /** LLM provider. "gateway" = Vercel AI Gateway, "custom-openai" = any OpenAI-compatible endpoint, "atomic-chat" = local Atomic Chat */
+  provider: "gateway" | "anthropic" | "openai" | "google" | "custom-openai" | "atomic-chat";
   /** Model ID (e.g. "claude-sonnet-4-6", "gemini-3-flash-preview", "gpt-5.4") */
   model: string;
   /** Override the provider API key for this specific model */

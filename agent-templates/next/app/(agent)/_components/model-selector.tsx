@@ -14,6 +14,7 @@ const PROVIDERS: { id: Provider; name: string }[] = [
   { id: "openai", name: "OpenAI" },
   ...(EXPERIMENTAL.customOpenAI ? [{ id: "custom-openai" as Provider, name: "Custom OpenAI" }] : []),
   { id: "google", name: "Google" },
+  { id: "atomic-chat", name: "Atomic Chat" },
 ];
 
 // Provider → (label, docs URL). Used to point users at the right console when
@@ -24,6 +25,7 @@ const PROVIDER_DOCS: Record<Provider, { label: string; url: string }> = {
   google:          { label: "Google AI",    url: "https://aistudio.google.com/apikey" },
   gateway:         { label: "AI Gateway",   url: "https://vercel.com/dashboard/ai-gateway" },
   "custom-openai": { label: "Custom OpenAI", url: "" },
+  "atomic-chat":   { label: "Atomic Chat",  url: "https://atomic.chat" },
   firecrawl:       { label: "Firecrawl",    url: "https://firecrawl.dev/app/api-keys" },
 };
 
@@ -35,6 +37,7 @@ const PROVIDER_TO_KEY_ID: Record<Provider, string | null> = {
   google: "google",
   gateway: "gateway",
   "custom-openai": "customOpenAI",
+  "atomic-chat": "atomicChat",
   firecrawl: "firecrawl",
 };
 

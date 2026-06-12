@@ -63,6 +63,7 @@ const PROVIDER_KEY_IDS: Partial<Record<ModelConfig["provider"], string>> = {
   google: "google",
   gateway: "gateway",
   "custom-openai": "customOpenAI",
+  "atomic-chat": "atomicChat",
 };
 
 function sanitizeModelPreference(model: ModelConfig): CachedModelPreference {

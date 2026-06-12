@@ -96,6 +96,32 @@ describe("resolveModel", () => {
     ).rejects.toThrow("CUSTOM_OPENAI_BASE_URL is not configured");
   });
 
+  it("resolves atomic-chat with default baseURL and keyless token", async () => {
+    const model = await resolveModel({
+      provider: "atomic-chat",
+      model: "local-model",
+    });
+    expect(model).toMatchObject({
+      provider: "openai",
+      model: "local-model",
+      apiKey: "atomic-chat-local",
+      baseURL: "http://127.0.0.1:1337/v1",
+    });
+  });
+
+  it("resolves atomic-chat with custom baseURL and api key", async () => {
+    const model = await resolveModel(
+      { provider: "atomic-chat", model: "qwen-local" },
+      { "atomic-chat": "my-key", "atomic-chat:baseURL": "http://host.docker.internal:1337/v1" },
+    );
+    expect(model).toMatchObject({
+      provider: "openai",
+      model: "qwen-local",
+      apiKey: "my-key",
+      baseURL: "http://host.docker.internal:1337/v1",
+    });
+  });
+
   it("prefers config.apiKey over apiKeys map", async () => {
     const model = await resolveModel(
       { provider: "google", model: "gemini-flash", apiKey: "config-key" },

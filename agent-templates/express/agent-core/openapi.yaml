@@ -211,7 +211,7 @@ components:
       properties:
         provider:
           type: string
-          enum: [anthropic, openai, google, gateway, custom-openai]
+          enum: [anthropic, openai, google, gateway, custom-openai, atomic-chat]
           description: LLM provider.
         model:
           type: string
