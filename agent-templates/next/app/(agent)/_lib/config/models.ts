@@ -26,6 +26,9 @@ export const AVAILABLE_MODELS = {
     { id: "gemini-2.5-pro-preview-05-06", name: "Gemini 2.5 Pro", icon: "gemini" },
     { id: "gemini-2.5-flash-preview-05-20", name: "Gemini 2.5 Flash", icon: "gemini" },
   ],
+  "atomic-chat": [
+    { id: "local", name: "Local model (see GET /v1/models)", icon: "openai" },
+  ],
   // Spark 1 models are experimental and not yet available for BYOK.
   // firecrawl: [
   //   { id: "spark-1-mini", name: "Spark 1 Mini", icon: "firecrawl" },
@@ -40,5 +43,6 @@ export const PROVIDER_META: Record<string, { name: string; icon: string }> = {
   anthropic: { name: "Anthropic", icon: "anthropic" },
   openai: { name: "OpenAI", icon: "openai" },
   "custom-openai": { name: "Custom OpenAI", icon: "openai" },
+  "atomic-chat": { name: "Atomic Chat", icon: "openai" },
   google: { name: "Google", icon: "google" },
 };

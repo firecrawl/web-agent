@@ -11,6 +11,7 @@ export const KEY_DEFS = {
   google: { env: "GOOGLE_GENERATIVE_AI_API_KEY", label: "Google AI", placeholder: "AI..." },
   gateway: { env: "AI_GATEWAY_API_KEY", label: "AI Gateway", placeholder: "vck_..." },
   customOpenAI: { env: "CUSTOM_OPENAI_API_KEY", label: "Custom OpenAI", placeholder: "sk-..." },
+  atomicChat: { env: "ATOMIC_CHAT_API_KEY", label: "Atomic Chat", placeholder: "atomic-chat-local (optional)" },
 } as const;
 
 export type KeyId = keyof typeof KEY_DEFS;
@@ -20,6 +21,11 @@ export const VALUE_DEFS = {
     env: "CUSTOM_OPENAI_BASE_URL",
     label: "Base URL",
     placeholder: "https://openrouter.ai/api/v1",
+  },
+  atomicChatBaseURL: {
+    env: "ATOMIC_CHAT_BASE_URL",
+    label: "Base URL",
+    placeholder: "http://127.0.0.1:1337/v1",
   },
 } as const;
 
@@ -70,6 +76,7 @@ export function getProviderKey(provider: string): string | undefined {
     google: "google",
     gateway: "gateway",
     "custom-openai": "customOpenAI",
+    "atomic-chat": "atomicChat",
   };
   const id = map[provider];
   return id ? getKey(id) : undefined;
@@ -82,6 +89,10 @@ export function getValue(id: ValueId): string | undefined {
 
 export function getCustomOpenAIBaseURL(): string | undefined {
   return getValue("customOpenAIBaseURL");
+}
+
+export function getAtomicChatBaseURL(): string | undefined {
+  return getValue("atomicChatBaseURL");
 }
 
 export function maskKey(key: string): string {
@@ -179,17 +190,25 @@ export function setValue(id: ValueId, value: string) {
 
 export function getProviderApiKeys(): Record<string, string> {
   const keys: Record<string, string> = {};
-  for (const provider of ["anthropic", "openai", "google", "gateway", "custom-openai"] as const) {
+  for (const provider of ["anthropic", "openai", "google", "gateway", "custom-openai", "atomic-chat"] as const) {
     const key = getProviderKey(provider);
     if (key) keys[provider] = key;
   }
-  const baseURL = getCustomOpenAIBaseURL();
-  if (baseURL) keys["custom-openai:baseURL"] = baseURL;
+  const customBaseURL = getCustomOpenAIBaseURL();
+  if (customBaseURL) keys["custom-openai:baseURL"] = customBaseURL;
+  const atomicBaseURL = getAtomicChatBaseURL();
+  if (atomicBaseURL) keys["atomic-chat:baseURL"] = atomicBaseURL;
   return keys;
 }
 
 export function hydrateModelConfig(model: ModelConfig): ModelConfig {
-  if (model.provider !== "custom-openai" || model.baseURL) return model;
-  const baseURL = getCustomOpenAIBaseURL();
-  return baseURL ? { ...model, baseURL } : model;
+  if (model.provider === "custom-openai" && !model.baseURL) {
+    const baseURL = getCustomOpenAIBaseURL();
+    return baseURL ? { ...model, baseURL } : model;
+  }
+  if (model.provider === "atomic-chat" && !model.baseURL) {
+    const baseURL = getAtomicChatBaseURL();
+    return baseURL ? { ...model, baseURL } : model;
+  }
+  return model;
 }

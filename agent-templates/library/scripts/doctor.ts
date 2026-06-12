@@ -49,10 +49,25 @@ const providerKeyEnv: Record<string, string> = {
   google: "GOOGLE_GENERATIVE_AI_API_KEY",
   gateway: "AI_GATEWAY_API_KEY",
   "custom-openai": "CUSTOM_OPENAI_API_KEY",
+  "atomic-chat": "ATOMIC_CHAT_API_KEY",
 };
 const requiredKey = providerKeyEnv[provider];
-if (requiredKey) {
+if (requiredKey && provider !== "atomic-chat") {
   checkKey(requiredKey, `${requiredKey} (for provider "${provider}")`, true);
+} else if (provider === "atomic-chat") {
+  const key = process.env.ATOMIC_CHAT_API_KEY;
+  if (key) checkKey("ATOMIC_CHAT_API_KEY", "ATOMIC_CHAT_API_KEY (optional)", false);
+}
+
+// --- atomic-chat baseURL (optional override) ---
+if (provider === "atomic-chat") {
+  const baseURL = process.env.ATOMIC_CHAT_BASE_URL ?? "http://127.0.0.1:1337/v1";
+  try {
+    new URL(baseURL);
+    add("ATOMIC_CHAT_BASE_URL", "ok", baseURL);
+  } catch {
+    add("ATOMIC_CHAT_BASE_URL", "fail", `invalid URL: "${baseURL}"`);
+  }
 }
 
 // --- custom-openai baseURL ---

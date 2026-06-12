@@ -37,6 +37,13 @@ export const config = {
   // subAgent:     { provider: "custom-openai", model: "gpt-4.1", baseURL: "https://openrouter.ai/api/v1" } satisfies ModelRef,
   // background:   { provider: "custom-openai", model: "gpt-4.1", baseURL: "https://openrouter.ai/api/v1" } satisfies ModelRef,
 
+  // ═══════════════════════════════════════════
+  // Atomic Chat (local OpenAI-compatible)
+  // ═══════════════════════════════════════════
+  // orchestrator: { provider: "atomic-chat", model: "local" } satisfies ModelRef,
+  // subAgent:     { provider: "atomic-chat", model: "local" } satisfies ModelRef,
+  // background:   { provider: "atomic-chat", model: "local" } satisfies ModelRef,
+
   // ─── Parallel workers ───
   maxWorkers: 10,              // Max concurrent worker agents
   workerMaxSteps: 50,          // Max steps per worker — let them finish complex tasks

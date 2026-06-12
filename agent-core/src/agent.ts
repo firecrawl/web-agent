@@ -628,12 +628,16 @@ export function createAgentFromEnv(overrides?: Partial<CreateAgentOptions>): Fir
     GOOGLE_GENERATIVE_AI_API_KEY: "google",
     AI_GATEWAY_API_KEY: "gateway",
     CUSTOM_OPENAI_API_KEY: "custom-openai",
+    ATOMIC_CHAT_API_KEY: "atomic-chat",
   };
   for (const [env, id] of Object.entries(envMap)) {
     if (process.env[env]) apiKeys[id] = process.env[env]!;
   }
   if (process.env.CUSTOM_OPENAI_BASE_URL) {
     apiKeys["custom-openai:baseURL"] = process.env.CUSTOM_OPENAI_BASE_URL;
+  }
+  if (process.env.ATOMIC_CHAT_BASE_URL) {
+    apiKeys["atomic-chat:baseURL"] = process.env.ATOMIC_CHAT_BASE_URL;
   }
 
   // Support both MODEL="provider:id" shorthand and the split
