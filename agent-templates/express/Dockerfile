@@ -1,7 +1,7 @@
 # Multi-stage build for a small final image
 FROM node:22-alpine AS deps
 WORKDIR /app
-COPY package.json pnpm-lock.yaml* package-lock.json* ./
+COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml package-lock.json* ./
 RUN \
   if [ -f pnpm-lock.yaml ]; then corepack enable && pnpm install --frozen-lockfile; \
   elif [ -f package-lock.json ]; then npm ci; \
