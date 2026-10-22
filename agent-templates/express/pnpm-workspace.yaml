@@ -1,0 +1,10 @@
+packages:
+  - "."
+
+minimumReleaseAgeExclude:
+  - body-parser@2.4.0
+
+overrides:
+  # GHSA-27r3-jxmh-p828: patch both supported body-parser lines.
+  "body-parser@<1.20.9": "1.20.9"
+  "body-parser@>=2.0.0 <2.4.0": "2.4.0"
